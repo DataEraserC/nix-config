@@ -42,6 +42,19 @@
       updatetime = 300;
       wrap = true;
       linebreak = true;
+
+      # fileencodings = {
+      #   "utf-8",
+      #   "iso-2022-jp",
+      #   "cp932",
+      #   "euc-jp",
+      #   "latin",
+      #   "cp936",
+      #   "gb18030",
+      #   "big5",
+      #   "ucs-bom",
+      #   "default",
+      # };
     };
 
     colorschemes.catppuccin = {
@@ -100,6 +113,9 @@
           };
         };
       };
+    };
+    plugins.vim-suda = {
+      enable = true;
     };
   };
 }

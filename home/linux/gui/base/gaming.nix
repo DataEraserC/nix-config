@@ -4,6 +4,8 @@
   osConfig,
   config,
   lib,
+  pkgs-unstable-yuzu,
+  suyu,
   ...
 }:
 with lib;
@@ -13,7 +15,7 @@ in
 {
   options.modules.desktop = {
     gaming = {
-      enable = mkEnableOption "Install Game Suite(steam, lutris, etc)";
+      enable = mkEnableOption "Install Game Suite(steam, lutris, etc (Also some important runtimes))";
     };
   };
 
@@ -43,6 +45,33 @@ in
         # Sed-like editor for binary files
         # required by some games to fix problems
         bbe
+
+        # Mayuri Spec
+
+        # a GUI game launcher for Steam/GoG/Epic
+        # lutris
+        bottles
+
+        # Wine related
+        protonup-qt
+        wineWow64Packages.waylandFull
+        # wine-staging
+        # wine64Packages.stagingFull
+        # winePackages.stagingFull
+        # proton-ge-bin should not be installed into environments. Please use programs.steam.extraCompatPackages instead.
+        # playonlinux
+
+        # Switch related
+        # pkgs-unstable-yuzu.yuzu # Switch games
+        # broken so I disable it
+        suyu.packages.${pkgs.system}.suyu # Switch games
+        ryubing # Switch games
+
+        # Steam related
+        steamcmd # steam command line
+
+        # Ons related
+        onscripter
       ])
       ++ (with pkgs-x64; [
         # Heroic Games Launcher - primarily for Epic Games & GOG

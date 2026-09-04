@@ -1,5 +1,6 @@
 {
   pkgs,
+  pkgs-latest,
   pkgs-x64,
   ...
 }:
@@ -11,6 +12,7 @@
     playerctl
     pulsemixer
     imv # simple image viewer
+    vlc # Cross-platform media player and streaming server
 
     # video/audio tools
     libva-utils

@@ -1,8 +1,18 @@
-{ pkgs, ... }:
+{
+  pkgs,
+  fh,
+  ...
+}:
 {
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
+    # 'neofetch' has been removed because it is unmaintained upstream.
+    # neofetch
+    inxi
+    python313Packages.gpustat
+    cpu-x
+
     # system call monitoring
     strace # system call monitoring
     ltrace # library call monitoring
@@ -27,6 +37,7 @@
     psmisc # killall/pstree/prtstat/fuser/...
     lm_sensors # for `sensors` command
     ethtool
+    lshw
     pciutils # lspci
     usbutils # lsusb
     hdparm # for disk performance, command
@@ -34,9 +45,13 @@
     parted
     smartmontools # smartctl -a /dev/nvme0n1
     nvme-cli
+
+    fh.packages.${system}.default
   ];
 
   # BCC - Tools for BPF-based Linux IO analysis, networking, monitoring, and more
   # https://github.com/iovisor/bcc
   programs.bcc.enable = true;
+
+  programs.partition-manager.enable = true;
 }

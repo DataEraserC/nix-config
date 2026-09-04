@@ -4,6 +4,8 @@
 }:
 let
   specialExpected = {
+    "ai-gnome-wayland" = "ai";
+    "ai-kde-wayland" = "ai";
     "ai-niri" = "ai";
   };
   specialHostNames = builtins.attrNames specialExpected;

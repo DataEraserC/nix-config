@@ -1,7 +1,7 @@
-{ config, ... }:
+{ config, mylib, ... }:
 let
   hostName = "shoukei"; # Define your hostname.
-  mkSymlink = config.lib.file.mkOutOfStoreSymlink;
+  mkSymlink = mylib.mklinkRelativeToRoot;
 in
 {
   imports = [
@@ -15,5 +15,5 @@ in
   modules.desktop.niri.enable = true;
 
   xdg.configFile."niri/niri-hardware.kdl".source =
-    mkSymlink "${config.home.homeDirectory}/nix-config/hosts/12kingdoms-shoukei/niri-hardware.kdl";
+    mkSymlink config "hosts/12kingdoms-shoukei/niri-hardware.kdl";
 }

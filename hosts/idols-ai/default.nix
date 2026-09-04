@@ -1,30 +1,35 @@
 {
+  config,
+  pkgs,
+  lib,
   disko,
   myvars,
-  lib,
-  pkgs,
+  nur-DataEraserC,
+  nixGL,
   ...
-}:
+}@args:
 #############################################################
 #
-#  Ai - my main computer, with NixOS + I5-13600KF + RTX 4090 GPU, for gaming & daily use.
+#  Ai - my main computer, with NixOS + AMD Ryzen 9 8945HX + RTX 5070 Laptop GPU, for gaming & daily use.
 #
 #############################################################
 let
   hostName = "ai"; # Define your hostname.
 
+  macAddress = "02:d7:de:84:1e:e9";
   inherit (myvars.networking) mainGateway mainGateway6 nameservers;
   inherit (myvars.networking.hostsAddr.${hostName}) iface ipv4 ipv6;
   ipv4WithMask = "${ipv4}/24";
   ipv6WithMask = "${ipv6}/64";
+
 in
-{
+rec {
   imports = [
     disko.nixosModules.default
     # disks
     ./disko-fs.nix
-    ./disko-fs-data.nix
-    ./netdev-mount.nix
+    # ./disko-fs-data.nix
+    # ./netdev-mount.nix
 
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -33,9 +38,20 @@ in
 
     ./preservation.nix
     ./secureboot.nix
+    ./sunshine.nix
 
     # others
     ./ai
+    ./proxmox.nix
+    ../../modules/nixos/desktop/networking/pgy.nix
+    ../../modules/nixos/desktop/networking/easytier.nix
+    ../../modules/nixos/host-heartbeat.nix
+    ../../modules/nixos/network-event-notify.nix
+    ../../modules/nixos/cpolar-status.nix
+    ../../modules/nixos/offline-shutdown.nix
+
+    # ./tpm_luks.nix
+    ./dae.nix
   ];
 
   # Zram consumes physical memory for compression, which can cause a deadlock and system hang if the model size approaches the physical memory limit.
@@ -59,48 +75,106 @@ in
   services.sunshine.enable = true;
   services.tuned.ppdSettings.main.default = lib.mkForce "performance";
 
-  powerManagement.resumeCommands = ''
-    # Insta360 Link may stay enumerated with a stalled UVC endpoint after S3 resume.
-    ${pkgs.coreutils}/bin/sleep 1
-    ${pkgs.usbutils}/bin/usbreset 2e1a:4c01 || true
-  '';
+  # NTFS mounts use ntfs-3g (userspace FUSE) instead of the kernel ntfs3 driver.
+  # The blacklist stops udisks/GNOME automounts and `mount -t ntfs` from picking
+  # ntfs3, so they fall back to the mount.ntfs-3g helper; static mounts use
+  # fsType "ntfs3g" (see hardware-configuration.nix). Needed for reliable
+  # read/write on removable media and dirty/hibernated Windows volumes.
+  boot.blacklistedKernelModules = [
+    "ntfs3"
+  ];
+  environment.systemPackages = [
+    pkgs.ntfs3g
+  ];
+
+  # powerManagement.resumeCommands = ''
+  #   # Insta360 Link may stay enumerated with a stalled UVC endpoint after S3 resume.
+  #   ${pkgs.coreutils}/bin/sleep 1
+  #   ${pkgs.usbutils}/bin/usbreset 2e1a:4c01 || true
+  # '';
+
+  # ntfy notifications on network up/down events(NM dispatcher, shared script)
+  modules.network-event-notify = {
+    enable = true;
+    inherit hostName;
+  };
+
+  # periodic host liveness heartbeat via ntfy
+  modules.host-heartbeat = {
+    enable = true;
+    interval = "30min";
+    inherit hostName;
+    username = myvars.username;
+  };
+
+  # one-shot cpolar tunnel status report after boot
+  modules.cpolar-status = {
+    enable = true;
+    inherit hostName;
+    username = myvars.username;
+  };
+
+  # Power off after staying offline for 30min(no access to the gateway or a
+  # public host). Options here are the nix defaults; for temporary live tweaks
+  # without a rebuild use `sudo offline-shutdown {disable|enable|grace|reset}`
+  # (changes reset on reboot). See modules/nixos/offline-shutdown.nix.
+  modules.offline-shutdown = {
+    enable = true;
+    targets = [
+      myvars.networking.mainGateway
+      "223.5.5.5"
+    ];
+    gracePeriod = "30min";
+    checkInterval = "10min";
+  };
 
   networking = {
     inherit hostName;
+    # hostName = "DESKTOP-GM6XG0X";
 
     # we use networkd instead
-    networkmanager.enable = false; # provides nmcli/nmtui for wifi adjustment
-    useDHCP = false;
-  };
+    # networkmanager.enable = false; # provides nmcli/nmtui for wifi adjustment
+    # useDHCP = false;
 
-  networking.useNetworkd = true;
-  systemd.network.enable = true;
-
-  systemd.network.networks."10-${iface}" = {
-    matchConfig.Name = [ iface ];
-    networkConfig = {
-      Address = [
-        ipv4WithMask
-        ipv6WithMask
-      ];
-      DNS = nameservers;
-      DHCP = "ipv6"; # enable DHCPv6 only, so we can get a GUA.
-      IPv6AcceptRA = true; # for Stateless IPv6 Autoconfiguraton (SLAAC)
-      LinkLocalAddressing = "ipv6";
-    };
-    routes = [
-      {
-        Destination = "0.0.0.0/0";
-        Gateway = mainGateway;
-      }
-      {
-        Destination = "::/0";
-        Gateway = mainGateway6;
-        GatewayOnLink = true; # it's a gateway on local link.
-      }
-    ];
-    linkConfig.RequiredForOnline = "routable";
+    # desktop need its cli for status bar
+    networkmanager.enable = true;
+    networkmanager.wifi.macAddress = macAddress;
+    networkmanager.ethernet.macAddress = macAddress;
+    extraHosts = myvars.networking.genericHosts;
+    # opencode(4096) needs no explicit port open: it is served only over the
+    # trusted overlay VPNs (tailscale/zerotier/easytier, see firewall.nix).
+    # firewall.allowedTCPPorts = [ 4096 ];
   };
+  # systemd.network.networks."10-${iface}" = {
+  #   matchConfig.Name = [ iface ];
+  #   networkConfig = {
+  #     Address = [
+  #       ipv4WithMask
+  #       ipv6WithMask
+  #     ];
+  #     DNS = nameservers;
+  #     DHCP = "ipv6"; # enable DHCPv6 only, so we can get a GUA.
+  #     IPv6AcceptRA = true; # for Stateless IPv6 Autoconfiguraton (SLAAC)
+  #     LinkLocalAddressing = "ipv6";
+  #   };
+  #   routes = [
+  #     {
+  #       Destination = "0.0.0.0/0";
+  #       Gateway = mainGateway;
+  #     }
+  #     {
+  #       Destination = "::/0";
+  #       Gateway = mainGateway6;
+  #       GatewayOnLink = true; # it's a gateway on local link.
+  #     }
+  #   ];
+  # };
+
+  # networking.useNetworkd = true;
+  # systemd.network.enable = true;
+
+  # conflict with feature: containerd-snapshotter
+  # virtualisation.docker.storageDriver = "btrfs";
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
@@ -108,5 +182,10 @@ in
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "25.11"; # Did you read the comment?
+  system.stateVersion = "26.11"; # Did you read the comment?
+  features.bigdata_hadoop = {
+    enable = false;
+    package = pkgs.hadoop_3_3;
+    impermanence.enable = true;
+  };
 }

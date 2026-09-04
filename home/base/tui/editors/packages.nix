@@ -1,6 +1,10 @@
 {
   pkgs,
   pkgs-master,
+  pkgs-stable,
+  gomod2nix,
+  cargo2nix,
+  gradle2nix,
   ...
 }:
 {
@@ -9,12 +13,37 @@
     (
       # -*- Data & Configuration Languages -*-#
       [
+        # -- java
+        jdk17
+        tomcat9
+        gradle
+        maven
+        spring-boot-cli
+        jdt-language-server
+
+        #-- flutter
+        flutter
+
+        #-- dart
+        # dart
+
+        #-- haskell
+        ghc
+
         #-- nix
         nil
         nixd
         statix # Lints and suggestions for the nix programming language
         deadnix # Find and remove unused code in .nix source files
         nixfmt # Nix Code Formatter
+
+        #-- nix other things
+        nurl
+        nvfetcher
+        patchelf # Patch ELF for nixos
+
+        #-- nickel lang
+        nickel
 
         #-- json like
         terraform-ls
@@ -32,7 +61,7 @@
         marksman # language server for markdown
         glow # markdown previewer
         pandoc # document converter
-        pkgs-master.hugo # static site generator
+        hugo # static site generator
 
         #-- sql
         sqlfluff
@@ -41,10 +70,17 @@
         buf # linting and formatting
       ]
       ++
+        #-*- devenv
+        [
+          devenv
+          act
+        ]
+      ++
         #-*- General Purpose Languages -*-#
         [
           #-- c/c++
           cmake
+          xmake
           cmake-language-server
           gnumake
           checkmake
@@ -74,16 +110,51 @@
               pyquery
               pyyaml
               protobuf # protocol buffer compiler
+
+              # modules used by Mayuri
+              virtualenv
+              pip # use in venv "python -m venv .venv" "source .venv/bin/activate"
+              tkinter # The standard Python interface to the Tcl/Tk GUI toolkit
+
+              # AI/Digital Image
+              # matplotlib
+              # numpy
+              # opencv-python
+              # scipy
+              # pywavelets
+              # pillow
+
+              pycryptodome
+              ipykernel
+              jupyterlab
+              seaborn
+              networkx
+              beautifulsoup4
+              # selenium
+              urllib3
+              pyclip
+              pygobject3
+              pybluez
+              pymysql
+              redis
+              jieba
+              wordcloud
+              # NOTE: not supported by python313 yet
+              # pandas-datareader
+              pyperclip
+              # disable due to build test failed
+              # fake-useragent
             ]
           ))
 
           #-- rust
           # we'd better use the rust-overlays for rust development
-          pkgs-master.rustc
-          pkgs-master.rust-analyzer
-          pkgs-master.cargo # rust package manager
-          pkgs-master.rustfmt
-          pkgs-master.clippy # rust linter
+          rustc
+          rust-analyzer
+          cargo # rust package manager
+          rustfmt
+          clippy # rust linter
+          # cargo2nix.packages.${pkgs.system}.cargo2nix
 
           #-- golang
           go
@@ -93,6 +164,7 @@
           # gotools # contains tools like: godoc, goimports, etc.
           gopls # go language server
           delve # go debugger
+          gomod2nix.packages.${pkgs.system}.default
 
           # -- java
           # jdk25
@@ -112,6 +184,7 @@
         ]
       #-*- Web Development -*-#
       ++ [
+        yarn
         nodejs_24
         pnpm
         typescript
@@ -129,6 +202,8 @@
         prettier # common code formatter
         fzf
         gdu # disk usage analyzer, required by AstroNvim
+        nix-du
+        bottom # graphical process/system monitor, required by AstroNvim
         (ripgrep.override { withPCRE2 = true; }) # recursively searches directories for a regex pattern
       ]
     );

@@ -1,15 +1,16 @@
 { lib }:
 {
-  username = "ryan";
-  userfullname = "Ryan Yin";
-  useremail = "xiaoyin_c@qq.com";
+  username = "nixos";
+  userfullname = "DataEraserC";
+  useremail = "102341238+DataEraserC@users.noreply.github.com";
   networking = import ./networking.nix { inherit lib; };
   # Generated using: mkpasswd -m yescrypt --rounds=11
   # Password: long, strong random string (full charset)
   # Rotation policy: changed annually
   # Purpose: system login password only
   # https://man.archlinux.org/man/crypt.5.en
-  initialHashedPassword = "$y$jFT$RBapCH3F6bc0uSF.FaUGB.$rvhiVvcCKxkkumDFLONV5zFP1lsv1VyZ1ErH.r2rNk3";
+  initialHashedPassword = "$7$CU..../....lO1U0fsl954fC3porcCY41$OXiwbYrYuY4Z3KSFQ6IM04D9yFBExkENIewhjyTqN7C";
+  hashedPassword = "$7$CU..../....lO1U0fsl954fC3porcCY41$OXiwbYrYuY4Z3KSFQ6IM04D9yFBExkENIewhjyTqN7C";
   # Public Keys that can be used to login to all my PCs, Macbooks, and servers.
   #
   # Since its authority is so large, we must strengthen its security:
@@ -24,9 +25,18 @@
   # 2. Or just use hardware security keys like Yubikey/CanoKey.
   mainSshAuthorizedKeys = [
     # The main ssh keys for daily usage
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIKlN+Q/GxvwxDX/OAjJHaNFEznEN4Tw4E4TwqQu/eD6 ryan@idols-ai"
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJwoI5MAogEa726jwwHL5EgM1X/i2A5d2pgV7i7t8fzB ryan@shoukei"
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDc1PNTXzzvd93E+e9LXvnEzqgUI5gMTEF/IitvzgmL+ ryan@frieren"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBiYaQw5Zd3zph4ESSmzTeThQs4mUvQl6VmAgwhFQeIj nix-on-droid@pstar"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIESZxsPpUfvzrLVVu7O1QYnUvSKWG4U6Fcv3kdxiLQTg termux@pstar"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMKycQztUbwaCQnvF6wiQz+WukpAXbkubMMMp4VUtwt/ nix-on-droid@mondrian"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBPciOhklQslFUU2Y+ARt+HvBLLScjQ+c+3S2ZX9NGOK termux@mondrian"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAII7NyZi1fs1EubesSvFA16UI6E3dut1XL+6F4PYqIJZ7 termux@infiniti"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOZ5jg4mJdPLLwQqY5DFJwSAaQtTO6UFoPW5Z18pZroe nix-on-droid@fily_pad_f12"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBO0+WOKwK9EcRj2Bcdt/VpiB9MvZYqk4JKxlcQElskx nixos@idols-ai"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOa/B+wRm8FtHaYuQ9hNQy8FL91FVjF5hLGk4FoCY9Ix ec@DESKTOP-BOTVVJ6"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFak7BMP5b8HDe63AfaR2FmwVUgrQyg5+Uqiqd+/Jj3q openpgp:0x8B7537BE"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFGcZXWoZPVMpf2dx6a8Kw3UsTSr2Ba5ZruCER+FwNv2 braxtonj\\futang@XA-7GjSQ81EiOf4"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPdiLAS0Gwc1FIDVs5gyp0fQyJZm5KRXjR/oPZ6cezfL nixos@work"
+
   ];
   secondaryAuthorizedKeys = [
     # the backup ssh keys for disaster recovery

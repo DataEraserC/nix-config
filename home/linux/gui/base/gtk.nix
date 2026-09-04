@@ -1,8 +1,21 @@
 {
   pkgs,
+  nur-DataEraserC,
   config,
+  myvars,
   ...
 }:
+let
+  catppuccinVariant = "mocha";
+  catppuccinAccent = "pink";
+  catppuccinSize = "standard";
+
+  catppuccinGtk = pkgs.catppuccin-gtk.override {
+    variant = catppuccinVariant;
+    accents = [ catppuccinAccent ];
+    size = catppuccinSize;
+  };
+in
 {
   # If your themes for mouse cursor, icons or windows don’t load correctly,
   # try setting them with home.pointerCursor and gtk.theme,
@@ -12,17 +25,23 @@
     enable = true;
     gtk.enable = true;
     x11.enable = true;
-    package = pkgs.bibata-cursors;
-    name = "Bibata-Modern-Ice";
+    # package = pkgs.bibata-cursors;
+    # name = "Bibata-Modern-Ice";
+    # NOTE: use catppuccin cursors for test
+    # package = nur-DataEraserC.packages.${pkgs.system}.xcursor-genshin-nahida;
+    # name = "xcursor-genshin-nahida";
     size = 24;
   };
+
+  catppuccin.cursors.enable = true;
+  catppuccin.cursors.accent = "dark";
 
   # set dpi for 4k monitor
   xresources.properties = {
     # dpi for Xorg's font
-    "Xft.dpi" = 150;
+    "Xft.dpi" = 96;
     # or set a generic dpi
-    "*.dpi" = 150;
+    "*.dpi" = 96;
   };
 
   # gtk's theme settings, generate files:
@@ -32,12 +51,42 @@
   gtk = {
     enable = true;
 
-    font = {
-      name = "Noto Sans";
-      package = pkgs.noto-fonts;
+    font = with pkgs; {
+      name = "Maple Mono NF CN";
+      package = maple-mono.NF-CN-unhinted;
       size = 11;
     };
 
     gtk2.configLocation = "${config.xdg.configHome}/gtk-2.0/gtkrc";
+
+    gtk3 = {
+      bookmarks = [
+        "file:///home/${myvars.username}/Downloads/AyuGram%20Desktop"
+        "file:///home/${myvars.username}/Apps/Wine"
+        "file:///home/${myvars.username}/Documents"
+        "file:///home/${myvars.username}/Downloads"
+        "file:///home/${myvars.username}/Videos"
+        "file:///home/${myvars.username}/Pictures"
+        "file:///home/${myvars.username}/Music"
+        "file:///home/${myvars.username}/Apps"
+        "file:///home/${myvars.username}/nix-config"
+        "file:///persistent"
+        "file:///run/media/nixos/windows/Users/"
+      ];
+    };
+
+    theme = {
+      name = "catppuccin-${catppuccinVariant}-${catppuccinAccent}-${catppuccinSize}";
+      package = catppuccinGtk;
+    };
+
+    gtk3.extraConfig = {
+      "gtk-application-prefer-dark-theme" = "1";
+    };
+    gtk4.extraConfig = {
+      "gtk-application-prefer-dark-theme" = "1";
+    };
+    # Some Applications (e.g. MissionCenter) only look for gtk4 settings, so we need to set the theme there as well.
+    gtk4.theme = config.gtk.theme;
   };
 }

@@ -1,14 +1,16 @@
-{ config, ... }:
+{ config, mylib, ... }:
 let
-  mkSymlink = config.lib.file.mkOutOfStoreSymlink;
+  mkSymlink = mylib.mklinkRelativeToRoot;
 in
 {
   imports = [ ../../linux/gui.nix ];
 
-  programs.ssh.settings."github.com".IdentityFile = "${config.home.homeDirectory}/.ssh/idols-ai";
+  programs.ssh.settings."github.com".identityFile =
+    "${config.home.homeDirectory}/.ssh/idols-ai_id_ed25519";
 
-  modules.desktop.gaming.enable = true;
-  modules.desktop.niri.enable = true;
+  # We set this in outputs
+  # modules.desktop.gaming.enable = true;
+  # modules.desktop.niri.enable = true;
 
   programs.zed-editor.userSettings = {
     ui_font_size = 18.0;
@@ -17,6 +19,8 @@ in
     agent_buffer_font_size = 17.0;
   };
 
+  programs.jetbrains.enable = true;
+
   xdg.configFile."niri/niri-hardware.kdl".source =
-    mkSymlink "${config.home.homeDirectory}/nix-config/hosts/idols-ai/niri-hardware.kdl";
+    mkSymlink config "hosts/idols-ai/niri-hardware.kdl";
 }

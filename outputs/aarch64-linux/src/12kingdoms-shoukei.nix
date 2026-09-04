@@ -34,6 +34,7 @@ let
           modules.secrets.preservation.enable = true;
           # not supported yet
           modules.desktop.gaming.enable = false;
+          modules.desktop.appcast.enable = true;
         }
       ];
     home-modules = map mylib.relativeToRoot [
@@ -43,7 +44,10 @@ let
 
   modules-niri = {
     nixos-modules = [
-      { programs.niri.enable = true; }
+      {
+        programs.niri.enable = true;
+        modules.desktop.niri.enable = true;
+      }
     ]
     ++ base-modules.nixos-modules;
     home-modules = base-modules.home-modules;

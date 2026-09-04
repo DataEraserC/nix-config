@@ -44,9 +44,35 @@ Name=rime
 # Layout
 Layout=
 
-[Groups/1/Items/2]
+[Groups/1]
+# Group Name
+Name=pinyin
+# Layout
+Default Layout=us
+# Default Input Method
+DefaultIM=pinyin
+
+[Groups/1/Items/0]
 # Name
-Name=mozc
+Name=keyboard-us
+# Layout
+Layout=
+
+[Groups/1/Items/1]
+# Name
+Name=pinyin
+# Layout
+Layout=
+
+[Groups/2]
+# Group Name
+Name=BlockIME
+# Layout
+Default Layout=us
+
+[Groups/2/Items/0]
+# Name
+Name=keyboard-us
 # Layout
 Layout=
 
@@ -57,6 +83,6 @@ Name=hangul
 Layout=
 
 [GroupOrder]
-0=Default
-1=Intl
-
+0=pinyin
+1=BlockIME
+2=Default

@@ -4,7 +4,12 @@
 {
   networking.firewall = {
     enable = true;
-    # Trust everything from the tailnet.
-    trustedInterfaces = [ "tailscale0" ];
+    # Trust the private overlay VPNs (Tailscale / ZeroTier / EasyTier).
+    # All other inbound traffic on physical interfaces is filtered by port rules.
+    trustedInterfaces = [
+      "tailscale0" # Tailscale
+      "zt5u4z6wb4" # ZeroTier
+      "easytier0" # EasyTier, see easytier.nix
+    ];
   };
 }

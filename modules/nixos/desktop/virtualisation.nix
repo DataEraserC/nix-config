@@ -1,5 +1,8 @@
 {
   pkgs,
+  pkgs-latest,
+  nur-ataraxiasjel,
+  winboat,
   # nur-ataraxiasjel,
   ...
 }:
@@ -26,11 +29,27 @@
   services.flatpak.enable = true;
 
   virtualisation = {
-    docker.enable = false;
+    docker = {
+      enable = true;
+      daemon.settings = {
+        # enables pulling using containerd, which supports restarting from a partial pull
+        # https://docs.docker.com/storage/containerd/
+        "features" = {
+          "containerd-snapshotter" = true;
+        };
+      };
+
+      # start dockerd on boot.
+      # This is required for containers which are created with the `--restart=always` flag to work.
+      enableOnBoot = true;
+    };
+
+    # Do not use "--restart=always" to create container, or shutdown/reboot will be slow
+    # https://github.com/containers/podman/issues/15284
     podman = {
       enable = true;
       # Create a `docker` alias for podman, to use it as a drop-in replacement
-      dockerCompat = true;
+      dockerCompat = false;
       # Required for containers under podman-compose to be able to talk to each other.
       defaultNetwork.settings.dns_enabled = true;
       # Periodically prune Podman resources
@@ -41,21 +60,59 @@
       };
     };
 
+    # podman containers as systemd services(will break nixos's declare feat)
     oci-containers = {
       backend = "podman";
+      # containers = {
+      #   container-name = {
+      #     image = "container-image";
+      #     autoStart = true;
+      #     ports = [ "127.0.0.1:1234:1234" ];
+      #   };
+      # };
     };
 
     # Usage: https://wiki.nixos.org/wiki/Waydroid
-    # waydroid.enable = true;
+    waydroid.enable = true;
 
-    # libvirtd = {
-    #   enable = true;
-    #   # hanging this option to false may cause file permission issues for existing guests.
-    #   # To fix these, manually change ownership of affected files in /var/lib/libvirt/qemu to qemu-libvirtd.
-    #   qemu.runAsRoot = true;
+    libvirtd = {
+      enable = true;
+      # hanging this option to false may cause file permission issues for existing guests.
+      # To fix these, manually change ownership of affected files in /var/lib/libvirt/qemu to qemu-libvirtd.
+      qemu = {
+        runAsRoot = true;
+        swtpm.enable = true;
+      };
+    };
+    spiceUSBRedirection.enable = true;
+    # lxd = {
+    #   enable = false;
+    #   ui.enable = true;
     # };
-
-    # lxd.enable = true;
+    # Incus on NixOS is unsupported using iptables. Set `networking.nftables.enable = true;`
+    # incus = {
+    #   enable = true;
+    #   ui.enable = true;
+    # };
+    virtualbox = {
+      host = {
+        enable = false;
+        enableExtensionPack = true;
+        enableKvm = true;
+        addNetworkInterface = false;
+        enableHardening = true;
+        enableWebService = true;
+        headless = false;
+      };
+    };
+    vmware = {
+      host = {
+        # package = nur-program-learning.packages.${pkgs.system}.vmware-workstation.override {
+        #   enableMacOSGuests = true;
+        # };
+        enable = false;
+      };
+    };
   };
 
   environment.systemPackages = with pkgs; [
@@ -68,7 +125,7 @@
     # nur-ataraxiasjel.packages.${pkgs.stdenv.hostPlatform.system}.waydroid-script
 
     # Need to add [File (in the menu bar) -> Add connection] when start for the first time
-    # virt-manager
+    virt-manager
 
     # QEMU/KVM(HostCpuOnly), provides:
     #   qemu-storage-daemon qemu-edid qemu-ga
@@ -84,5 +141,32 @@
     #   qemu-system-xtensa qemu-xtensa qemu-system-xtensaeb qemu-xtensaeb
     #   ......
     qemu
+
+    # Mayuri Spec
+    nixos-shell
+    # virt-manager-qt
+    virt-viewer
+
+    distrobox
+
+    gnome-boxes
+
+    spice
+    spice-gtk
+    spice-protocol
+    win-spice
+
+    virtio-win
+
+    edk2
+    edk2-uefi-shell
+
+    x11docker
+
+    virtiofsd
+
+    dmg2img
+
+    # winboat.winboat
   ];
 }

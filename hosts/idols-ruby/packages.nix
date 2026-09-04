@@ -85,7 +85,8 @@
       codex
       cursor-cli
       claude-code
-      opencode
+      # opencode
+      pkgs.opencode
       kimi-code
 
       # Utilities

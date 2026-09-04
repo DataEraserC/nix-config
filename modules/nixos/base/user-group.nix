@@ -1,6 +1,7 @@
 {
   myvars,
   config,
+  lib,
   ...
 }:
 {
@@ -26,7 +27,7 @@
 
   users.users."${myvars.username}" = {
     # we have to use initialHashedPassword here when using tmpfs for /
-    inherit (myvars) initialHashedPassword;
+    inherit (myvars) initialHashedPassword hashedPassword;
     home = "/home/${myvars.username}";
     isNormalUser = true;
     extraGroups = [
@@ -38,6 +39,14 @@
       "adbusers" # android debugging
       "libvirtd" # virt-viewer / qemu
       "fileshare"
+
+      "disk"
+      "vboxusers"
+      "kvm"
+      "warp"
+      "ollama"
+      "open-webui"
+      "input" # input for bongocat
     ];
   };
 

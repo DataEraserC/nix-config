@@ -1,4 +1,10 @@
-{ config, pkgs, ... }:
+{
+  config,
+  pkgs,
+  mylib,
+  nur-DataEraserC,
+  ...
+}:
 {
   catppuccin.fcitx5.enable = false;
   xdg.configFile = {
@@ -9,7 +15,7 @@
       force = true;
     };
     "mozc/config1.db".source =
-      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/home/linux/gui/base/fcitx5/mozc-config1.db";
+      mylib.mklinkRelativeToRoot config "home/linux/gui/base/fcitx5/mozc-config1.db";
   };
 
   i18n.inputMethod = {
@@ -22,7 +28,13 @@
 
       # Chinese
       fcitx5-rime # for flypy chinese input method
-      # fcitx5-chinese-addons # we use rime instead
+      qt6Packages.fcitx5-chinese-addons # we use rime instead
+
+      # Chinese Word Dictionaries
+      fcitx5-material-color
+      fcitx5-pinyin-moegirl
+      fcitx5-pinyin-zhwiki
+      nur-DataEraserC.packages.${pkgs.system}.fcitx5-pinyin-CustomPinyinDictionary
 
       # Japanese
       # ctrl-i / F7 - convert to takakana

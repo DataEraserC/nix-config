@@ -1,3 +1,5 @@
+# WARN: do not use this file
+# Use nixos_agenix.nix or nixos_sopsnix.nix
 {
   lib,
   config,
@@ -30,6 +32,10 @@ let
   user_readable = {
     mode = "0500";
     owner = myvars.username;
+  };
+  MkPermAttr = username: mode: {
+    mode = mode;
+    owner = username;
   };
 in
 {
@@ -81,7 +87,8 @@ in
       assertions = [
         {
           # This expression should be true to pass the assertion
-          assertion = !(cfg.desktop.enable && enabledServerSecrets);
+          # WARNING: we bypass this on my secret bcs we only have a computer without surrounding facilities
+          assertion = !(cfg.desktop.enable && enabledServerSecrets) || true;
           message = "Enable either desktop or server's secrets, not both!";
         }
       ];
@@ -94,8 +101,8 @@ in
         # ---------------------------------------------
 
         # .age means the decrypted file is still encrypted by age(via a passphrase)
-        "ryan4yin-gpg-subkeys.priv.age" = {
-          file = "${mysecrets}/ryan4yin-gpg-subkeys-2024-01-27.priv.age.age";
+        "nix-gpg-subkeys.priv.age" = {
+          file = "${mysecrets}/nix-gpg-subkeys-2024-01-27.priv.age.age";
         }
         // noaccess;
 
@@ -121,11 +128,56 @@ in
         }
         // user_readable;
 
+        "gluttony" = {
+          file = "${mysecrets}/gluttony.age";
+        }
+        // user_readable;
+
+        "juliet-age" = {
+          file = "${mysecrets}/juliet-age.age";
+        }
+        // user_readable;
+
+        "idols-ai_id_rsa" = {
+          file = "${mysecrets}/idols-ai_id_rsa.age";
+        }
+        // user_readable;
+
+        "idols-ai_id_ed25519" = {
+          file = "${mysecrets}/idols-ai_id_ed25519.age";
+        }
+        // user_readable;
+
         # alias-for-work
         "alias-for-work.nushell" = {
           file = "${mysecrets}/alias-for-work.nushell.age";
         }
         // user_readable;
+        "alias-for-work.bash" = {
+          file = "${mysecrets}/alias-for-work.bash.age";
+        }
+        // user_readable;
+        # I do not have server for router request so I use dae locally
+        "clash.dae" = {
+          file = "${mysecrets}/clash.dae.age";
+        }
+        // high_security;
+        "dae.dae" = {
+          file = "${mysecrets}/dae.dae.age";
+        }
+        // high_security;
+        "dae-subscription.dae" = {
+          file = "${mysecrets}/server/dae-subscription.dae.age";
+        }
+        // high_security;
+        "cpolar.yml" = {
+          file = "${mysecrets}/cpolar.yml.age";
+        }
+        // (MkPermAttr "cpolar" "0700");
+        "alist-jwt" = {
+          file = "${mysecrets}/alist-jwt.age";
+        }
+        // (MkPermAttr "alist" "0700");
       };
 
       # place secrets in /etc/
@@ -140,8 +192,32 @@ in
           user = myvars.username;
         };
 
-        "agenix/ryan4yin-gpg-subkeys.priv.age" = {
-          source = config.age.secrets."ryan4yin-gpg-subkeys.priv.age".path;
+        "agenix/gluttony" = {
+          source = config.age.secrets."gluttony".path;
+          mode = "0600";
+          user = myvars.username;
+        };
+
+        "agenix/juliet-age" = {
+          source = config.age.secrets."juliet-age".path;
+          mode = "0600";
+          user = myvars.username;
+        };
+
+        "agenix/idols-ai_id_rsa" = {
+          source = config.age.secrets."idols-ai_id_rsa".path;
+          mode = "0600";
+          user = myvars.username;
+        };
+
+        "agenix/idols-ai_id_ed25519" = {
+          source = config.age.secrets."idols-ai_id_ed25519".path;
+          mode = "0600";
+          user = myvars.username;
+        };
+
+        "agenix/nix-gpg-subkeys.priv.age" = {
+          source = config.age.secrets."nix-gpg-subkeys.priv.age".path;
           mode = "0000";
         };
 

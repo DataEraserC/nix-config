@@ -1,4 +1,5 @@
 {
+  config,
   lib,
   pkgs,
   ...
@@ -7,7 +8,7 @@
 #
 # NetBird - your own private network(VPN) that uses WireGuard, Coturn, etc.
 #
-# It's similar to tailscale, but netbird's more opensouse and less mature.
+# It's similar to tailscale, but netbird's more opensource and less mature.
 #
 # NetBird natively supports running multiple clients on the same host — something
 #   Tailscale can’t do easily.

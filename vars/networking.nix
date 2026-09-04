@@ -1,10 +1,10 @@
 { lib }:
 rec {
-  mainGateway = "192.168.5.1"; # main router
+  mainGateway = "192.168.0.1"; # main router
   mainGateway6 = "fe80::5"; # main router's link-local address
   # use suzi as the default gateway
   # it's a subrouter with a transparent proxy
-  proxyGateway = "192.168.5.178";
+  proxyGateway = "192.168.0.178";
   proxyGateway6 = "fe80::8";
   nameservers = [
     # IPv4
@@ -18,7 +18,7 @@ rec {
   ];
   prefixLength = 24;
 
-  hostsAddr = {
+  hostsAddr = rec {
     # ============================================
     # Homelab's Physical Machines (KubeVirt Nodes)
     # ============================================
@@ -38,12 +38,28 @@ rec {
     # ============================================
     # Other VMs and Physical Machines
     # ============================================
-    ai = {
-      # Desktop PC
-      iface = "enp130s0";
-      ipv4 = "192.168.5.100";
-      ipv6 = "fe80::10"; # Link-local Address
+    # ai = {
+    #   # Desktop PC
+    #   iface = "enp130s0";
+    #   ipv4 = "192.168.5.100";
+    #   ipv6 = "fe80::10"; # Link-local Address
+    # };
+    y9000p2025 = {
+      # Laptop - physical home network interface
+      iface = "wlp130s0";
+      ipv4 = "192.168.2.150";
+      ipv6 = "fe80::150"; # Link-local Address
     };
+    idols-ai = y9000p2025;
+    ai = y9000p2025;
+    wsl-y9000p2025 = y9000p2025;
+    work = {
+      # Work Laptop - physical home network interface
+      iface = "wlp130s0";
+      ipv4 = "192.168.2.150";
+      ipv6 = "fe80::150"; # Link-local Address
+    };
+    wsl-work = work;
     # akane = {
     #   # VM (running in macOS's UTM App), using DHCP instead of static ip.
     #   iface = "enp0s1";
@@ -159,6 +175,36 @@ rec {
     };
   };
 
+  # VPN interfaces grouped by physical device (not in hostsAddr since they are virtual overlays)
+  vpnInterfaces = {
+    y9000p2025 = {
+      zerotier = {
+        iface = "zt5u4z6wb4";
+        ipv4 = "10.147.20.150";
+        ipv6 = "fe80::150";
+      };
+      tailscale = {
+        iface = "tailscale0";
+        ipv4 = "100.95.92.150";
+        ipv6 = "fe80::150";
+      };
+    };
+  };
+
+  # EasyTier - decentralized P2P VPN overlay network addresses
+  # NOTE: network_name and network_secret are stored as agenix secrets (easytier.env)
+  # and injected via environmentFiles in the easytier module.
+  easytier = {
+    instances = rec {
+      idols-ai = "10.126.126.150/24";
+      ai = idols-ai;
+      wsl-work = "10.126.126.170/24";
+      work = wsl-work;
+      apatch-infiniti = "10.126.126.154/24";
+      infiniti = apatch-infiniti;
+    };
+  };
+
   hostsInterface = lib.attrsets.mapAttrs (key: val: {
     interfaces."${val.iface}" = {
       useDHCP = false;
@@ -220,4 +266,19 @@ rec {
             "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
         };
   };
+  genericHosts = ''
+    155.248.179.129 oracle_ubuntu_1.mayuri.org
+
+    10.147.20.151 mondrian_android_cli_zerotier.mayuri.org
+    100.95.92.151 mondrian_android_cli_tailscale.mayuri.org
+
+    10.147.20.153 pstar_android_cli_zerotier.mayuri.org
+    100.95.92.153 pstar_android_cli_tailscale.mayuri.org
+
+    10.147.20.154 infiniti_android_cli_zerotier.mayuri.org
+    100.95.92.154 infiniti_android_cli_tailscale.mayuri.org
+
+    10.147.20.150 y9000p2025_nixos_zerotier.mayuri.org
+    100.95.92.150 y9000p2025_nixos_tailscale.mayuri.org
+  '';
 }

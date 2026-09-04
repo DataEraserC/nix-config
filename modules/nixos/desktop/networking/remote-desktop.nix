@@ -1,12 +1,21 @@
 {
   lib,
   pkgs,
+  oray-tools,
   ...
 }:
 {
-  environment.systemPackages = with pkgs; [
-    moonlight-qt # moonlight client, for streaming games/desktop from a PC
-  ];
+  environment.systemPackages =
+    with pkgs;
+    [
+      novnc # vnc client webui
+      wayvnc # vnc server for wayland
+      moonlight-qt # moonlight client, for streaming games/desktop from a PC
+      waypipe # transparent proxy for remote Wayland apps over SSH (e.g. ssh -R <port> waypipe ssh <remote> wayland-app)
+    ]
+    ++ [
+      oray-tools.packages.${pkgs.system}.default
+    ];
 
   # ===============================================================================
   #
@@ -38,10 +47,12 @@
       capture = "wlr";
       # pc  - Only localhost may access the web ui
       # lan - Only LAN devices may access the web ui
-      origin_web_ui_allowed = "pc";
+      origin_web_ui_allowed = "any";
       # 2   -	encryption is mandatory and unencrypted connections are rejected
       lan_encryption_mode = 2;
       wan_encryption_mode = 2;
     };
   };
+  # services.todesk.enable = true;
+  # services.meshcentral.enable = true;
 }

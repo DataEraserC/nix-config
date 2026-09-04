@@ -1,6 +1,9 @@
+.vscode
 .Trash-1000/
 result
 result/
+result*
+result*/
 .direnv/
 .worktrees/
 .DS_Store
@@ -10,6 +13,14 @@ core*
 !core/
 !core.nix
 !coredns*
+tmp/
+secrets/
+!secrets/README.md
+!secrets/darwin.nix
+!secrets/nixos.nix
+mysql/
+.Trash-*/
+./*.patch
 
 # =============== Python.gitignore ===========================
 

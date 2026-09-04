@@ -7,6 +7,11 @@
 }:
 let
   inherit (myvars) username;
+  makeDirRW = dir: dir;
+  # makeDirRW = dir: {
+  #   directory = dir;
+  #   configureParent = true;
+  # };
 in
 {
   imports = [
@@ -72,7 +77,7 @@ in
       "/var/lib/lxc"
       "/var/lib/lxd"
       "/var/lib/qemu"
-      # "/var/lib/waydroid"
+      "/var/lib/waydroid"
 
       # network
       "/var/lib/bluetooth"
@@ -80,7 +85,48 @@ in
       "/var/lib/iwd"
       "/var/lib/tailscale"
       "/var/lib/netbird-homelab" # netbird's homelab client
+      "/var/lib/pgyvpn" # Oray PgyVisitor state
       "/etc/netbird-homelab"
+
+      # Mayuri spec
+
+      # zerotier
+      "/var/lib/zerotier-one"
+
+      # alist
+      "/var/lib/openlist"
+      # daed
+      "/etc/daed/"
+
+      # ccache
+      "/var/cache/ccache"
+
+      # for android sign
+      # TODO: move to agenix/sop
+      "/etc/secrets/android-keys"
+
+      # for pve-nixos
+      "/var/lib/pve-cluster"
+
+      {
+        directory = "/var/lib/gnome-remote-desktop";
+        user = "gnome-remote-desktop";
+        group = "gnome-remote-desktop";
+        mode = "0755";
+      }
+      {
+        directory = "/etc/gnome-remote-desktop";
+        user = "gnome-remote-desktop";
+        group = "gnome-remote-desktop";
+        mode = "0755";
+      }
+
+      # shared sunshine identity data (see hosts/idols-ai/sunshine.nix)
+      {
+        directory = "/var/lib/sunshine";
+        group = "sunshine";
+        mode = "2770";
+      }
     ];
     files = [
       # auto-generated machine ID
@@ -106,6 +152,9 @@ in
         "Pictures"
         "Documents"
         "Videos"
+        "Templates"
+
+        ".gnome"
 
         # Keep .cache off tmpfs to avoid high RAM usage; many apps use it and it is storage-heavy.
         ".cache"
@@ -144,6 +193,9 @@ in
         # vscode
         ".vscode"
         ".config/Code"
+        ".vscode-insiders"
+        ".config/Code - Insiders"
+        ".config/vscode-sqltools"
 
         # zed
         ".config/zed"
@@ -163,6 +215,9 @@ in
         ".config/opencode"
         ".local/share/opencode"
         ".local/state/opencode"
+
+        # pi coding agent (sessions under ~/.pi/agent/sessions)
+        ".pi"
 
         ".context7" # up-to-date docs and code examples for for LLMs & agents
 
@@ -240,10 +295,11 @@ in
           directory = ".pki";
           mode = "0700";
         }
-        {
-          directory = ".local/share/password-store";
-          mode = "0700";
-        }
+        # {
+        #   # symlinked to ${mysecrets}/PasswordStore, no need to preserve
+        #   directory = ".local/share/password-store";
+        #   mode = "0700";
+        # }
         {
           # gnmome keyrings
           directory = ".local/share/keyrings";
@@ -266,11 +322,19 @@ in
         ".config/heroic"
         ".config/lutris"
         ".local/share/lutris"
-
+        ".local/share/wine/drive_c/users/${username}"
         ".local/share/tiled"
         ".local/share/GOG.com"
         ".local/share/StardewValley"
         ".local/share/feral-interactive"
+
+        # ======================================
+        # Instant Messaging
+        # ======================================
+        ".config/QQ"
+
+        ".local/share/TelegramDesktop"
+        ".local/share/AyuGramDesktop"
 
         # ======================================
         # Meeting / Remote Desktop / Recording
@@ -289,6 +353,8 @@ in
         ".mozilla"
         ".config/google-chrome"
         ".config/chromium"
+        ".config/google-chrome-unstable"
+        ".config/microsoft-edge"
 
         # ======================================
         # CLI data
@@ -336,6 +402,153 @@ in
         ".config/mozc" # used by fcitx5-mozc
 
         ".config/nushell"
+
+        # Mayuri Spec
+
+        # ======================================
+        # Apps
+        # ======================================
+
+        # piliplus
+        ".local/share/com.example.piliplus/"
+
+        # persist data for android studio
+        ".local/share/Google/"
+
+        ".local/share/DBeaverData/"
+
+        ".local/share/authenticator/"
+
+        (makeDirRW ".wine")
+        (makeDirRW ".winboat")
+        (makeDirRW ".minecraft")
+        (makeDirRW "GOG Games")
+
+        (makeDirRW "Apps") # some apps temporarily store at here
+
+        (makeDirRW ".config/Ryujinx")
+        (makeDirRW ".config/yuzu")
+        (makeDirRW ".config/suyu")
+        (makeDirRW ".config/lutris")
+        (makeDirRW ".config/gnome-boxes")
+        (makeDirRW "Android")
+        (makeDirRW ".android")
+        ".config/.android"
+        (makeDirRW "workspace")
+        (makeDirRW "eclipse-workspace")
+        (makeDirRW ".Genymobile")
+        (makeDirRW "AndroidStudioProjects")
+        (makeDirRW "IdeaProjects")
+        (makeDirRW ".jdks")
+
+        # persist gnome shell extensions clipboard-indicator
+        ".cache/clipboard-indicator@tudmotu.com"
+
+        # persist paired device data for gsconnect
+        # cert and key
+        ".config/gsconnect"
+
+        # nix-index
+        ".cache/nix-index"
+
+        (makeDirRW ".tldr")
+
+        # cisco packet tracer
+        (makeDirRW "pt")
+
+        # email clients profiles
+        (makeDirRW ".thunderbird")
+
+        # ServerBox
+        ".config/ServerBox"
+
+        (makeDirRW "BetterUniverse")
+
+        # clash
+        ".config/clash"
+        ".config/clash-verge"
+        ".config/clash-nyanpasu"
+        ".config/mihomo-party"
+        ".config/flclash"
+        # v2ray
+        ".config/qv2ray"
+        ".config/nekoray"
+        ".config/Throne"
+        # gg
+        ".config/gg"
+
+        # test niri
+        ".config/niri"
+
+        # ai related file dirs
+        (makeDirRW "invokeai")
+        (makeDirRW ".textgen")
+        ".config/LaphaeLaicmd"
+        ".config/aichat"
+        # NOTE: this can be remove bcs we use `services.ollama` which place files in `/var/lib/ollama` by default
+        ".ollama"
+        # NOTE: this can be remove bcs we use `services.open-webui` which place state files in `/var/lib/open-webui` by default
+        ".config/open-webui"
+        ".config/CherryStudio"
+        ".cache/huggingface"
+        ".lingma"
+
+        ".vmware"
+        "VirtualBox VMs"
+        ".config/VirtualBox"
+        ".config/lxc"
+        ".config/libvirt"
+
+        ".config/.cpolar"
+        ".config/oray-tools"
+        ".config/aDrive"
+        ".config/baidunetdisk"
+        ".config/wechat-devtools"
+        ".config/JetBrains"
+        ".config/io.hoppscotch.desktop"
+        ".config/ncmpcpp"
+        ".config/uGet"
+        ".config/Motrix"
+        ".config/sunshine"
+        ".config/icalingua"
+        ".config/MuseScore"
+        ".config/ghc"
+        ".config/Kingsoft"
+        ".config/libreoffice"
+        ".config/onlyoffice"
+        ".config/Genymobile"
+        # this is set to 0700
+        # ".config/gh"
+        ".config/go-musicfox"
+        ".config/GIMP"
+        ".config/anytype"
+        ".config/obs-studio"
+        ".config/kdeconnect"
+        ".config/DingTalk"
+        ".config/bilibili"
+        ".config/Google"
+        ".config/Moonlight Game Streaming Project"
+
+        # kde related
+        ".config/kdedefaults"
+
+        # Trash Bin(not work yet)
+        # https://github.com/nix-community/impermanence/issues/147
+
+        ".local/share/Trash"
+
+        ".cache/tlrc"
+
+        ".net/devtunnel"
+
+        # for nautilus pre dir config
+        ".local/share/gvfs-metadata"
+
+        # nvfetcher cache
+        (makeDirRW "_sources")
+
+        # Trash Bin
+        (makeDirRW ".Trash-1000")
       ];
       files = [
         {
@@ -353,6 +566,14 @@ in
         {
           file = ".claude.json";
           how = "bindmount";
+        }
+        {
+          file = ".condarc";
+          how = "symlink";
+        }
+        {
+          file = "nvfetcher.toml";
+          how = "symlink";
         }
       ];
     };

@@ -6,6 +6,7 @@
 }:
 {
   home.packages = with pkgs; [
+    docker-compose
     podman-compose
     dive # explore docker layers
     lazydocker # Docker terminal UI.
@@ -27,7 +28,7 @@
     istioctl
     clusterctl # for kubernetes cluster-api
     kubevirt # virtctl
-    pkgs-2505.kubernetes-helm
+    kubernetes-helm
     fluxcd
     # argocd
 
