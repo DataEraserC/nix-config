@@ -212,12 +212,8 @@ rec {
             exclude = "rime-data/";
           };
           # Vendored third-party content must stay byte-identical to upstream
-          # (noctalia plugin files are installed as-is; gsconnect-conf-persistent
-          # intentionally keeps upstream's spelling).
-          excludes = [
-            "home/linux/gui/base/noctalia/config/plugins"
-            "home/linux/gui/gnome-wayland/values/gsconnect-conf-persistent.nix"
-          ];
+          # (noctalia plugin files are installed as-is).
+          excludes = [ "home/linux/gui/base/noctalia/config/plugins" ];
         };
         prettier = {
           enable = true;

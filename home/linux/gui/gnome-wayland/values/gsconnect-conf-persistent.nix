@@ -1,7 +1,7 @@
 { config, pkgs, ... }:
 {
   # https://github.com/jz8132543/flakes/blob/3225d8f726da9a8980a7becc949f3f634927f926/home-manager/modules/desktop/gnome.nix#L293-L321
-  # NOTE: make sure dumpped gsconnect.dconf is persistent if you are using tmpfs as root
+  # NOTE: make sure dumped gsconnect.dconf is persistent if you are using tmpfs as root
   systemd.user.services.gsconnect-dconf = {
     Unit = {
       Description = "gsconnect-dconf";
