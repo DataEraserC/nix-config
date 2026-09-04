@@ -211,6 +211,13 @@ rec {
             configPath = ".typos.toml"; # relative to the flake root
             exclude = "rime-data/";
           };
+          # Vendored third-party content must stay byte-identical to upstream
+          # (noctalia plugin files are installed as-is; gsconnect-conf-persistent
+          # intentionally keeps upstream's spelling).
+          excludes = [
+            "home/linux/gui/base/noctalia/config/plugins"
+            "home/linux/gui/gnome-wayland/values/gsconnect-conf-persistent.nix"
+          ];
         };
         prettier = {
           enable = true;
@@ -218,6 +225,8 @@ rec {
             write = true; # Automatically format files
             configPath = ".prettierrc.yaml"; # relative to the flake root
           };
+          # Vendored third-party content must stay byte-identical to upstream.
+          excludes = [ "home/linux/gui/base/noctalia/config/plugins" ];
         };
         # deadnix.enable = true; # detect unused variable bindings in `*.nix`
         # statix.enable = true; # lints and suggestions for Nix code(auto suggestions)

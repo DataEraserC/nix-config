@@ -6,7 +6,7 @@
     "activeColor": {
       "desc": "Couleur des icônes lorsqu'elles sont actives.",
       "label": "Couleur d'icône active"
-    },
+    },  
     "hideInactive": {
       "desc": "Masquer les icônes du micro, de la caméra et de l’écran lorsqu’ils sont inactifs.",
       "label": "Masquer les états inactifs"
