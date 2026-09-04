@@ -45,10 +45,6 @@ rec {
     ./proxmox.nix
     ../../modules/nixos/desktop/networking/pgy.nix
     ../../modules/nixos/desktop/networking/easytier.nix
-    ../../modules/nixos/host-heartbeat.nix
-    ../../modules/nixos/network-event-notify.nix
-    ../../modules/nixos/cpolar-status.nix
-    ../../modules/nixos/offline-shutdown.nix
 
     # ./tpm_luks.nix
     ./dae.nix
@@ -117,7 +113,7 @@ rec {
   # Power off after staying offline for 30min(no access to the gateway or a
   # public host). Options here are the nix defaults; for temporary live tweaks
   # without a rebuild use `sudo offline-shutdown {disable|enable|grace|reset}`
-  # (changes reset on reboot). See modules/nixos/offline-shutdown.nix.
+  # (changes reset on reboot). See modules/nixos/base/offline-shutdown.nix.
   modules.offline-shutdown = {
     enable = true;
     targets = [

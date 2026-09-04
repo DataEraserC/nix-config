@@ -37,8 +37,6 @@ rec {
 
     ../../modules/nixos/desktop/networking/pgy.nix
     ../../modules/nixos/desktop/networking/easytier.nix
-    ../../modules/nixos/port-forwarding.nix
-    ../../modules/nixos/network-event-notify.nix
 
     # wsl related
   ];

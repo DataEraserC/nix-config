@@ -9,7 +9,7 @@
 #   warning(down), priority default(high for down), markdown body.
 #
 # Architecture note: the script's logic lives in
-# ./scripts/network-event-notify.sh as a plain shell file(no nix interpolation
+# ../scripts/network-event-notify.sh as a plain shell file(no nix interpolation
 # inside); config-dependent values are injected by a thin generated wrapper via
 # environment variables, then exec'd with the original NM arguments.
 {
@@ -22,7 +22,7 @@ let
   cfg = config.modules.network-event-notify;
 
   script = pkgs.writeShellScript "network-event-notify" (
-    builtins.readFile ./scripts/network-event-notify.sh
+    builtins.readFile ../scripts/network-event-notify.sh
   );
 
   # Thin NM dispatcher entry: injects environment, then execs the shared script

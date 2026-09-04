@@ -34,8 +34,6 @@ rec {
     # ./secureboot.nix
     # ./dae.nix
 
-    ../../modules/nixos/network-event-notify.nix
-
     # wsl related
   ];
 

@@ -64,13 +64,13 @@ let
       n * mul.${if unit == null then "s" else unit};
 
   script = pkgs.writeShellScript "offline-shutdown-check" (
-    builtins.readFile ./scripts/offline-shutdown-check.sh
+    builtins.readFile ../scripts/offline-shutdown-check.sh
   );
 
   # CLI for temporary runtime overrides(no rebuild). It only writes a file under
   # /run, so any change resets to the nix defaults on the next reboot.
   cli = pkgs.writeShellScriptBin "offline-shutdown" (
-    builtins.readFile ./scripts/offline-shutdown-cli.sh
+    builtins.readFile ../scripts/offline-shutdown-cli.sh
   );
 in
 {

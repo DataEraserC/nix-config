@@ -6,7 +6,7 @@
 # Notification metadata follows the repo-wide ntfy message spec:
 #   title "<host> · cpolar tunnels", tags "satellite_antenna", priority "low".
 #
-# Architecture note: the script's logic lives in ./scripts/cpolar-status-notify.sh
+# Architecture note: the script's logic lives in ../scripts/cpolar-status-notify.sh
 # as a plain shell file(no nix interpolation inside), all config-dependent values
 # are injected into the systemd unit via `environment`.
 #
@@ -31,7 +31,7 @@ let
   cpolarStatus = cpolar-status.packages.${pkgs.system}.default;
 
   script = pkgs.writeShellScript "cpolar-status-boot-notify" (
-    builtins.readFile ./scripts/cpolar-status-notify.sh
+    builtins.readFile ../scripts/cpolar-status-notify.sh
   );
 in
 {
