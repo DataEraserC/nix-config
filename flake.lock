@@ -1905,11 +1905,11 @@
         "nixpkgs-lib": "nixpkgs-lib_9"
       },
       "locked": {
-        "lastModified": 1788306937,
-        "narHash": "sha256-lbrI1UYVpFgKSsyrU9oeF7FHfnu8nLD9ja0ou9f2rxk=",
+        "lastModified": 1788450739,
+        "narHash": "sha256-glZLQlzIn1fXH6PazR2iUmTo7kzzyYSshrWhLS9TqCU=",
         "owner": "hercules-ci",
         "repo": "flake-parts",
-        "rev": "f16b25b8c3d2809b87925d0b76652d7821a75c68",
+        "rev": "31729ca8cbdb4fa927b34e5f4353e6a83f39e993",
         "type": "github"
       },
       "original": {
@@ -1941,11 +1941,11 @@
         "nixpkgs-lib": "nixpkgs-lib_11"
       },
       "locked": {
-        "lastModified": 1788306937,
-        "narHash": "sha256-lbrI1UYVpFgKSsyrU9oeF7FHfnu8nLD9ja0ou9f2rxk=",
+        "lastModified": 1788450739,
+        "narHash": "sha256-glZLQlzIn1fXH6PazR2iUmTo7kzzyYSshrWhLS9TqCU=",
         "owner": "hercules-ci",
         "repo": "flake-parts",
-        "rev": "f16b25b8c3d2809b87925d0b76652d7821a75c68",
+        "rev": "31729ca8cbdb4fa927b34e5f4353e6a83f39e993",
         "type": "github"
       },
       "original": {
@@ -2077,11 +2077,11 @@
         "nixpkgs-lib": "nixpkgs-lib_14"
       },
       "locked": {
-        "lastModified": 1788306937,
-        "narHash": "sha256-lbrI1UYVpFgKSsyrU9oeF7FHfnu8nLD9ja0ou9f2rxk=",
+        "lastModified": 1788450739,
+        "narHash": "sha256-glZLQlzIn1fXH6PazR2iUmTo7kzzyYSshrWhLS9TqCU=",
         "owner": "hercules-ci",
         "repo": "flake-parts",
-        "rev": "f16b25b8c3d2809b87925d0b76652d7821a75c68",
+        "rev": "31729ca8cbdb4fa927b34e5f4353e6a83f39e993",
         "type": "github"
       },
       "original": {
@@ -4595,10 +4595,10 @@
     "mysecrets": {
       "flake": false,
       "locked": {
-        "lastModified": 1788413265,
-        "narHash": "sha256-mAyq1RuMR8e+BhU/p6OIPqT5bq8UkX3GbYm2ozfatFo=",
+        "lastModified": 1788541702,
+        "narHash": "sha256-NLYQU8GU7TDzDtTNNt+oS+vKAh0ysYIg4Bg5DsrpfLM=",
         "ref": "refs/heads/master",
-        "rev": "406804030a24a75f899fc4fed5ebb90979b31e8b",
+        "rev": "966c71a058eb676a19c4384333a3b040d5d6fbc1",
         "shallow": true,
         "type": "git",
         "url": "file:////home/nixos/nix-config/secrets"
@@ -6490,11 +6490,11 @@
     },
     "nixpkgs_19": {
       "locked": {
-        "lastModified": 1788179007,
-        "narHash": "sha256-hn1oU2rue2SYK8dAr8+WNZWtbsz1S2W5mnHlSEuh3bo=",
+        "lastModified": 1785454630,
+        "narHash": "sha256-LQy14TZp77TwbQf40gg1V3jo8FwJG0jGDkAH+zRHqg8=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "34ab99075ac4f7e40cf037eef32cb1c360bb85e9",
+        "rev": "1559d3daa3ecc813a650b79375ea61b6741b8746",
         "type": "github"
       },
       "original": {
@@ -6957,11 +6957,11 @@
         "treefmt-nix": "treefmt-nix_6"
       },
       "locked": {
-        "lastModified": 1788427621,
-        "narHash": "sha256-z8uR6kKa8Iy4ifK9BITSMPDLsan+XquZcCqgJSi3HX8=",
+        "lastModified": 1788542619,
+        "narHash": "sha256-sPpxcEs+4bl5Nb1S2mQ2wUagzdnBzV6M8bxnCg5FLw0=",
         "owner": "DataEraserC",
         "repo": "nur-packages",
-        "rev": "809afe713d99d42ab9558f38bc379280c0d0557d",
+        "rev": "b2778700454af2884a9d4773097d3b44273f9755",
         "type": "github"
       },
       "original": {
@@ -7015,11 +7015,11 @@
         "treefmt-nix": "treefmt-nix_10"
       },
       "locked": {
-        "lastModified": 1788427621,
-        "narHash": "sha256-z8uR6kKa8Iy4ifK9BITSMPDLsan+XquZcCqgJSi3HX8=",
+        "lastModified": 1788542619,
+        "narHash": "sha256-sPpxcEs+4bl5Nb1S2mQ2wUagzdnBzV6M8bxnCg5FLw0=",
         "owner": "DataEraserC",
         "repo": "nur-packages",
-        "rev": "809afe713d99d42ab9558f38bc379280c0d0557d",
+        "rev": "b2778700454af2884a9d4773097d3b44273f9755",
         "type": "github"
       },
       "original": {
@@ -7864,11 +7864,11 @@
         "treefmt-nix": "treefmt-nix_17"
       },
       "locked": {
-        "lastModified": 1788427621,
-        "narHash": "sha256-z8uR6kKa8Iy4ifK9BITSMPDLsan+XquZcCqgJSi3HX8=",
+        "lastModified": 1788542619,
+        "narHash": "sha256-sPpxcEs+4bl5Nb1S2mQ2wUagzdnBzV6M8bxnCg5FLw0=",
         "owner": "DataEraserC",
         "repo": "nur-packages",
-        "rev": "809afe713d99d42ab9558f38bc379280c0d0557d",
+        "rev": "b2778700454af2884a9d4773097d3b44273f9755",
         "type": "github"
       },
       "original": {

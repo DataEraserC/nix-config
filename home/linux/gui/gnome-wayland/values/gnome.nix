@@ -14,6 +14,8 @@ in
     gsconnect
     kimpanel
     clipboard-indicator
+    mirror
+    pkgs.qrencode # required by pkgs.gnomeExtensions.mirror
 
     # dconf-editor
     pkgs.dconf-editor
@@ -33,6 +35,7 @@ in
         gsconnect.extensionUuid
         kimpanel.extensionUuid
         clipboard-indicator.extensionUuid
+        mirror.extensionUuid
       ];
     };
     settings."org/gnome/mutter" = {
