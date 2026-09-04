@@ -3,7 +3,10 @@ let
   mkSymlink = mylib.mklinkRelativeToRoot;
 in
 {
-  imports = [ ../../linux/gui.nix ];
+  imports = [
+    ../../linux/gui.nix
+    ./jetbrains.nix
+  ];
 
   programs.ssh.settings."github.com".identityFile =
     "${config.home.homeDirectory}/.ssh/idols-ai_id_ed25519";
