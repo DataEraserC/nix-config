@@ -11,24 +11,6 @@
 #
 ############################################################################
 
-ai-i3:
-	nixos-rebuild switch --flake .#ai-i3 --sudo
-
-s-i3:
-	nixos-rebuild switch --flake .#shoukei-i3 --sudo
-
-ai-hyprland:
-	nixos-rebuild switch --flake .#ai-hyprland --sudo
-
-s-hypr:
-	nixos-rebuild switch --flake .#shoukei-hyprland --sudo
-
-ai-i3-debug:
-	nixos-rebuild switch --flake .#ai-i3 --sudo --show-trace --verbose
-
-ai-hyprland-debug:
-	nixos-rebuild switch --flake .#ai-hyprland --sudo --show-trace --verbose
-
 up:
 	nix flake update
 
@@ -71,9 +53,6 @@ update_nur:
 niri:
 	NIXPKGS_ALLOW_BROKEN=1 NIXPKGS_ALLOW_INSECURE=1 NIXPKGS_ALLOW_UNFREE=1 nixos-rebuild switch --sudo --flake .#ai-niri --show-trace --verbose --impure
 
-hypr:
-	NIXPKGS_ALLOW_BROKEN=1 NIXPKGS_ALLOW_INSECURE=1 NIXPKGS_ALLOW_UNFREE=1 nixos-rebuild switch --sudo --flake .#ai-hyprland --show-trace --verbose --impure
-
 wsl:
 	NIXPKGS_ALLOW_BROKEN=1 NIXPKGS_ALLOW_INSECURE=1 NIXPKGS_ALLOW_UNFREE=1 nixos-rebuild switch --sudo --flake .#wsl-y9000p2025 --show-trace --verbose --impure
 
@@ -83,7 +62,7 @@ wsl-work:
 
 ############################################################################
 #
-#  Darwin related commands, harmonica is my macbook pro's hostname
+#  Darwin related commands
 #
 ############################################################################
 
@@ -93,14 +72,6 @@ darwin-set-proxy:
 
 darwin-rollback:
 	./result/sw/bin/darwin-rebuild rollback
-
-ha: darwin-set-proxy
-	nix build .#darwinConfigurations.harmonica.system
-	./result/sw/bin/darwin-rebuild switch --flake .#harmonica
-
-ha-debug: darwin-set-proxy
-	nom build .#darwinConfigurations.harmonica.system --show-trace --verbose
-	./result/sw/bin/darwin-rebuild switch --flake .#harmonica --show-trace --verbose
 
 fe: darwin-set-proxy
 	nix build .#darwinConfigurations.fern.system

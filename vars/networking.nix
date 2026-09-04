@@ -38,12 +38,6 @@ rec {
     # ============================================
     # Other VMs and Physical Machines
     # ============================================
-    # ai = {
-    #   # Desktop PC
-    #   iface = "enp130s0";
-    #   ipv4 = "192.168.5.100";
-    #   ipv6 = "fe80::10"; # Link-local Address
-    # };
     y9000p2025 = {
       # Laptop - physical home network interface
       iface = "wlp130s0";
