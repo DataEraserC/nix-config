@@ -11,15 +11,21 @@ let
   # desktop-tools.nix). Kept here instead of as a tracked .desktop so the Exec
   # path is resolved from the home-manager config rather than a machine-specific
   # repository path.
-  startupDesktop = pkgs.writeText "startup.desktop" ''
-    [Desktop Entry]
-    Type=Application
-    Name=Startup Script
-    Exec=${config.home.homeDirectory}/.config/scripts/startup
-    Hidden=false
-    NoDisplay=false
-    X-GNOME-Autostart-enabled=true
-  '';
+  #
+  # The script is niri/wlroots-oriented (mpd, wayvnc/novnc, sway-audio-idle-inhibit
+  # and friends), so it is only autostarted under the niri variant; GNOME and
+  # KDE sessions do not depend on this file.
+  startupDesktop = lib.optional config.modules.desktop.niri.enable (
+    pkgs.writeText "startup.desktop" ''
+      [Desktop Entry]
+      Type=Application
+      Name=Startup Script
+      Exec=${config.home.homeDirectory}/.config/scripts/startup
+      Hidden=false
+      NoDisplay=false
+      X-GNOME-Autostart-enabled=true
+    ''
+  );
 in
 {
   # XDG autostart entries. All of them are globally ordered after the
@@ -36,13 +42,12 @@ in
 
     "${pkgs-master.clash-verge-rev}/share/applications/clash-verge.desktop"
 
-    # Custom startup script
-    startupDesktop
-
     # nixpaks
     #"${pkgs.nixpaks.firefox}/share/applications/org.mozilla.firefox.desktop"
     #"${pkgs.nixpaks.telegram-desktop}/share/applications/org.telegram.desktop.desktop"
   ]
+  # Custom startup script (niri only)
+  ++ startupDesktop
   ++ (
     if pkgs.stdenv.hostPlatform.isx86_64 then
       [ "${pkgs.google-chrome}/share/applications/google-chrome.desktop" ]
