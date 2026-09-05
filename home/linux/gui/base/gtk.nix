@@ -17,7 +17,7 @@ let
   };
 in
 {
-  # If your themes for mouse cursor, icons or windows don’t load correctly,
+  # If your themes for mouse cursor, icons or windows don't load correctly,
   # try setting them with home.pointerCursor and gtk.theme,
   # which enable a bunch of compatibility options that should make the themes load in all situations.
 
@@ -25,16 +25,35 @@ in
     enable = true;
     gtk.enable = true;
     x11.enable = true;
-    # package = pkgs.bibata-cursors;
-    # name = "Bibata-Modern-Ice";
-    # NOTE: use catppuccin cursors for test
-    # package = nur-DataEraserC.packages.${pkgs.system}.xcursor-genshin-nahida;
-    # name = "xcursor-genshin-nahida";
-    size = 24;
+    package = nur-DataEraserC.packages.${pkgs.system}.sam-toki-mouse-cursors;
+    # Sam Toki Mouse Cursors. Switch by changing the name:
+    #   STMC_1_1_Standard              - Standard
+    #   STMC_1_2_Standard_White        - Standard White
+    #   STMC_1_3_Standard_Classic      - Standard Classic
+    #   STMC_1_7_Standard_Left_Handed  - Standard Left-Handed
+    #   STMC_2_1_45_Degree             - 45-Degree
+    #   STMC_2_2_45_Degree_White       - 45-Degree White
+    #   STMC_2_7_45_Degree_Left_Handed - 45-Degree Left-Handed
+    #   STMC_3_1_Genshin               - Genshin
+    #   STMC_3_2_Genshin_Elements      - Genshin Elements
+    #   STMC_3_7_Genshin_Left_Handed   - Genshin Left-Handed
+    #   STMC_4_1_Genshin_Nahida        - Genshin Nahida
+    #   STMC_4_7_Genshin_Nahida_Left_Handed - Genshin Nahida Left-Handed
+    #   STMC_5_1_BTR_Ahoge             - Bocchi the Rock (current)
+    #   STMC_5_2_BTR_Ahoge_Nijika      - BTR Nijika
+    #   STMC_5_3_BTR_Ahoge_Mix         - BTR Mix
+    #   STMC_5_7_BTR_Ahoge_Left_Handed - BTR Left-Handed
+    #   STMC_6_1_Genshin_Furina        - Genshin Furina
+    #   STMC_6_7_Genshin_Furina_Left_Handed - Genshin Furina Left-Handed
+    #   STMC_7_1_Silent_Witch          - Silent Witch
+    #   STMC_7_2_Silent_Witch_Alt      - Silent Witch Alt
+    #   STMC_7_7_Silent_Witch_Left_Handed - Silent Witch Left-Handed
+    name = "STMC_6_1_Genshin_Furina";
+    size = 32;
   };
 
-  catppuccin.cursors.enable = true;
-  catppuccin.cursors.accent = "dark";
+  # Disable catppuccin cursors to avoid conflict with sam-toki-mouse-cursors
+  catppuccin.cursors.enable = false;
 
   # set dpi for 4k monitor
   xresources.properties = {
