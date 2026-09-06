@@ -8,7 +8,7 @@
   home.packages =
     with pkgs;
     [
-      dbeaver-bin # database manager
+      # dbeaver-bin # database manager
       dbx.packages.${pkgs.stdenv.hostPlatform.system}.dbx-desktop
       # TODO: maybe we can move tui network tools to a better place
       traceroute # trace route
