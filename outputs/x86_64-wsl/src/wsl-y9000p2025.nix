@@ -99,6 +99,6 @@ in
 
   # generate iso image for hosts with desktop environment
   packages = {
-    "wsl-${name}" = inputs.self.nixosConfigurations."wsl-${name}".config.formats.iso;
+    "wsl-${name}" = inputs.self.nixosConfigurations."wsl-${name}".config.system.build.images.iso;
   };
 }

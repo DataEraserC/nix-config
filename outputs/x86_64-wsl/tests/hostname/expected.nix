@@ -5,6 +5,7 @@
 let
   specialExpected = {
     "wsl-y9000p2025" = "y9000p2025";
+    "wsl-work" = "work";
   };
   specialHostNames = builtins.attrNames specialExpected;
 
