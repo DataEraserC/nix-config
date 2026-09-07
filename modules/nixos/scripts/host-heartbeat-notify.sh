@@ -37,10 +37,42 @@ if [ -z "$UP" ]; then
   UP="$(uptime 2>/dev/null)"
 fi
 
+# power state(AC/battery + capacity), omitted when the host has no battery
+POWER_LINE=""
+mains_online=""
+for dev in /sys/class/power_supply/*; do
+  [ -d "$dev" ] || continue
+  [ "$(cat "$dev/type" 2>/dev/null)" = "Mains" ] || continue
+  mains_online="$(cat "$dev/online" 2>/dev/null)"
+  break
+done
+capacity=""
+for dev in /sys/class/power_supply/*; do
+  [ -d "$dev" ] || continue
+  [ "$(cat "$dev/type" 2>/dev/null)" = "Battery" ] || continue
+  capacity="$(cat "$dev/capacity" 2>/dev/null)"
+  [ -n "$capacity" ] && break
+done
+if [ -n "$mains_online" ] || [ -n "$capacity" ]; then
+  if [ "$mains_online" = "1" ]; then
+    POWER_LINE="**Power** AC"
+  else
+    POWER_LINE="**Power** battery"
+  fi
+  if [ -n "$capacity" ]; then
+    POWER_LINE="$POWER_LINE (${capacity}%)"
+  fi
+fi
+POWER_BLOCK=""
+if [ -n "$POWER_LINE" ]; then
+  POWER_BLOCK="
+$POWER_LINE"
+fi
+
 MSG="**Host** ${HOST_NAME} (${USER_NAME})
 **State** alive
 **Uptime** ${UP:-unknown}
-**Time** $NOW"
+**Time** $NOW$POWER_BLOCK"
 
 # --------------------------------------------------------------------
 # network info(per-interface IPv4/IPv6 + public IP)

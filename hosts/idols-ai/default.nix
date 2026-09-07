@@ -103,6 +103,12 @@ rec {
     username = myvars.username;
   };
 
+  # ntfy warnings when the AC power supply is unplugged/restored(udev-driven)
+  modules.power-event-notify = {
+    enable = true;
+    inherit hostName;
+  };
+
   # one-shot cpolar tunnel status report after boot
   modules.cpolar-status = {
     enable = true;
