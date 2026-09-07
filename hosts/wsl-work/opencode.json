@@ -6,7 +6,7 @@
       "npm": "@ai-sdk/openai-compatible",
       "name": "AgentRouter (OpenAI Compatible)",
       "options": {
-        "baseURL": "https://agentrouter.org/v1",
+        "baseURL": "https://ps.air-outer.com/v1",
         "apiKey": "{env:AGENTROUTER_API_KEY}"
       },
       "models": {
@@ -31,7 +31,7 @@
       "npm": "@ai-sdk/anthropic",
       "name": "AgentRouter (Anthropic)",
       "options": {
-        "baseURL": "https://agentrouter.org",
+        "baseURL": "https://ps.air-outer.com",
         "apiKey": "{env:AGENTROUTER_API_KEY}"
       },
       "models": {

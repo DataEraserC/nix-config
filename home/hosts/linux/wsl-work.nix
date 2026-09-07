@@ -76,7 +76,7 @@
     models = {
       providers = {
         agentrouter-openai = {
-          baseUrl = "https://agentrouter.org/v1";
+          baseUrl = "https://ps.air-outer.com/v1";
           api = "openai-completions";
           apiKey = "$AGENTROUTER_API_KEY";
           models = [
@@ -103,7 +103,7 @@
           ];
         };
         agentrouter-anthropic = {
-          baseUrl = "https://agentrouter.org";
+          baseUrl = "https://ps.air-outer.com";
           api = "anthropic-messages";
           apiKey = "$AGENTROUTER_API_KEY";
           models = [
