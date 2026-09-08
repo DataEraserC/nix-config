@@ -11,6 +11,7 @@
     ../desktop/appcast.nix
     ../base/i18n.nix
     ../base/user-group.nix
+    ./apparmor-workaround.nix
 
     # ./vscode-remote-workaround.nix
   ];
