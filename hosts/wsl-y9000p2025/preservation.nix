@@ -196,6 +196,9 @@ in
         ".vscode-insiders"
         ".config/Code - Insiders"
         ".config/vscode-sqltools"
+        # remote-ssh server install cache; persisted so it is not re-downloaded
+        # (and re-patched by auto-fix-vscode-server) after every reboot.
+        ".vscode-server"
 
         # zed
         ".config/zed"
@@ -341,6 +344,7 @@ in
         # ======================================
         ".zoom"
         ".config/obs-studio"
+        ".config/Moonlight Game Streaming Project"
         ".config/sunshine"
         ".config/freerdp"
 
