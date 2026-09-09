@@ -422,9 +422,11 @@ in
         ".local/share/DBeaverData/"
 
         ".local/share/authenticator/"
+        ".local/share/hmcl" # HMCL launcher shared accounts/config
 
         (makeDirRW ".wine")
         (makeDirRW ".winboat")
+        (makeDirRW ".hmcl") # HMCL launcher accounts/config
         (makeDirRW ".minecraft")
         (makeDirRW "GOG Games")
 
