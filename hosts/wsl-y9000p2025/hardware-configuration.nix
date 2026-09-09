@@ -20,6 +20,9 @@
   # This enables the kernel to preload the emulator binaries when the binfmt registrations are added,
   # obviating the need to make the emulator binaries available inside chroots and chroot-like sandboxes.
   boot.binfmt.preferStaticEmulators = true; # required to work with podman
+  # NOTE: systemd-binfmt.service will fail on WSL with "Read-only file system" because
+  # /proc/sys/fs/binfmt_misc is read-only. This is benign and does not affect functionality.
+  # See: https://github.com/microsoft/WSL/issues/41226#issuecomment-5175341738
 
   # supported file systems, so we can mount any removable disks with these filesystems
   boot.supportedFilesystems = [

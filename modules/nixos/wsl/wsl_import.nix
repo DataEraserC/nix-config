@@ -16,6 +16,20 @@
     # ./vscode-remote-workaround.nix
   ];
 
+  # WSL has no wireless hardware, disable wpa_supplicant
+  networking.wireless.enable = lib.mkForce false;
+
+  # Service accounts required by agenix secrets (cpolar.yml, alist-jwt)
+  users.users.alist = {
+    isSystemUser = true;
+    group = "nogroup";
+  };
+  users.users.cpolar = {
+    isSystemUser = true;
+    group = "cpolar";
+  };
+  users.groups.cpolar = { };
+
   # The OpenSSH agent remembers private keys for you
   # so that you don’t have to type in passphrases every time you make an SSH connection.
   # Use `ssh-add` to add a key to the agent.

@@ -22,7 +22,7 @@
 
   programs.appimage = {
     enable = true;
-    binfmt = true;
+    binfmt = lib.mkDefault true;
   };
 
   # https://github.com/Mic92/nix-ld
