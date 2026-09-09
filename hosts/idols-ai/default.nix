@@ -118,9 +118,9 @@ rec {
 
   # Power off after staying offline for 30min(no access to the gateway or a
   # public host). Options here are the nix defaults; for temporary live tweaks
-  # without a rebuild use `sudo offline-shutdown {disable|enable|grace|reset}`
-  # (changes reset on reboot). See modules/nixos/base/offline-shutdown.nix.
-  modules.offline-shutdown = {
+  # without a rebuild use `sudo auto-shutdown {disable|enable|grace|reset}`
+  # (changes reset on reboot). See modules/nixos/base/auto-shutdown.nix.
+  modules.auto-shutdown = {
     enable = true;
     targets = [
       myvars.networking.mainGateway

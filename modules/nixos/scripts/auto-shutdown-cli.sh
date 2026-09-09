@@ -1,28 +1,28 @@
 #!/usr/bin/env bash
 # ===============================================================================
 #
-# offline-shutdown: temporarily tweak the auto-power-off behavior WITHOUT a nix
-# rebuild. Writes /run/offline-shutdown/override.env, which the
-# offline-shutdown.service re-reads on every tick. Because the file lives under
+# auto-shutdown: temporarily tweak the auto-power-off behavior WITHOUT a nix
+# rebuild. Writes /run/auto-shutdown/override.env, which the
+# auto-shutdown.service re-reads on every tick. Because the file lives under
 # /run(tmpfs), every change is reset to the nix-declared defaults on reboot.
 #
 # Usage:
-#   offline-shutdown status                      show current override & state
-#   offline-shutdown enable                      re-enable (undo a disable)
-#   offline-shutdown disable                     disable until the next reboot
-#   offline-shutdown grace <span>                e.g. 45min / 2h / 3600 (seconds)
-#   offline-shutdown reset                       drop the override file entirely
+#   auto-shutdown status                      show current override & state
+#   auto-shutdown enable                      re-enable (undo a disable)
+#   auto-shutdown disable                     disable until the next reboot
+#   auto-shutdown grace <span>                e.g. 45min / 2h / 3600 (seconds)
+#   auto-shutdown reset                       drop the override file entirely
 #
 # Examples:
-#   sudo offline-shutdown disable                # tonight, don't auto power off
-#   sudo offline-shutdown grace 1h               # power off only after 1h offline
+#   sudo auto-shutdown disable                # tonight, don't auto power off
+#   sudo auto-shutdown grace 1h               # power off only after 1h offline
 # ===============================================================================
 
 set -euo pipefail
 
-STATE_DIR=/run/offline-shutdown
+STATE_DIR=/run/auto-shutdown
 OVERRIDE_FILE="$STATE_DIR/override.env"
-STATE_FILE="$STATE_DIR/offline-since"
+STATE_FILE="$STATE_DIR/failing-since"
 
 span_to_seconds() {
   local span="$1"
@@ -52,8 +52,8 @@ read_override() {
     # shellcheck disable=SC1090
     while IFS='=' read -r _key _val; do
       case "$_key" in
-        OFFLINE_SHUTDOWN_ENABLED) _enabled="$_val" ;;
-        OFFLINE_SHUTDOWN_GRACE_SECONDS) _grace="$_val" ;;
+        AUTO_SHUTDOWN_ENABLED) _enabled="$_val" ;;
+        AUTO_SHUTDOWN_GRACE_SECONDS) _grace="$_val" ;;
       esac
     done < "$OVERRIDE_FILE"
   fi
@@ -64,10 +64,10 @@ write_override() {
   local out="$STATE_DIR/.override.env.tmp"
   : >"$out"
   if [ "$_enabled" = "0" ]; then
-    printf 'OFFLINE_SHUTDOWN_ENABLED=%s\n' "$_enabled" >>"$out"
+    printf 'AUTO_SHUTDOWN_ENABLED=%s\n' "$_enabled" >>"$out"
   fi
   if [ -n "$_grace" ]; then
-    printf 'OFFLINE_SHUTDOWN_GRACE_SECONDS=%s\n' "$_grace" >>"$out"
+    printf 'AUTO_SHUTDOWN_GRACE_SECONDS=%s\n' "$_grace" >>"$out"
   fi
   # nothing overridden -> drop the file so status reports "none"
   if [ ! -s "$out" ]; then
@@ -92,9 +92,9 @@ cmd_status() {
     local since elapsed
     since=$(cat "$STATE_FILE")
     elapsed=$(( $(date +%s) - since ))
-    echo "  offline:  ${elapsed}s (counting since boot/toggle)"
+    echo "  failing:  ${elapsed}s (counting since boot/toggle)"
   else
-    echo "  offline:  not counting (online or freshly booted)"
+    echo "  failing:  not counting (conditions OK or freshly booted)"
   fi
 }
 
@@ -103,7 +103,7 @@ cmd_enable() {
   _enabled=1
   write_override
   rm -f "$STATE_FILE"
-  echo "offline-shutdown enabled (runtime override, until next reboot)"
+  echo "auto-shutdown enabled (runtime override, until next reboot)"
 }
 
 cmd_disable() {
@@ -111,16 +111,16 @@ cmd_disable() {
   _enabled=0
   write_override
   rm -f "$STATE_FILE"
-  echo "offline-shutdown disabled (runtime override, until next reboot)"
+  echo "auto-shutdown disabled (runtime override, until next reboot)"
 }
 
 cmd_grace() {
   local seconds
-  seconds=$(span_to_seconds "${1:?usage: offline-shutdown grace <span>}")
+  seconds=$(span_to_seconds "${1:?usage: auto-shutdown grace <span>}")
   read_override
   _grace="$seconds"
   write_override
-  echo "offline-shutdown grace set to ${seconds}s (runtime override, until next reboot)"
+  echo "auto-shutdown grace set to ${seconds}s (runtime override, until next reboot)"
 }
 
 cmd_reset() {
@@ -129,7 +129,7 @@ cmd_reset() {
 }
 
 if [ "$(id -u)" -ne 0 ]; then
-  echo "offline-shutdown: needs root to write ${OVERRIDE_FILE}; re-run with sudo" >&2
+  echo "auto-shutdown: needs root to write ${OVERRIDE_FILE}; re-run with sudo" >&2
   exit 1
 fi
 
@@ -142,7 +142,7 @@ case "$cmd" in
   grace) cmd_grace "${1:-}" ;;
   reset) cmd_reset ;;
   *)
-    echo "usage: offline-shutdown {status|enable|disable|grace <span>|reset}" >&2
+    echo "usage: auto-shutdown {status|enable|disable|grace <span>|reset}" >&2
     exit 1
     ;;
 esac
