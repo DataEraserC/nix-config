@@ -2,7 +2,6 @@
   pkgs,
   pkgs-latest,
   nur-ataraxiasjel,
-  winboat,
   # nur-ataraxiasjel,
   ...
 }:
@@ -167,6 +166,6 @@
 
     dmg2img
 
-    # winboat.winboat
+    winboat
   ];
 }
