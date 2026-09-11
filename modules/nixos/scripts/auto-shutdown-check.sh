@@ -13,12 +13,18 @@
 # Effective settings resolution (highest priority last):
 #   1. nix-declared defaults, injected via systemd `environment`:
 #        CONDITIONS       space separated list of condition executables
+#        CONDITION_NAMES  space separated labels matching CONDITIONS(for logs)
 #        MODE             how the conditions are combined: all|any
 #        GRACE_SECONDS    duration(seconds) in the shutdown-worthy state
 #                         after which we power off
+#        VERBOSE          1 logs every condition result + verdict each tick
 #   2. runtime override file(if present):
 #        AUTO_SHUTDOWN_ENABLED           0 disables, 1 enables(default)
 #        AUTO_SHUTDOWN_GRACE_SECONDS     overrides GRACE_SECONDS
+#
+# Logs go to the journal(`journalctl -u auto-shutdown`). State transitions and
+# the final power-off are always logged; per-condition results only when
+# VERBOSE=1.
 #
 # The override file lives under /run(tmpfs), so any runtime tweak made with the
 # `auto-shutdown` command is temporary and reverts to the nix defaults after a
@@ -41,7 +47,15 @@ OVERRIDE_FILE="$STATE_DIR/override.env"
 
 # --- defaults from nix ------------------------------------------------------
 GRACE_SECONDS="${GRACE_SECONDS:-1800}"
+VERBOSE="${VERBOSE:-0}"
 ENABLED=1
+
+# verbose-only logging helper(state transitions/poweroff use plain echo below)
+log() {
+  if [ "$VERBOSE" = "1" ]; then
+    echo "auto-shutdown: $*"
+  fi
+}
 
 # --- load runtime override (temporary, reboot-reset) ------------------------
 if [ -r "$OVERRIDE_FILE" ]; then
@@ -71,29 +85,45 @@ fi
 is_ok() {
   # no conditions configured -> always OK, never power off
   if [ -z "${CONDITIONS:-}" ]; then
+    log "no conditions configured -> OK (never powers off)"
     return 0
   fi
 
   local mode="${MODE:-all}"
-  local cond
-  if [ "$mode" = "any" ]; then
-    # at least one passing condition keeps the machine on
-    for cond in $CONDITIONS; do
-      if "$cond" >/dev/null 2>&1; then
-        return 0
-      fi
-    done
-    echo "auto-shutdown: all conditions failing (mode=any)" >&2
-    return 1
-  fi
-  # mode=all: every condition must pass
-  for cond in $CONDITIONS; do
-    if ! "$cond" >/dev/null 2>&1; then
-      echo "auto-shutdown: condition '$cond' failing (mode=all)" >&2
-      return 1
+  local -a conds names
+  read -r -a conds <<<"$CONDITIONS"
+  read -r -a names <<<"${CONDITION_NAMES:-}"
+
+  # run every condition so the log shows all results, not just until the first
+  # short-circuit; the number of checks is small and runs at most once per tick.
+  local total="${#conds[@]}"
+  local passed=0 i cond name
+  for i in "${!conds[@]}"; do
+    cond="${conds[$i]}"
+    name="${names[$i]:-$cond}"
+    if "$cond" >/dev/null 2>&1; then
+      passed=$((passed + 1))
+      log "[ok]   $name"
+    else
+      log "[fail] $name"
     fi
   done
-  return 0
+
+  if [ "$mode" = "any" ]; then
+    if [ "$passed" -gt 0 ]; then
+      log "verdict: OK (${passed}/${total} passed, mode=any)"
+      return 0
+    fi
+    log "verdict: shutdown-worthy (${passed}/${total} passed, mode=any)"
+    return 1
+  fi
+
+  if [ "$passed" -eq "$total" ]; then
+    log "verdict: OK (${passed}/${total} passed, mode=all)"
+    return 0
+  fi
+  log "verdict: shutdown-worthy (${passed}/${total} passed, mode=all)"
+  return 1
 }
 
 now() {
@@ -104,6 +134,9 @@ mkdir -p "$STATE_DIR"
 
 if is_ok; then
   # conditions OK again (or nothing configured): cancel any pending poweroff
+  if [ -f "$STATE_FILE" ]; then
+    echo "auto-shutdown: conditions OK again after $(( $(now) - $(cat "$STATE_FILE") ))s, cancelling countdown"
+  fi
   rm -f "$STATE_FILE"
   exit 0
 fi
@@ -112,6 +145,7 @@ fi
 if [ ! -f "$STATE_FILE" ]; then
   # start counting from now
   now >"$STATE_FILE"
+  echo "auto-shutdown: shutdown-worthy, starting ${GRACE_SECONDS}s countdown"
   exit 0
 fi
 
@@ -119,8 +153,8 @@ failing_since=$(cat "$STATE_FILE")
 elapsed=$(( $(now) - failing_since ))
 
 if [ "$elapsed" -ge "$GRACE_SECONDS" ]; then
-  echo "shutdown-worthy state for ${elapsed}s >= ${GRACE_SECONDS}s, powering off"
+  echo "auto-shutdown: shutdown-worthy for ${elapsed}s >= ${GRACE_SECONDS}s, powering off"
   systemctl poweroff
 else
-  echo "still in shutdown-worthy state for ${elapsed}s (power off after ${GRACE_SECONDS}s)"
+  echo "auto-shutdown: still shutdown-worthy for ${elapsed}s (power off after ${GRACE_SECONDS}s)"
 fi

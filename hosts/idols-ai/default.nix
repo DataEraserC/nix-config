@@ -123,13 +123,13 @@ rec {
   modules.auto-shutdown = {
     enable = true;
     targets = [
-      myvars.networking.mainGateway
-      "223.5.5.5"
+      # myvars.networking.mainGateway
       "10.126.126.154"
       "10.126.126.170"
     ];
     gracePeriod = "30min";
     checkInterval = "10min";
+    verbose = true;
   };
 
   networking = {

@@ -78,10 +78,14 @@ let
     command = pkgs.writeShellScript "auto-shutdown-ping" ''
       exec ping -c 1 -W 2 ${target}
     '';
+    name = "ping ${target}";
   };
 
   # Explicit `conditions` take precedence over the `targets` sugar.
   conditions = if cfg.conditions != [ ] then cfg.conditions else map targetCondition cfg.targets;
+
+  # Human-readable labels for logs; fall back to the command path.
+  conditionNames = map (c: if c.name == "" then toString c.command else c.name) conditions;
 
   # `targets` implies mode "any"(one reachable target = online), matching the
   # original offline-shutdown behavior; `conditions` follow the declared mode.
@@ -105,13 +109,23 @@ in
     conditions = lib.mkOption {
       type = lib.types.listOf (
         lib.types.submodule {
-          options.command = lib.mkOption {
-            type = lib.types.path;
-            description = ''
-              Path to an executable run on every tick. Exit 0 means this check is
-              OK; any non-zero exit marks the machine shutdown-worthy. Build one
-              from a shell script with `pkgs.writeShellScript`.
-            '';
+          options = {
+            command = lib.mkOption {
+              type = lib.types.path;
+              description = ''
+                Path to an executable run on every tick. Exit 0 means this check
+                is OK; any non-zero exit marks the machine shutdown-worthy. Build
+                one from a shell script with `pkgs.writeShellScript`.
+              '';
+            };
+            name = lib.mkOption {
+              type = lib.types.str;
+              default = "";
+              description = ''
+                Label used in logs(whitespace is replaced with `_`). Defaults to
+                the command path.
+              '';
+            };
           };
         }
       );
@@ -173,6 +187,16 @@ in
         How often to run the condition checks.
       '';
     };
+
+    verbose = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Log every condition's result and the overall verdict on each tick to the
+        journal(`journalctl -u auto-shutdown`). Useful to see which check keeps
+        the machine on. When off, only state transitions and failures are logged.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -205,8 +229,12 @@ in
       # shell scripts stay decoupled from nix evaluation.
       environment = {
         CONDITIONS = lib.concatStringsSep " " (map (c: c.command) conditions);
+        CONDITION_NAMES = lib.concatStringsSep " " (
+          map (n: lib.replaceStrings [ " " ] [ "_" ] n) conditionNames
+        );
         MODE = mode;
         GRACE_SECONDS = toString (toSeconds cfg.gracePeriod);
+        VERBOSE = if cfg.verbose then "1" else "0";
       };
       serviceConfig = {
         Type = "oneshot";
