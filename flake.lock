@@ -7959,6 +7959,7 @@
         "vscode-server": "vscode-server",
         "wallpapers": "wallpapers",
         "winboat": "winboat",
+        "winpodx": "winpodx",
         "wpsFonts": "wpsFonts"
       }
     },
@@ -9482,6 +9483,26 @@
       "original": {
         "owner": "Apps-Used-By-Myself",
         "repo": "winboat",
+        "type": "github"
+      }
+    },
+    "winpodx": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1789207273,
+        "narHash": "sha256-mSwSanzlua5TkDxSSsuuC814L3mPb2ZJxKaSrDseDhk=",
+        "owner": "kernalix7",
+        "repo": "winpodx",
+        "rev": "072eae5437718b411c55a02347f3ceb7045e0d96",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kernalix7",
+        "repo": "winpodx",
         "type": "github"
       }
     },

@@ -2,6 +2,7 @@
   pkgs,
   pkgs-latest,
   nur-ataraxiasjel,
+  winpodx,
   # nur-ataraxiasjel,
   ...
 }:
@@ -167,5 +168,8 @@
     dmg2img
 
     winboat
+
+    # TODO: test which one is better, and if we choose winpodx,we need to persist winpodx data.
+    # winpodx.packages.${pkgs.system}.winpodx
   ];
 }

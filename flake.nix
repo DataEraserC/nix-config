@@ -524,6 +524,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    winpodx = {
+      url = "github:kernalix7/winpodx";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # pve-nixos
     proxmox-nixos = {
       url = "github:SaumonNet/proxmox-nixos";
