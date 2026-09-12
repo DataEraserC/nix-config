@@ -138,10 +138,10 @@
   # };
 
   nixpkgs.config.permittedInsecurePackages = [
-    "openssl-1.1.1v"
-    "electron-19.1.9"
-    "alist-3.45.0"
-    "ventoy-1.1.12"
+    "electron-40.10.5"
+    "ventoy-1.1.17"
+    "idea-oss-2025.3.4"
+    "idea-oss-with-plugins-2025.3.4"
     # build-time dependency of cherry-studio
     "pnpm-10.29.2"
   ];
