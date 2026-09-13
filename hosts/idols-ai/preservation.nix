@@ -218,6 +218,8 @@ in
         ".config/opencode"
         ".local/share/opencode"
         ".local/state/opencode"
+        ".dsh"
+        ".dsh-tui"
 
         # pi coding agent (sessions under ~/.pi/agent/sessions)
         ".pi"

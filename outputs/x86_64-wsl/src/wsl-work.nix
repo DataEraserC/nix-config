@@ -74,12 +74,14 @@ let
 
   modules = {
     nixos-modules = [
+      (mylib.relativeToRoot "modules/nixos/desktop/dsh.nix")
       {
         modules.desktop.fonts.enable = true;
         # modules.desktop.wayland.enable = true;
         modules.secrets.desktop.enable = true;
         modules.secrets.preservation.enable = true;
         modules.desktop.appcast.enable = true;
+        modules.desktop.dsh.enable = true;
         # modules.desktop.niri.enable = true;
       }
     ]

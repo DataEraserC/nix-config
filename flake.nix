@@ -37,6 +37,9 @@
 
       "https://snowy-cache.cachix.org"
 
+      # deepseek-harness-nix cache
+      "https://deepseek-harness-nix.cachix.org"
+
       # "https://cache.saumon.network/proxmox-nixos"
     ];
     extra-trusted-public-keys = [
@@ -59,6 +62,9 @@
       "anyrun.cachix.org-1:pqBobmOjI7nKlsUMV25u9QHa9btJK65/C8vnO3p346s="
 
       "snowy-cache.cachix.org-1:okWl5IF/yzdZ+p/eRhDFvcanQo/y0ta80dvfdGgy28U="
+
+      # deepseek-harness-nix cache
+      "deepseek-harness-nix.cachix.org-1:5NrkwLN9veNMhiINtU5ZeV4isXFhFsOwn6Ms7J1M+TA="
 
       # "proxmox-nixos:D9RYSWpQQC/msZUWphOY2I5RLH5Dd6yQcaHIuug7dWM="
     ];
@@ -171,6 +177,12 @@
 
     # AI coding agents
     llm-agents.url = "github:numtide/llm-agents.nix";
+
+    # DeepSeek Harness (dsh)
+    deepseek-harness = {
+      url = "github:moraxyc/deepseek-harness.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     # -------------- Gaming ---------------------
 

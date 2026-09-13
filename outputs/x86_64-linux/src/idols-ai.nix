@@ -37,6 +37,7 @@ let
           modules.secrets.preservation.enable = true;
           modules.desktop.gaming.enable = true;
           modules.desktop.appcast.enable = true;
+          modules.desktop.dsh.enable = true;
           modules.vscode-server.enable = true;
         }
         inputs.daeuniverse.nixosModules.dae
