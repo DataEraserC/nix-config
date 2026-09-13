@@ -9,8 +9,8 @@
 #   - a generated management key (`/var/lib/cliproxyapi/management.key`)
 #   - `mutableConfig = true` so panel/API edits survive restarts
 #
-# The management panel is only bound to 127.0.0.1 by default; reach it through
-# https://127.0.0.1:8317/management.html (or an SSH tunnel / reverse proxy).
+# By default, binds to 0.0.0.0:8317; reach the panel at
+# http://<host-ip>:8317/management.html (access restricted by firewall).
 #
 # Check Service Status
 #   systemctl status cliproxyapi
@@ -37,10 +37,11 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    services.cliproxyapi = {
+    services.cliproxyapiCustom = {
       enable = true;
       package = nur-DataEraserC.packages.${system}.cliproxyapi;
       managementCenterPackage = nur-DataEraserC.packages.${system}.cliproxyapi-management-center;
+      host = "0.0.0.0";
     };
   };
 }
