@@ -33,6 +33,10 @@
               name = "gpt-5.6-sol";
             }
             {
+              id = "gpt-6-astra";
+              name = "gpt-6-astra";
+            }
+            {
               id = "claude-opus-4-8";
               name = "claude-opus-4-8";
             }
