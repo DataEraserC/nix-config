@@ -2,8 +2,8 @@
 #
 # CLIProxyAPI - proxy that exposes Gemini/Claude/Codex/Grok as OpenAI-compatible APIs.
 #
-# This wrapper uses the DataEraserC NUR module, which replaces nixpkgs'
-# `services.cliproxyapi` and adds:
+# This wrapper uses the DataEraserC NUR module, which provides
+# `services.dataEraserc.cliproxyapi` and adds:
 #   - an offline management panel served from `cliproxyapi-management-center`
 #     (no GitHub download at runtime)
 #   - a generated management key (`/var/lib/cliproxyapi/management.key`)
@@ -37,7 +37,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    services.cliproxyapiCustom = {
+    services.dataEraserc.cliproxyapi = {
       enable = true;
       package = nur-DataEraserC.packages.${system}.cliproxyapi;
       managementCenterPackage = nur-DataEraserC.packages.${system}.cliproxyapi-management-center;

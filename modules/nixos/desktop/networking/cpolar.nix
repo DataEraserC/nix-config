@@ -18,7 +18,7 @@
   imports = [
     nur-DataEraserC.nixosModules.cpolar
   ];
-  services.cpolar = {
+  services.dataEraserc.cpolar = {
     enable = true;
     package = nur-DataEraserC.packages.${pkgs.system}.cpolar;
     configFile = "${config.age.secrets."cpolar.yml".path}";

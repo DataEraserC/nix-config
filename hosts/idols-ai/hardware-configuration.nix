@@ -78,7 +78,7 @@ in
     nur-DataEraserC.nixosModules.aw88399-legion-audio
   ];
 
-  hardware.audio.aw88399-legion-audio = {
+  hardware.dataEraserc.aw88399-legion-audio = {
     enable = true;
     patchVersion = null;
     patchPackage = nur-DataEraserC.packages.${pkgs.system}.aw88399-legion-audio-patch;

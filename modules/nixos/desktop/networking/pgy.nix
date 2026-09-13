@@ -16,7 +16,7 @@
   imports = [
     nur-DataEraserC.nixosModules.pgy
   ];
-  services.pgy = {
+  services.dataEraserc.pgy = {
     enable = true;
     package = nur-DataEraserC.packages.${pkgs.system}.pgy_fhs;
     stateDir = "/var/lib/pgyvpn";
