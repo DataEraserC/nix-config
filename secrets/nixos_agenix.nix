@@ -195,6 +195,12 @@ in
           file = "${mysecrets}/agenix/ecc-server.key.age";
         }
         // high_security;
+        "cliproxyapi-management.key" = {
+          file = "${mysecrets}/agenix/cliproxyapi-management.key.age";
+          mode = "0600";
+          owner = "cliproxyapi";
+          group = "cliproxyapi";
+        };
       };
 
       # place secrets in /etc/

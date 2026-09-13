@@ -98,6 +98,14 @@ in
       # daed
       "/etc/daed/"
 
+      # cliproxyapi (generated config.yaml, management key and auth/provider files)
+      {
+        directory = "/var/lib/cliproxyapi";
+        user = "cliproxyapi";
+        group = "cliproxyapi";
+        mode = "0700";
+      }
+
       # ccache
       "/var/cache/ccache"
 

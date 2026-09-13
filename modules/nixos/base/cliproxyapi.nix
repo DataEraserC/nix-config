@@ -6,7 +6,7 @@
 # `services.dataEraserc.cliproxyapi` and adds:
 #   - an offline management panel served from `cliproxyapi-management-center`
 #     (no GitHub download at runtime)
-#   - a generated management key (`/var/lib/cliproxyapi/management.key`)
+#   - a management key managed by agenix (`/run/agenix/cliproxyapi-management.key`)
 #   - `mutableConfig = true` so panel/API edits survive restarts
 #
 # By default, binds to 0.0.0.0:8317; reach the panel at
@@ -17,7 +17,7 @@
 # Check logs
 #   journalctl -u cliproxyapi --since "2 minutes ago"
 # Read the management key
-#   sudo cat /var/lib/cliproxyapi/management.key
+#   sudo cat /run/agenix/cliproxyapi-management.key
 {
   config,
   lib,
@@ -42,6 +42,7 @@ in
       package = nur-DataEraserC.packages.${system}.cliproxyapi;
       managementCenterPackage = nur-DataEraserC.packages.${system}.cliproxyapi-management-center;
       host = "0.0.0.0";
+      managementKeyFile = "/run/agenix/cliproxyapi-management.key";
     };
   };
 }
