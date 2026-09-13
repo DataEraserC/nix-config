@@ -117,7 +117,8 @@ rec {
   };
 
   # CLIProxyAPI proxy with an offline management panel, bound to 127.0.0.1:8317.
-  modules.cliproxyapi.enable = true;
+  # modules.cliproxyapi.enable = true;
+  # modules.cliproxyapi.enable = true; # TODO: temporarily disabled to test if it breaks GDM boot on 1106/1107
 
   # Power off after staying offline for 30min(no access to the gateway or a
   # public host). Options here are the nix defaults; for temporary live tweaks
