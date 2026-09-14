@@ -77,6 +77,63 @@
             }
           ];
         };
+        # Local CLIProxyAPI endpoint (OpenAI-compatible). The API key is read
+        # from the `$CLIPROXYAPI_API_KEY` env var.
+        cliproxyapi = {
+          baseUrl = "http://localhost:8317/v1";
+          api = "openai-completions";
+          apiKey = "$CLIPROXYAPI_API_KEY";
+          models = [
+            {
+              id = "AgentRouter1/claude-opus-4-8";
+              name = "AgentRouter1/claude-opus-4-8";
+            }
+            {
+              id = "AgentRouter1/claude-opus-5";
+              name = "AgentRouter1/claude-opus-5";
+            }
+            {
+              id = "AgentRouter1/deepseek-v4-flash";
+              name = "AgentRouter1/deepseek-v4-flash";
+            }
+            {
+              id = "AgentRouter1/glm-5.3";
+              name = "AgentRouter1/glm-5.3";
+            }
+            {
+              id = "AgentRouter1/gpt-5.6-sol";
+              name = "AgentRouter1/gpt-5.6-sol";
+            }
+            {
+              id = "AgentRouter1/gpt-6-astra";
+              name = "AgentRouter1/gpt-6-astra";
+            }
+            {
+              id = "AgentRouter2/claude-opus-4-8";
+              name = "AgentRouter2/claude-opus-4-8";
+            }
+            {
+              id = "AgentRouter2/claude-opus-5";
+              name = "AgentRouter2/claude-opus-5";
+            }
+            {
+              id = "AgentRouter2/deepseek-v4-flash";
+              name = "AgentRouter2/deepseek-v4-flash";
+            }
+            {
+              id = "AgentRouter2/glm-5.3";
+              name = "AgentRouter2/glm-5.3";
+            }
+            {
+              id = "AgentRouter2/gpt-5.6-sol";
+              name = "AgentRouter2/gpt-5.6-sol";
+            }
+            {
+              id = "AgentRouter2/gpt-6-astra";
+              name = "AgentRouter2/gpt-6-astra";
+            }
+          ];
+        };
       };
     };
 
