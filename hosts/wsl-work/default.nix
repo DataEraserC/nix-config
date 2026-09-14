@@ -80,6 +80,12 @@ rec {
         remotePort = 8080;
       }
       {
+        name = "dsh";
+        localPort = 33080;
+        remoteHost = "10.126.126.150";
+        remotePort = 3080;
+      }
+      {
         name = "rdp";
         localPort = 33389;
         remoteHost = "10.126.126.150";
