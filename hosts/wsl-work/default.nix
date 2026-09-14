@@ -68,6 +68,12 @@ rec {
     tunnels = [
       # idols-ai (10.126.126.150) - 3xxxx range
       {
+        name = "cliproxyapimanagementcenter";
+        localPort = 38317;
+        remoteHost = "10.126.126.150";
+        remotePort = 8317;
+      }
+      {
         name = "openwebui";
         localPort = 38080;
         remoteHost = "10.126.126.150";
