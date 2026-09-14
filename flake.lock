@@ -996,11 +996,11 @@
         "systems": "systems_13"
       },
       "locked": {
-        "lastModified": 1789222675,
-        "narHash": "sha256-fFTYgV9B0Bf4KLk4MffRhfKS0bkEU2gdbvajeMpsr9Q=",
+        "lastModified": 1789379975,
+        "narHash": "sha256-Ur9m7C/Hpq0BqrIz+VLyTpq6p/2l3brVoS5KnIZ+Bak=",
         "owner": "moraxyc",
         "repo": "deepseek-harness.nix",
-        "rev": "1850affdc25a7ecd5dbb45323569ad3a15cd3247",
+        "rev": "f1112a82587f856b492f0dbd55042f1e860d80df",
         "type": "github"
       },
       "original": {

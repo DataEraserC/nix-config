@@ -21,10 +21,31 @@ in
     programs.dsh = {
       enable = true;
       profiles = {
-        tui.bundles = [ pkgs.dsh.bundles.tui ];
-        web.bundles = [ pkgs.dsh.bundles.web-app ];
+        tui.bundles = [
+          pkgs.dsh.bundles.tui
+          pkgs.dsh.bundles.modsearch
+          # pkgs.dsh.bundles.turn-rewind
+          pkgs.dsh.bundles.cpa
+          pkgs.dsh.bundles.remote
+          # pkgs.dsh.bundles.message-edit
+          pkgs.dsh.bundles.agent-teams
+          pkgs.dsh.bundles.ads
+          pkgs.dsh.bundles.navbar
+        ];
+        web.bundles = [
+          pkgs.dsh.bundles.web-app
+          pkgs.dsh.bundles.modsearch
+          # pkgs.dsh.bundles.turn-rewind
+          pkgs.dsh.bundles.web-ui
+          pkgs.dsh.bundles.cpa
+          pkgs.dsh.bundles.remote
+          # pkgs.dsh.bundles.message-edit
+          pkgs.dsh.bundles.agent-teams
+          # pkgs.dsh.bundles.ads
+          pkgs.dsh.bundles.navbar
+        ];
       };
-      defaultProfile = "nix-tui";
+      defaultProfile = config.programs.dsh.profiles.tui.materializedName;
     };
   };
 }
