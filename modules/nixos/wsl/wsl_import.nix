@@ -24,11 +24,18 @@
     isSystemUser = true;
     group = "nogroup";
   };
+
   users.users.cpolar = {
     isSystemUser = true;
     group = "cpolar";
   };
   users.groups.cpolar = { };
+
+  users.users.cliproxyapi = {
+    isSystemUser = true;
+    group = "cliproxyapi";
+  };
+  users.groups.cliproxyapi = { };
 
   # The OpenSSH agent remembers private keys for you
   # so that you don’t have to type in passphrases every time you make an SSH connection.
