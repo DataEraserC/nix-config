@@ -4620,10 +4620,10 @@
     "mysecrets": {
       "flake": false,
       "locked": {
-        "lastModified": 1789320637,
-        "narHash": "sha256-co7ZIrePFS8k0EDaEnl/utlFYWHyuKPtmth/v5Qsyn8=",
+        "lastModified": 1789372212,
+        "narHash": "sha256-ahnkOS7t9H3JPtNKikGZnjqprwdlvBzq/IYT3hT+0t4=",
         "ref": "refs/heads/master",
-        "rev": "b9aa1f9a31791f9c6d1ada9452e36ba9aeed26f3",
+        "rev": "cf530c6951acbb3bf62eb4795e15e76b55f985a5",
         "shallow": true,
         "type": "git",
         "url": "file:////home/nixos/nix-config/secrets"
