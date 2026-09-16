@@ -79,6 +79,12 @@ agents MUST ask which state to use before editing.
   subject no longer than 72 characters.
 - Each commit MUST contain one logical change. Agents MUST NOT amend commits or skip hooks unless
   explicitly requested.
+- When an agent materially contributes to a commit (authoring or editing code, configuration,
+  scripts, or documentation), that commit MUST carry an `Assisted-by` trailer in the form
+  `Assisted-by: <agent>:<model>`, for example `Assisted-by: dsh:deepseek-v4-flash`. Agents MUST NOT
+  claim a model they did not run; when the model is unknown, `Assisted-by: <agent>` alone is
+  acceptable. Agents MUST NOT use `Co-authored-by` to attribute AI involvement, or record it in
+  fields whose semantics are ownership, accountability, or contact.
 
 ## Tools and environment
 
