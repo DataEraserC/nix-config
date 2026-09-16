@@ -40,6 +40,7 @@
         #-- nix other things
         nurl
         nvfetcher
+        nix-update
         patchelf # Patch ELF for nixos
 
         #-- nickel lang
