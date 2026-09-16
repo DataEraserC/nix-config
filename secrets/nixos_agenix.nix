@@ -201,6 +201,12 @@ in
           owner = "cliproxyapi";
           group = "cliproxyapi";
         };
+        "m365-copilot2api-admin-password" = {
+          file = "${mysecrets}/agenix/m365-copilot2api-admin-password.age";
+          mode = "0600";
+          owner = "m365-copilot2api";
+          group = "m365-copilot2api";
+        };
       };
 
       # place secrets in /etc/

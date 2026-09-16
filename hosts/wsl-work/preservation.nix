@@ -106,6 +106,14 @@ in
         mode = "0700";
       }
 
+      # m365-copilot2api (accounts, tokens, sessions, API keys, settings)
+      {
+        directory = "/var/lib/m365-copilot2api";
+        user = "m365-copilot2api";
+        group = "m365-copilot2api";
+        mode = "0700";
+      }
+
       # ccache
       "/var/cache/ccache"
 

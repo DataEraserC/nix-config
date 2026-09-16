@@ -62,6 +62,8 @@ rec {
     inherit hostName;
   };
 
+  modules.m365-copilot2api.enable = true;
+
   modules.port-forwarding = {
     enable = true;
     # implementation = "socat";  # default, uncomment to switch explicitly

@@ -11,6 +11,7 @@
     ../desktop/appcast.nix
     ../base/i18n.nix
     ../base/user-group.nix
+    ../base/m365-copilot2api.nix
     ./apparmor-workaround.nix
 
     # ./vscode-remote-workaround.nix
@@ -36,6 +37,12 @@
     group = "cliproxyapi";
   };
   users.groups.cliproxyapi = { };
+
+  users.users.m365-copilot2api = {
+    isSystemUser = true;
+    group = "m365-copilot2api";
+  };
+  users.groups.m365-copilot2api = { };
 
   # The OpenSSH agent remembers private keys for you
   # so that you don’t have to type in passphrases every time you make an SSH connection.
