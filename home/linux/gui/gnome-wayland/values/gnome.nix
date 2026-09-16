@@ -60,6 +60,16 @@ in
     settings."org/gnome/nautilus/preferences" = {
       default-folder-viewer = "list-view";
       use-tree-view = true;
+      # NOTE: `show-hidden-files` here is deprecated and ignored since nautilus 43.
+      # Nautilus now shares GTK's file-chooser setting, see below.
+    };
+
+    # Show hidden files in nautilus (and in GTK4 file chooser dialogs).
+    # Nautilus reads `show-hidden` from `org.gtk.gtk4.Settings.FileChooser` at path
+    # `/org/gtk/gtk4/settings/file-chooser/`, see
+    # https://gitlab.gnome.org/GNOME/nautilus/-/blob/main/src/nautilus-global-preferences.c
+    settings."org/gtk/gtk4/settings/file-chooser" = {
+      show-hidden = true;
     };
 
     # 设置 GNOME Remote Desktop RDP 端口为 23389，并允许在占用时向后搜索 10 个端口
