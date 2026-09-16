@@ -4,13 +4,15 @@
 #
 # This wrapper uses the DataEraserC NUR module, which provides
 # `services.dataEraserc.cliproxyapi` and adds:
-#   - an offline management panel served from `cliproxyapi-management-center`
-#     (no GitHub download at runtime)
+#   - an offline management panel from `cliproxyapi-management-center-bin`, the
+#     prebuilt upstream release asset (no npm build, no GitHub download at runtime)
 #   - a management key managed by agenix (`/run/agenix/cliproxyapi-management.key`)
 #   - `mutableConfig = true` so panel/API edits survive restarts
 #
-# By default, binds to 0.0.0.0:8317; reach the panel at
-# http://<host-ip>:8317/management.html (access restricted by firewall).
+# Binds to 0.0.0.0:8317; reach the panel at http://<host-ip>:8317/management.html
+# (access restricted by firewall). Every management API request needs the
+# management key, so `allowRemote` only lifts the loopback-only check that would
+# otherwise answer 403 to a browser connecting from another host.
 #
 # Check Service Status
 #   systemctl status cliproxyapi
@@ -40,8 +42,9 @@ in
     services.dataEraserc.cliproxyapi = {
       enable = true;
       package = nur-DataEraserC.packages.${system}.cliproxyapi;
-      managementCenterPackage = nur-DataEraserC.packages.${system}.cliproxyapi-management-center;
+      managementCenterPackage = nur-DataEraserC.packages.${system}.cliproxyapi-management-center-bin;
       host = "0.0.0.0";
+      allowRemote = true;
       managementKeyFile = "/run/agenix/cliproxyapi-management.key";
     };
   };
