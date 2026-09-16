@@ -7075,11 +7075,11 @@
         "treefmt-nix": "treefmt-nix_6"
       },
       "locked": {
-        "lastModified": 1789528400,
-        "narHash": "sha256-7qKcJJ211OxZtzem8NcX5yxOq85UkX4wETSSpn7J+uc=",
+        "lastModified": 1789530825,
+        "narHash": "sha256-0mkolIYL8eok359GqFf9ucXt8XZ3DwyqI7QSG5bT6MA=",
         "owner": "DataEraserC",
         "repo": "nur-packages",
-        "rev": "9436605a396cb622b72d6db9c47dec5f46b6da3e",
+        "rev": "55a0327f4040f93a3672d4d6db1a09cf11c9df7f",
         "type": "github"
       },
       "original": {
