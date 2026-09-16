@@ -207,6 +207,12 @@ in
           owner = "m365-copilot2api";
           group = "m365-copilot2api";
         };
+        "m365-copilot2api-master-key" = {
+          file = "${mysecrets}/agenix/m365-copilot2api-master-key.age";
+          mode = "0600";
+          owner = "m365-copilot2api";
+          group = "m365-copilot2api";
+        };
       };
 
       # place secrets in /etc/

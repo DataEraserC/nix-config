@@ -5,7 +5,18 @@
 # This wrapper uses the DataEraserC NUR module, which provides
 # `services.dataEraserc.m365Copilot2api`.
 #
-# Binds to 0.0.0.0:4141; reach the web console at http://<host-ip>:4141/
+# Binds to 127.0.0.1:4141; reach the web console at http://127.0.0.1:4141/
+# Set listenAddress = "0.0.0.0" plus openFirewall = true to expose it on the
+# network; the console is plain HTTP, so keep a TLS reverse proxy in front.
+#
+# The adminPasswordFile secret seeds the console password on first start and
+# again whenever its content changes; a password changed in the web console
+# stays in effect until then.
+#
+# The masterKeyFile secret encrypts the refresh tokens in accounts.json (and
+# enables the Microsoft Graph admin connection). Changing or removing it makes
+# the already-stored tokens unreadable, so the accounts have to be authorized
+# again.
 #
 # Check Service Status
 #   systemctl status m365-copilot2api
@@ -35,9 +46,10 @@ in
     services.dataEraserc.m365Copilot2api = {
       enable = true;
       package = nur-DataEraserC.packages.${system}.m365-copilot2api;
-      listenAddress = "0.0.0.0:4141";
+      listenAddress = "127.0.0.1";
+      port = 4141;
       adminPasswordFile = "/run/agenix/m365-copilot2api-admin-password";
-      requireStrongPassword = false;
+      masterKeyFile = "/run/agenix/m365-copilot2api-master-key";
     };
   };
 }
