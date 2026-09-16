@@ -1,6 +1,7 @@
 {
   pkgs,
   deepseek-harness,
+  nur-DataEraserC,
   config,
   lib,
   ...
@@ -22,6 +23,8 @@ let
     pkgs.dsh.bundles.agent-teams
     # pkgs.dsh.bundles.ads
     pkgs.dsh.bundles.navbar
+    nur-DataEraserC.packages.${pkgs.system}.opencode2dsh
+    nur-DataEraserC.packages.${pkgs.system}.dsh-bas-remote
   ];
 in
 {
@@ -45,8 +48,10 @@ in
           pkgs.dsh.bundles.remote
           # pkgs.dsh.bundles.message-edit
           pkgs.dsh.bundles.agent-teams
-          pkgs.dsh.bundles.ads
+          # pkgs.dsh.bundles.ads
           pkgs.dsh.bundles.navbar
+          nur-DataEraserC.packages.${pkgs.system}.opencode2dsh
+          nur-DataEraserC.packages.${pkgs.system}.dsh-bas-remote
         ];
         web.bundles = webBundles;
 

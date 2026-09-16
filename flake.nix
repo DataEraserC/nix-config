@@ -525,6 +525,7 @@
     nur-DataEraserC = {
       url = "github:DataEraserC/nur-packages";
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.deepseek-harness.follows = "deepseek-harness";
     };
 
     nur-DataEraserC-not-follow = {
