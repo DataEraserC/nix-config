@@ -212,6 +212,11 @@ in
         ".vscode-insiders"
         ".config/Code - Insiders"
         ".config/vscode-sqltools"
+        # application-shared storage (VSCODE_SHARED / `sharedDataFolderName`).
+        # The workspace-trust list lives in
+        # `sharedStorage/state.vscdb` (`content.trust.model.key`), so without this
+        # every folder has to be trusted again after each reboot.
+        ".vscode-shared"
         # remote-ssh server install cache; persisted so it is not re-downloaded
         # (and re-patched by auto-fix-vscode-server) after every reboot.
         ".vscode-server"
