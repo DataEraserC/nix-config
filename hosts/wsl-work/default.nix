@@ -62,6 +62,10 @@ rec {
     inherit hostName;
   };
 
+  # CLIProxyAPI proxy with an offline management panel, bound to 127.0.0.1:8317.
+  modules.cliproxyapi.enable = true;
+
+  # M365 Copilot2API gateway, bound to 127.0.0.1:4141.
   modules.m365-copilot2api.enable = true;
 
   modules.port-forwarding = {
