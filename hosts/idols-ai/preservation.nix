@@ -199,6 +199,9 @@ in
         ".local/state/nix/profiles"
         ".local/share/nix"
 
+        # rclone configuration and credentials
+        ".config/rclone"
+
         # ======================================
         # IDE / Editors
         # ======================================
