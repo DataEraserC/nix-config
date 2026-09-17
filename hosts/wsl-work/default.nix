@@ -80,6 +80,12 @@ rec {
         remotePort = 8317;
       }
       {
+        name = "M365-Copilot2API";
+        localPort = 34141;
+        remoteHost = "10.126.126.150";
+        remotePort = 4141;
+      }
+      {
         name = "openwebui";
         localPort = 38080;
         remoteHost = "10.126.126.150";
