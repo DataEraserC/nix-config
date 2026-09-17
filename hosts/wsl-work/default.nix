@@ -85,12 +85,13 @@ rec {
         remoteHost = "10.126.126.150";
         remotePort = 8080;
       }
-      {
-        name = "dsh";
-        localPort = 33080;
-        remoteHost = "10.126.126.150";
-        remotePort = 3080;
-      }
+      # dsh 有很强的安全保护，需要通过ssh转发，否则很多功能不生效
+      # {
+      #   name = "dsh";
+      #   localPort = 33080;
+      #   remoteHost = "10.126.126.150";
+      #   remotePort = 3080;
+      # }
       {
         name = "rdp";
         localPort = 33389;
