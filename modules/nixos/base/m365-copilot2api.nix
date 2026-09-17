@@ -46,7 +46,7 @@ in
     services.dataEraserc.m365Copilot2api = {
       enable = true;
       package = nur-DataEraserC.packages.${system}.m365-copilot2api;
-      listenAddress = "127.0.0.1";
+      listenAddress = "0.0.0.0";
       port = 4141;
       adminPasswordFile = "/run/agenix/m365-copilot2api-admin-password";
       masterKeyFile = "/run/agenix/m365-copilot2api-master-key";
