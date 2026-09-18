@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   pkgs,
   nur-DataEraserC,
   nixGL,
@@ -82,8 +83,10 @@
   };
 
   systemd.user.services.sunshine = {
-    after = [ "niri.service" ];
     environment.LIBVA_DRIVER_NAME = "iHD";
+  }
+  // lib.mkIf config.modules.desktop.niri.enable {
+    after = [ "niri.service" ];
     preStart = ''
       for _ in {1..20}; do
         if ${config.programs.niri.package}/bin/niri msg outputs | ${pkgs.gnugrep}/bin/grep -q '^Output '; then

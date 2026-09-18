@@ -5,6 +5,7 @@
 }:
 let
   cfg = outputs.nixosConfigurations.ai-niri.config;
+  gnomeCfg = outputs.nixosConfigurations.ai-gnome-wayland.config;
   niriHardware = builtins.readFile ../../../../hosts/idols-ai/niri-hardware.kdl;
 in
 {
@@ -16,4 +17,8 @@ in
   sunshineUsesWlrCapture = cfg.services.sunshine.settings.capture;
   sunshineStartsAfterNiri = builtins.elem "niri.service" cfg.systemd.user.services.sunshine.after;
   sunshineWaitsForNiriOutput = lib.hasInfix "niri msg outputs" cfg.systemd.user.services.sunshine.preStart;
+  gnomeSunshineDoesNotStartAfterNiri =
+    !(builtins.elem "niri.service" gnomeCfg.systemd.user.services.sunshine.after);
+  gnomeSunshineDoesNotWaitForNiriOutput =
+    !(lib.hasInfix "niri msg outputs" gnomeCfg.systemd.user.services.sunshine.preStart);
 }
