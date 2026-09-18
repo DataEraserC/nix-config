@@ -35,7 +35,9 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    environment.systemPackages = [ pkgs.dsh.dsh-desktop ];
+    environment.systemPackages = [
+      # pkgs.dsh.dsh-desktop
+    ];
 
     programs.dsh = {
       enable = true;
