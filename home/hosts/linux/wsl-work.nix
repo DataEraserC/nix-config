@@ -62,7 +62,7 @@
   # 0.84.1 from the upstream source tree via the `pi-coding-agent-unstable`
   # overlay.
   programs.pi-coding-agent = {
-    enable = true;
+    enable = false;
 
     package = pkgs.pi-coding-agent;
 

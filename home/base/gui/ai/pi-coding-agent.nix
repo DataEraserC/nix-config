@@ -9,7 +9,7 @@
   # from the upstream source tree via the `pi-coding-agent-unstable` overlay
   # (no new nixpkgs input).
   programs.pi-coding-agent = {
-    enable = true;
+    enable = false;
 
     package = pkgs.pi-coding-agent;
 
