@@ -15,7 +15,7 @@ let
   webBundles = [
     pkgs.dsh.bundles.web-app
     pkgs.dsh.bundles.modsearch
-    # pkgs.dsh.bundles.turn-rewind
+    pkgs.dsh.bundles.turn-rewind
     pkgs.dsh.bundles.web-ui
     pkgs.dsh.bundles.cpa
     pkgs.dsh.bundles.remote
@@ -43,7 +43,7 @@ in
         tui.bundles = [
           pkgs.dsh.bundles.tui
           pkgs.dsh.bundles.modsearch
-          # pkgs.dsh.bundles.turn-rewind
+          pkgs.dsh.bundles.turn-rewind
           pkgs.dsh.bundles.cpa
           pkgs.dsh.bundles.remote
           # pkgs.dsh.bundles.message-edit
