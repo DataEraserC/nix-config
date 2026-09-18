@@ -43,6 +43,5 @@
 
       # Utilities
       rtk # CLI proxy that reduces LLM token consumption
-      herdr # Terminal workspace manager for AI coding agents
     ]);
 }

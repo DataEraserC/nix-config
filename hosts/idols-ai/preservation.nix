@@ -248,6 +248,10 @@ in
         # pi coding agent (sessions under ~/.pi/agent/sessions)
         ".pi"
 
+        # herdr: plugin registry, plugin checkouts/config, session layout
+        ".config/herdr"
+        ".local/state/herdr"
+
         ".context7" # up-to-date docs and code examples for for LLMs & agents
 
         # nvim
@@ -384,6 +388,7 @@ in
         ".config/google-chrome"
         ".config/chromium"
         ".config/google-chrome-unstable"
+        ".config/BraveSoftware/Brave-Origin"
         ".config/microsoft-edge"
 
         # ======================================

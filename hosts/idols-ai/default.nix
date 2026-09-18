@@ -151,37 +151,7 @@ rec {
     networkmanager.wifi.macAddress = macAddress;
     networkmanager.ethernet.macAddress = macAddress;
     extraHosts = myvars.networking.genericHosts;
-    # opencode(4096) needs no explicit port open: it is served only over the
-    # trusted overlay VPNs (tailscale/zerotier/easytier, see firewall.nix).
-    # firewall.allowedTCPPorts = [ 4096 ];
   };
-  # systemd.network.networks."10-${iface}" = {
-  #   matchConfig.Name = [ iface ];
-  #   networkConfig = {
-  #     Address = [
-  #       ipv4WithMask
-  #       ipv6WithMask
-  #     ];
-  #     DNS = nameservers;
-  #     DHCP = "ipv6"; # enable DHCPv6 only, so we can get a GUA.
-  #     IPv6AcceptRA = true; # for Stateless IPv6 Autoconfiguraton (SLAAC)
-  #     LinkLocalAddressing = "ipv6";
-  #   };
-  #   routes = [
-  #     {
-  #       Destination = "0.0.0.0/0";
-  #       Gateway = mainGateway;
-  #     }
-  #     {
-  #       Destination = "::/0";
-  #       Gateway = mainGateway6;
-  #       GatewayOnLink = true; # it's a gateway on local link.
-  #     }
-  #   ];
-  # };
-
-  # networking.useNetworkd = true;
-  # systemd.network.enable = true;
 
   # conflict with feature: containerd-snapshotter
   # virtualisation.docker.storageDriver = "btrfs";
