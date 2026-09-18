@@ -1,6 +1,7 @@
 { config, mylib, ... }:
 let
   mkSymlink = mylib.mklinkRelativeToRoot;
+  cfgNiri = config.modules.desktop.niri;
 in
 {
   imports = [
@@ -17,9 +18,12 @@ in
 
   # PC: keep the screen on longer than on the laptop.
   modules.desktop.hypridle = {
-    keyboardBacklightTimeout = 900;
-    screenOffTimeout = 1200;
-    lockTimeout = 1800;
+    # Niri requires this module, and this module requires Niri to provide functionality.
+    enable = cfgNiri.enable;
+    keyboardDevice = "platform::kbd_backlight";
+    keyboardBacklightTimeout = 180;
+    screenOffTimeout = 120;
+    lockTimeout = 600;
   };
 
   programs.zed-editor.userSettings = {

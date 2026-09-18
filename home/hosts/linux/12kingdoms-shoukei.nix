@@ -16,6 +16,7 @@ in
 
   # Laptop defaults: backlight 3 min, screen off 6 min, lock 20 min.
   modules.desktop.hypridle = {
+    enable = true;
     keyboardBacklightTimeout = 180;
     screenOffTimeout = 360;
     lockTimeout = 1200;
