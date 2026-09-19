@@ -27,8 +27,8 @@ let
     x86_64-linux = {
       version = "4.1.1.8";
       src = fetchurl {
-        url = "https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_x86_64.AppImage";
-        hash = "sha256-T1StKQLs1vb9xWgLc1R/gNVCO/RwsBI3pXmi5bPK7us=";
+        url = "https://github.com/Rodert/wechat-linux-versions/releases/download/v4.1.1.8/WeChatLinux_x86_64.AppImage";
+        hash = "sha256-RX26ArkbAxzdRBLu4HT7v/udnQax5Q/Bgi00hw4RSZA=";
       };
     };
   };
