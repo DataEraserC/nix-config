@@ -20,7 +20,7 @@
     gnirehtet
     scrcpy
     libmtp
-    adb-sync
+    better-adb-sync
     abootimg
     android-tools
     android-studio
