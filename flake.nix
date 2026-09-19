@@ -532,11 +532,6 @@
       url = "github:DataEraserC/nur-packages";
     };
 
-    winboat = {
-      url = "github:Apps-Used-By-Myself/winboat";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     winpodx = {
       url = "github:kernalix7/winpodx";
       inputs.nixpkgs.follows = "nixpkgs";
