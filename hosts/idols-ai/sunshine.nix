@@ -18,7 +18,10 @@ let
     4
     5
   ]);
-  sunshineUsers = [ myvars.username ] ++ (if config.services.displayManager.gdm.enable then greeters else []);
+  sunshineUsers = [
+    myvars.username
+  ]
+  ++ (if config.services.displayManager.gdm.enable then greeters else [ ]);
 in
 {
   config = lib.mkIf (config.services.sunshine.enable) {
@@ -44,6 +47,10 @@ in
     # group/ownership/mode on every boot (setgid so anything created inside
     # inherits group `sunshine`).
     systemd.tmpfiles.rules = [
+      # The preservation bind mount itself must be traversable by members of
+      # the sunshine group. Fix the mount root before its child directories.
+      "d /var/lib/sunshine 2770 root sunshine - -"
+      "z /var/lib/sunshine 2770 root sunshine - -"
       "d /var/lib/sunshine/config 2770 root sunshine - -"
       "z /var/lib/sunshine/config 2770 root sunshine - -"
       "d /var/lib/sunshine/state 2770 root sunshine - -"
