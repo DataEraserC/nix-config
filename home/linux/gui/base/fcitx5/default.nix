@@ -14,6 +14,8 @@
       # so we need to force replace it in every rebuild to avoid file conflict.
       force = true;
     };
+    "fcitx5/conf/pinyin.conf".source =
+      mylib.mklinkRelativeToRoot config "home/linux/gui/base/fcitx5/pinyin.conf";
     "fcitx5/conf/cloudpinyin.conf".source =
       mylib.mklinkRelativeToRoot config "home/linux/gui/base/fcitx5/cloudpinyin.conf";
     "mozc/config1.db".source =
