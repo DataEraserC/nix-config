@@ -18,6 +18,7 @@
   # Application launcher shared across all WSL hosts (usable via WSLg).
   home.packages = with pkgs; [
     anyrun
+    python313
   ];
 
   # `wsl-path-fix`: restore a complete PATH when it has become incomplete, e.g.
