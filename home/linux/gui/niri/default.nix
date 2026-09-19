@@ -14,6 +14,7 @@ in
   imports = [
     # provides `services.pyclipsync.enable`
     pyclipsync.homeModules.default
+    ./values
   ];
 
   options.modules.desktop.niri = {
