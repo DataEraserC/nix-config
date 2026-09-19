@@ -214,10 +214,9 @@
                         "tray-icon tray app main",
                         "[Tun]\nThrone",
                         "Throne",
-                        "[Tun]\nThrone\n[Trojan] VIP2|香港三网3|2x@Garbage Dump",
-                        "[系统代理]\nThrone\n[Trojan] 韩国hh|1x@Garbage Dump",
                         "chrome_status_icon_1",
-                        "steam"
+                        "steam",
+                        "tray-icon tray app clash-verge-rev-tray"
                     ]
                 },
                 {
