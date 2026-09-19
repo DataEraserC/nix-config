@@ -136,7 +136,7 @@ in
   # );
 
   # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/top-level/linux-kernels.nix
-  boot.kernelPackages = pkgs.linuxPackages_7_1; # 6.19 works not well with nvidia driver
+  boot.kernelPackages = pkgs.linuxPackages_7_2; # 6.19 works not well with nvidia driver
   # boot.kernelPackages = pkgs.linuxPackages_latest;
   # boot.kernelPackages = pkgs.linuxPackages_xanmod_latest;
   # boot.kernelPackages = pkgs.linuxPackages_cachyos;
