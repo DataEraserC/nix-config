@@ -3,7 +3,6 @@
   pkgs,
   mylib,
   nur-DataEraserC,
-  qqnt,
   ...
 }:
 {
@@ -51,8 +50,8 @@
   };
   home.stateVersion = "26.05";
   home.packages = [
-    # qqnt.packages.${pkgs.system}.llqqnt
-    # qqnt.packages.${pkgs.system}.bqqnt
+    # nur-DataEraserC.packages.${pkgs.system}.llqqnt
+    # nur-DataEraserC.packages.${pkgs.system}.bqqnt
   ];
 
   # Pi Coding Agent, configured independently from idols-ai (which uses the

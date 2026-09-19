@@ -107,9 +107,6 @@
     };
     vmware = {
       host = {
-        # package = nur-program-learning.packages.${pkgs.system}.vmware-workstation.override {
-        #   enableMacOSGuests = true;
-        # };
         enable = false;
       };
     };

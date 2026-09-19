@@ -281,11 +281,6 @@
       flake = false;
     };
 
-    nur-program-learning-nod = {
-      url = "github:Program-Learning/nur-packages";
-      inputs.nixpkgs.follows = "nixpkgs-nod";
-    };
-
     fakedroid = {
       url = "github:nix-community/nix-on-droid";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -448,20 +443,6 @@
 
     nur.url = "github:nix-community/NUR";
 
-    # my old nur, will remove
-    nur-program-learning = {
-      url = "github:Program-Learning/nur-packages";
-      # url = "gitfile:////home/nixos/Documents/code/program-learning-nur-packages?shallow=1";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    qqnt = {
-      # url = "github:Program-Learning/nur-packages";
-      url = "github:DataEraserC/nur-packages";
-      inputs.nixpkgs.follows = "nixpkgs";
-      # url = "gitfile:////home/nixos/Documents/code/program-learning-nur-packages?shallow=1";
-    };
-
     clash-nyanpasu = {
       url = "github:DataEraserC/nur-packages/142b102b895bfe9bedf23504eb30e73d81f0f130";
     };
@@ -575,11 +556,6 @@
       # for the "android" flake.
       #
       # inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    fh = {
-      url = "https://flakehub.com/f/DeterminateSystems/fh/0.1.25";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     linyaps-flake = {

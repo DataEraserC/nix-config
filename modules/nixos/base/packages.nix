@@ -1,6 +1,5 @@
 {
   pkgs,
-  fh,
   ...
 }:
 {
@@ -45,8 +44,6 @@
     parted
     smartmontools # smartctl -a /dev/nvme0n1
     nvme-cli
-
-    fh.packages.${system}.default
   ];
 
   # BCC - Tools for BPF-based Linux IO analysis, networking, monitoring, and more

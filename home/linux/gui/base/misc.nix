@@ -2,7 +2,6 @@
   pkgs,
   pkgs-latest,
   pkgs-unstable-etcher,
-  qqnt,
   nur-linyinfeng,
   nur-xddxdd,
   nur-DataEraserC,
@@ -76,8 +75,8 @@
     # wechat-uos
     # nur-DataEraserC.packages.${pkgs.system}.wechat-uos
 
-    # qqnt.packages.${pkgs.system}.llqqnt
-    qqnt.packages.${pkgs.system}.bqqnt
+    # nur-DataEraserC.packages.${pkgs.system}.llqqnt
+    nur-DataEraserC.packages.${pkgs.system}.bqqnt
 
     #-- feishu
     feishu
