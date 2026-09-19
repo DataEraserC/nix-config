@@ -105,7 +105,7 @@ in
           # minecraft # Official MineCraft Launcher
           # prismlauncher
 
-          mindustry-wayland
+          #mindustry-wayland
           #mindustry-server
         ]);
   };
