@@ -7,11 +7,6 @@
 }:
 let
   inherit (myvars) username;
-  makeDirRW = dir: dir;
-  # makeDirRW = dir: {
-  #   directory = dir;
-  #   configureParent = true;
-  # };
 in
 {
   imports = [
@@ -101,16 +96,16 @@ in
       # cliproxyapi (generated config.yaml, management key and auth/provider files)
       {
         directory = "/var/lib/cliproxyapi";
-        user = "cliproxyapi";
-        group = "cliproxyapi";
+        # user = "cliproxyapi";
+        # group = "cliproxyapi";
         mode = "0700";
       }
 
       # m365-copilot2api (accounts, tokens, sessions, API keys, settings)
       {
         directory = "/var/lib/m365-copilot2api";
-        user = "m365-copilot2api";
-        group = "m365-copilot2api";
+        # user = "m365-copilot2api";
+        # group = "m365-copilot2api";
         mode = "0700";
       }
 
@@ -126,21 +121,21 @@ in
 
       {
         directory = "/var/lib/gnome-remote-desktop";
-        user = "gnome-remote-desktop";
-        group = "gnome-remote-desktop";
+        # user = "gnome-remote-desktop";
+        # group = "gnome-remote-desktop";
         mode = "0755";
       }
       {
         directory = "/etc/gnome-remote-desktop";
-        user = "gnome-remote-desktop";
-        group = "gnome-remote-desktop";
+        # user = "gnome-remote-desktop";
+        # group = "gnome-remote-desktop";
         mode = "0755";
       }
 
       # shared sunshine identity data (see hosts/idols-ai/sunshine.nix)
       {
         directory = "/var/lib/sunshine";
-        group = "sunshine";
+        # group = "sunshine";
         mode = "2770";
       }
     ];
@@ -247,6 +242,10 @@ in
 
         # pi coding agent (sessions under ~/.pi/agent/sessions)
         ".pi"
+
+        # herdr: plugin registry, plugin checkouts/config, session layout
+        ".config/herdr"
+        ".local/state/herdr"
 
         ".context7" # up-to-date docs and code examples for for LLMs & agents
 
@@ -384,6 +383,7 @@ in
         ".config/google-chrome"
         ".config/chromium"
         ".config/google-chrome-unstable"
+        ".config/BraveSoftware/Brave-Origin"
         ".config/microsoft-edge"
 
         # ======================================
@@ -450,28 +450,28 @@ in
         ".local/share/authenticator/"
         ".local/share/hmcl" # HMCL launcher shared accounts/config
 
-        (makeDirRW ".wine")
-        (makeDirRW ".winboat")
-        (makeDirRW ".hmcl") # HMCL launcher accounts/config
-        (makeDirRW ".minecraft")
-        (makeDirRW "GOG Games")
+        ".wine"
+        ".winboat"
+        ".hmcl" # HMCL launcher accounts/config
+        ".minecraft"
+        "GOG Games"
 
-        (makeDirRW "Apps") # some apps temporarily store at here
+        "Apps" # some apps temporarily store at here
 
-        (makeDirRW ".config/Ryujinx")
-        (makeDirRW ".config/yuzu")
-        (makeDirRW ".config/suyu")
-        (makeDirRW ".config/lutris")
-        (makeDirRW ".config/gnome-boxes")
-        (makeDirRW "Android")
-        (makeDirRW ".android")
+        ".config/Ryujinx"
+        ".config/yuzu"
+        ".config/suyu"
+        ".config/lutris"
+        ".config/gnome-boxes"
+        "Android"
+        ".android"
         ".config/.android"
-        (makeDirRW "workspace")
-        (makeDirRW "eclipse-workspace")
-        (makeDirRW ".Genymobile")
-        (makeDirRW "AndroidStudioProjects")
-        (makeDirRW "IdeaProjects")
-        (makeDirRW ".jdks")
+        "workspace"
+        "eclipse-workspace"
+        ".Genymobile"
+        "AndroidStudioProjects"
+        "IdeaProjects"
+        ".jdks"
 
         # persist gnome shell extensions clipboard-indicator
         ".cache/clipboard-indicator@tudmotu.com"
@@ -483,18 +483,18 @@ in
         # nix-index
         ".cache/nix-index"
 
-        (makeDirRW ".tldr")
+        ".tldr"
 
         # cisco packet tracer
-        (makeDirRW "pt")
+        "pt"
 
         # email clients profiles
-        (makeDirRW ".thunderbird")
+        ".thunderbird"
 
         # ServerBox
         ".config/ServerBox"
 
-        (makeDirRW "BetterUniverse")
+        "BetterUniverse"
 
         # clash
         ".config/clash"
@@ -513,8 +513,8 @@ in
         ".config/niri"
 
         # ai related file dirs
-        (makeDirRW "invokeai")
-        (makeDirRW ".textgen")
+        "invokeai"
+        ".textgen"
         ".config/LaphaeLaicmd"
         ".config/aichat"
         # NOTE: this can be remove bcs we use `services.ollama` which place files in `/var/lib/ollama` by default
@@ -541,7 +541,6 @@ in
         ".config/ncmpcpp"
         ".config/uGet"
         ".config/Motrix"
-        ".config/sunshine"
         ".config/icalingua"
         ".config/MuseScore"
         ".config/ghc"
@@ -577,10 +576,10 @@ in
         ".local/share/gvfs-metadata"
 
         # nvfetcher cache
-        (makeDirRW "_sources")
+        "_sources"
 
         # Trash Bin
-        (makeDirRW ".Trash-1000")
+        ".Trash-1000"
       ];
       files = [
         {

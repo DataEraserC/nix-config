@@ -18,9 +18,10 @@ let
     4
     5
   ]);
+  sunshineUsers = [ myvars.username ] ++ (if config.services.displayManager.gdm.enable then greeters else []);
 in
 {
-  config = lib.mkIf (config.services.sunshine.enable && config.services.displayManager.gdm.enable) {
+  config = lib.mkIf (config.services.sunshine.enable) {
     # The GDM greeter is itself a full graphical session running as one of the
     # `gdm-greeter` users, so the globally-enabled sunshine user service also
     # starts there. Its XDG dirs point at /var/lib/gdm/seat0/{config,state},
@@ -35,7 +36,7 @@ in
     # dedicated group whose sole purpose is sharing sunshine data
     users.groups.sunshine = { };
 
-    users.users = lib.genAttrs ([ myvars.username ] ++ greeters) (name: {
+    users.users = lib.genAttrs (sunshineUsers) (name: {
       extraGroups = [ "sunshine" ];
     });
 
