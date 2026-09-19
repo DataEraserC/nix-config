@@ -3,6 +3,7 @@
   deepseek-harness,
   nur-DataEraserC,
   config,
+  myvars,
   lib,
   ...
 }:
@@ -25,6 +26,8 @@ let
     pkgs.dsh.bundles.navbar
     nur-DataEraserC.packages.${pkgs.system}.opencode2dsh
     nur-DataEraserC.packages.${pkgs.system}.dsh-bas-remote
+    nur-DataEraserC.packages.${pkgs.system}.qq-bridge-dsh
+    nur-DataEraserC.packages.${pkgs.system}.qq-mode-console
   ];
 in
 {
@@ -37,6 +40,8 @@ in
   config = lib.mkIf cfg.enable {
     environment.systemPackages = [
       # pkgs.dsh.dsh-desktop
+
+      nur-DataEraserC.packages.${pkgs.system}.qq-bridge
     ];
 
     programs.dsh = {
@@ -54,6 +59,8 @@ in
           pkgs.dsh.bundles.navbar
           nur-DataEraserC.packages.${pkgs.system}.opencode2dsh
           nur-DataEraserC.packages.${pkgs.system}.dsh-bas-remote
+          nur-DataEraserC.packages.${pkgs.system}.qq-bridge-dsh
+          nur-DataEraserC.packages.${pkgs.system}.qq-mode-console 
         ];
         web.bundles = webBundles;
 
@@ -86,6 +93,15 @@ in
         };
       };
       defaultProfile = config.programs.dsh.profiles.tui.materializedName;
+    };
+
+    system.userActivationScripts.dsh-qq-presets = {
+      text = ''
+        mkdir -p ~/.dsh/.agent-presets/qq-chat
+        cp -r ${nur-DataEraserC.packages.${pkgs.system}.qq-bridge-dsh}/share/qq-bridge-presets/qq-chat/. ~/.dsh/.agent-presets/qq-chat/
+        mkdir -p ~/.dsh/.agent-presets/qq-chat-v2
+        cp -r ${nur-DataEraserC.packages.${pkgs.system}.qq-bridge-dsh}/share/qq-bridge-presets/qq-chat-v2/. ~/.dsh/.agent-presets/qq-chat-v2/
+      '';
     };
   };
 }
