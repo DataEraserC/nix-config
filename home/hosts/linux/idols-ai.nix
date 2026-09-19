@@ -1,7 +1,13 @@
-{ config, mylib, ... }:
+{
+  config,
+  lib,
+  mylib,
+  ...
+}:
 let
   mkSymlink = mylib.mklinkRelativeToRoot;
   cfgNiri = config.modules.desktop.niri;
+  cfgGnomeWayland = config.modules.desktop.gnome-wayland;
 in
 {
   imports = [
@@ -37,6 +43,10 @@ in
 
   xdg.configFile."niri/niri-hardware.kdl".source =
     mkSymlink config "hosts/idols-ai/niri-hardware.kdl";
+
+  xdg.configFile."monitors.xml" = lib.mkIf cfgGnomeWayland.enable {
+    source = mkSymlink config "hosts/idols-ai/monitors.xml";
+  };
 
   # The desktop speakers are already loud, so use the broadcast-standard -23 dB.
   services.easyeffects.extraPresets."loudness-normalization".output."autogain#0".target = -23.0;
