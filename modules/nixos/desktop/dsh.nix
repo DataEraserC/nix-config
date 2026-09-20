@@ -26,8 +26,11 @@ let
     pkgs.dsh.bundles.navbar
     nur-DataEraserC.packages.${pkgs.system}.opencode2dsh
     nur-DataEraserC.packages.${pkgs.system}.dsh-bas-remote
-    nur-DataEraserC.packages.${pkgs.system}.qq-bridge-dsh
+    (nur-DataEraserC.packages.${pkgs.system}.qq-bridge-dsh.override {
+      qqBridgeHome = "/home/${myvars.username}/.local/share/qq-bridge";
+    })
     nur-DataEraserC.packages.${pkgs.system}.qq-mode-console
+    nur-DataEraserC.packages.${pkgs.system}.dsh-plugin-guard
   ];
 in
 {
@@ -42,6 +45,7 @@ in
       # pkgs.dsh.dsh-desktop
 
       nur-DataEraserC.packages.${pkgs.system}.qq-bridge
+      nur-DataEraserC.packages.${pkgs.system}.dsh-plugin-guard
     ];
 
     programs.dsh = {
@@ -59,8 +63,11 @@ in
           pkgs.dsh.bundles.navbar
           nur-DataEraserC.packages.${pkgs.system}.opencode2dsh
           nur-DataEraserC.packages.${pkgs.system}.dsh-bas-remote
-          nur-DataEraserC.packages.${pkgs.system}.qq-bridge-dsh
+          (nur-DataEraserC.packages.${pkgs.system}.qq-bridge-dsh.override {
+            qqBridgeHome = "/home/${myvars.username}/.local/share/qq-bridge";
+          })
           nur-DataEraserC.packages.${pkgs.system}.qq-mode-console 
+          nur-DataEraserC.packages.${pkgs.system}.dsh-plugin-guard
         ];
         web.bundles = webBundles;
 
