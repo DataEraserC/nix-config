@@ -41,8 +41,10 @@ in
     services.dataEraserc.opencode2api = {
       enable = true;
       package = nur-DataEraserC.packages.${system}.opencode2api;
+      host = "0.0.0.0";
       port = 4142;
       webUi = {
+        host = "0.0.0.0";
         port = 4143;
         enable = true;
         passwordFile = "/run/agenix/opencode2api-webui-password";
