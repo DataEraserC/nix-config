@@ -213,6 +213,12 @@ in
           owner = "m365-copilot2api";
           group = "m365-copilot2api";
         };
+        "opencode2api-webui-password" = {
+          file = "${mysecrets}/agenix/opencode2api-webui-password.age";
+          mode = "0600";
+          owner = "opencode2api";
+          group = "opencode2api";
+        };
       };
 
       # place secrets in /etc/

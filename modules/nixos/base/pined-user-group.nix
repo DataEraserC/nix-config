@@ -17,6 +17,8 @@
     cliproxyapi = { };
     # m365-copilot2api
     m365-copilot2api = { };
+    # opencode2api
+    opencode2api = { };
   };
   users.users = {
     gnome-remote-desktop = {
@@ -33,6 +35,11 @@
       isNormalUser = lib.mkDefault false;
       isSystemUser = lib.mkDefault true;
       group = "m365-copilot2api";
+    };
+    opencode2api = {
+      isNormalUser = lib.mkDefault false;
+      isSystemUser = lib.mkDefault true;
+      group = "opencode2api";
     };
   };
 }

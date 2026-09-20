@@ -44,6 +44,12 @@
   };
   users.groups.m365-copilot2api = { };
 
+  users.users.opencode2api = {
+    isSystemUser = true;
+    group = "opencode2api";
+  };
+  users.groups.opencode2api = { };
+
   # The OpenSSH agent remembers private keys for you
   # so that you don’t have to type in passphrases every time you make an SSH connection.
   # Use `ssh-add` to add a key to the agent.

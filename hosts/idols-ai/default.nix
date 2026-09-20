@@ -122,6 +122,9 @@ rec {
   # M365 Copilot2API gateway, bound to 0.0.0.0:4141.
   modules.m365-copilot2api.enable = true;
 
+  # opencode2api gateway, bound to 127.0.0.1:8080 (API) and 127.0.0.1:8081 (WebUI).
+  modules.opencode2api.enable = true;
+
   # Power off after staying offline for 30min(no access to the gateway or a
   # public host). Options here are the nix defaults; for temporary live tweaks
   # without a rebuild use `sudo auto-shutdown {disable|enable|grace|reset}`
