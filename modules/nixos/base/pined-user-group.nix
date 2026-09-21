@@ -19,6 +19,8 @@
     m365-copilot2api = { };
     # opencode2api
     opencode2api = { };
+    # ollama
+    ollama = { };
   };
   users.users = {
     gnome-remote-desktop = {
@@ -40,6 +42,11 @@
       isNormalUser = lib.mkDefault false;
       isSystemUser = lib.mkDefault true;
       group = "opencode2api";
+    };
+    ollama = {
+      isNormalUser = lib.mkDefault false;
+      isSystemUser = lib.mkDefault true;
+      group = "ollama";
     };
   };
 }
