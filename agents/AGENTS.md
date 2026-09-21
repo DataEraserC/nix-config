@@ -1,4 +1,4 @@
-> **Fork-specific rules**: This repository is a DataEraserC fork of [ryan4yin/nix-config](https://github.com/ryan4yin/nix-config). Fork-specific rules (AI contribution attribution, etc.) are in [agents/downstream.md](./downstream.md). This file preserves the upstream original content to minimize merge conflicts.
+> **Fork-specific rules**: This repository is a DataEraserC fork of [ryan4yin/nix-config](https://github.com/ryan4yin/nix-config). Fork-specific rules (AI contribution attribution, etc.) are in [AGENTS_downstream.md](./AGENTS_downstream.md). This file preserves the upstream original content to minimize merge conflicts.
 
 # Personal global agent rules
 

@@ -1,5 +1,7 @@
 # Repository Agent Guide
 
+> **Fork-specific rules**: This repository is a DataEraserC fork of [ryan4yin/nix-config](https://github.com/ryan4yin/nix-config). Fork-specific rules are in [AGENTS_downstream.md](./AGENTS_downstream.md) (currently empty). This file preserves the upstream original content to minimize merge conflicts.
+
 This flake manages NixOS hosts, macOS via nix-darwin, shared Home Manager profiles, and Colmena
 deployments. Keep repository guidance here; reusable global rules live in `agents/AGENTS.md`. See
 [agents/README.md](./agents/README.md) for their scope and symlink installation targets.

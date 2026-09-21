@@ -37,6 +37,7 @@ def install_one(target_dir: Path, source_file: Path, target_name: str) -> None:
 def main() -> int:
     script_dir = Path(__file__).resolve().parent
     agents_file = script_dir / "AGENTS.md"
+    downstream_file = script_dir / "AGENTS_downstream.md"
 
     if not agents_file.is_file():
         print(f"Missing source file: {agents_file}", file=sys.stderr)
@@ -48,15 +49,22 @@ def main() -> int:
     claude_dir = Path("~/.claude").expanduser()
     agents_dir = Path("~/.agents").expanduser()
     targets = (
-        (codex_dir, "AGENTS.md"),
-        (opencode_dir, "AGENTS.md"),
-        (claude_dir, "CLAUDE.md"),
-        (agents_dir, "AGENTS.md"),
+        (codex_dir, "AGENTS.md", agents_file),
+        (opencode_dir, "AGENTS.md", agents_file),
+        (claude_dir, "CLAUDE.md", agents_file),
+        (agents_dir, "AGENTS.md", agents_file),
     )
+    # Also install downstream rules if the file exists
+    if downstream_file.is_file():
+        targets += (
+            (codex_dir, "AGENTS_downstream.md", downstream_file),
+            (opencode_dir, "AGENTS_downstream.md", downstream_file),
+            (agents_dir, "AGENTS_downstream.md", downstream_file),
+        )
     failed = False
-    for target_dir, target_name in targets:
+    for target_dir, target_name, source in targets:
         try:
-            install_one(target_dir, agents_file, target_name)
+            install_one(target_dir, source, target_name)
         except OSError as error:
             print(f"failed  {target_dir / target_name}: {error}", file=sys.stderr)
             failed = True
