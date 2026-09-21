@@ -7,7 +7,7 @@ let
 in
 {
   services.ollama = rec {
-    enable = true;
+    enable = false;
     package = pkgs.ollama;
     user = "ollama";
     group = "ollama";

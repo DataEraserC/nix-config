@@ -86,6 +86,18 @@ rec {
         remotePort = 4141;
       }
       {
+        name = "opencode2api";
+        localPort = 34142;
+        remoteHost = "10.126.126.150";
+        remotePort = 4142;
+      }
+      {
+        name = "opencode2api-management-center";
+        localPort = 34143;
+        remoteHost = "10.126.126.150";
+        remotePort = 4143;
+      }
+      {
         name = "openwebui";
         localPort = 38080;
         remoteHost = "10.126.126.150";

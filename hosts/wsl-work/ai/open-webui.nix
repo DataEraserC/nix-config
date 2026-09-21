@@ -7,7 +7,7 @@
 {
   services.open-webui = {
     package = pkgs.open-webui;
-    enable = true;
+    enable = false;
     host = "0.0.0.0";
   };
 }
