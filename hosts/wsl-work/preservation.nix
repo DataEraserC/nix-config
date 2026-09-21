@@ -109,6 +109,12 @@ in
         mode = "0700";
       }
 
+      # opencode2api (config.json, model caches, server key)
+      {
+        directory = "/var/lib/opencode2api";
+        mode = "0700";
+      }
+
       # ccache
       "/var/cache/ccache"
 
