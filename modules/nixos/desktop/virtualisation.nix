@@ -44,6 +44,26 @@
       enableOnBoot = true;
     };
 
+    # Containers registries configuration (shared by Docker and Podman)
+    # https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md
+    containers = {
+      registries = {
+        # Unqualified image names (e.g. "nginx") will be searched in these registries in order
+        search = [
+          "docker.io"
+          "quay.io"
+          "ghcr.io"
+          "registry.k8s.io"
+          "mcr.microsoft.com"
+          "gcr.io"
+        ];
+        # Insecure registries (HTTP instead of HTTPS) - add as needed
+        insecure = [ ];
+        # Blocked registries - block any known malicious or unused registries
+        block = [ ];
+      };
+    };
+
     # Do not use "--restart=always" to create container, or shutdown/reboot will be slow
     # https://github.com/containers/podman/issues/15284
     podman = {
