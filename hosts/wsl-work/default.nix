@@ -68,6 +68,9 @@ rec {
   # M365 Copilot2API gateway, bound to 0.0.0.0:4141.
   modules.m365-copilot2api.enable = true;
 
+  # opencode2api gateway, bound to 0.0.0.0:4142 (API) and 0.0.0.0:4143 (WebUI).
+  modules.opencode2api.enable = true;
+
   modules.port-forwarding = {
     enable = true;
     # implementation = "socat";  # default, uncomment to switch explicitly

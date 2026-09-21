@@ -122,7 +122,7 @@ rec {
   # M365 Copilot2API gateway, bound to 0.0.0.0:4141.
   modules.m365-copilot2api.enable = true;
 
-  # opencode2api gateway, bound to 127.0.0.1:8080 (API) and 127.0.0.1:8081 (WebUI).
+  # opencode2api gateway, bound to 0.0.0.0:4142 (API) and 0.0.0.0:4143 (WebUI).
   modules.opencode2api.enable = true;
 
   # Power off after staying offline for 30min(no access to the gateway or a
