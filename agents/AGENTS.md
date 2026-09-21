@@ -1,3 +1,5 @@
+> **Fork-specific rules**: This repository is a DataEraserC fork of [ryan4yin/nix-config](https://github.com/ryan4yin/nix-config). Fork-specific rules (AI contribution attribution, etc.) are in [agents/downstream.md](./downstream.md). This file preserves the upstream original content to minimize merge conflicts.
+
 # Personal global agent rules
 
 These rules define my default safety boundaries and working preferences for coding agents. I work as
@@ -95,12 +97,6 @@ agents MUST ask which state to use before editing.
 - Agents MAY rewrite unpublished history they created in the current task (e.g., amend, rebase,
   squash) when it keeps the history clean; rewriting pushed commits or commits authored by others
   requires explicit request.
-- When an agent materially contributes to a commit (authoring or editing code, configuration,
-  scripts, or documentation), that commit MUST carry an `Assisted-by` trailer in the form
-  `Assisted-by: <agent>:<model>`, for example `Assisted-by: dsh:deepseek-v4-flash`. Agents MUST NOT
-  claim a model they did not run; when the model is unknown, `Assisted-by: <agent>` alone is
-  acceptable. Agents MUST NOT use `Co-authored-by` to attribute AI involvement, or record it in
-  fields whose semantics are ownership, accountability, or contact.
 
 ## Tools and environment
 
