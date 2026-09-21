@@ -43,9 +43,6 @@ rec {
     # others
     ./ai
     ./proxmox.nix
-    ../../modules/nixos/desktop/networking/pgy.nix
-    ../../modules/nixos/desktop/networking/easytier.nix
-
     # ./tpm_luks.nix
     ./dae.nix
   ];
@@ -115,6 +112,12 @@ rec {
     inherit hostName;
     username = myvars.username;
   };
+
+  # Oray PgyVisitor SDN client
+  modules.pgy.enable = true;
+
+  # EasyTier decentralized P2P VPN
+  modules.easytier.enable = true;
 
   # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:8317.
   modules.cliproxyapi.enable = true;

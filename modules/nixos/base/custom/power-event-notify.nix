@@ -11,7 +11,7 @@
 #   title "<host> · power lost"/"<host> · power restored",
 #   tags "warning"/"electric_plug", priority high/low.
 #
-# Architecture note: the script's logic lives in ../scripts/power-event-notify.sh
+# Architecture note: the script's logic lives in ./scripts/power-event-notify.sh
 # as a plain shell file(no nix interpolation inside), all config-dependent values
 # are injected into the systemd unit via `environment`.
 #
@@ -41,7 +41,7 @@ let
   cfg = config.modules.power-event-notify;
 
   script = pkgs.writeShellScript "power-event-notify" (
-    builtins.readFile ../scripts/power-event-notify.sh
+    builtins.readFile ./scripts/power-event-notify.sh
   );
 
   # udev rule file shipped via services.udev.packages(composes cleanly with

@@ -11,7 +11,7 @@
     ../desktop/appcast.nix
     ../base/i18n.nix
     ../base/user-group.nix
-    ../base/m365-copilot2api.nix
+    ../base/custom
     ./apparmor-workaround.nix
 
     # ./vscode-remote-workaround.nix

@@ -92,12 +92,12 @@ let
   mode = if cfg.conditions != [ ] then cfg.mode else "any";
 
   checkScript = pkgs.writeShellScript "auto-shutdown-check" (
-    builtins.readFile ../scripts/auto-shutdown-check.sh
+    builtins.readFile ./scripts/auto-shutdown-check.sh
   );
 
   # CLI for temporary runtime overrides(no rebuild). It only writes a file under
   # /run, so any change resets to the nix defaults on the next reboot.
-  cli = pkgs.writeShellScriptBin "auto-shutdown" (builtins.readFile ../scripts/auto-shutdown-cli.sh);
+  cli = pkgs.writeShellScriptBin "auto-shutdown" (builtins.readFile ./scripts/auto-shutdown-cli.sh);
 in
 {
   options.modules.auto-shutdown = {

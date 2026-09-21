@@ -35,9 +35,6 @@ rec {
     # ./secureboot.nix
     # ./dae.nix
 
-    ../../modules/nixos/desktop/networking/pgy.nix
-    ../../modules/nixos/desktop/networking/easytier.nix
-
     # wsl related
   ];
 
@@ -61,6 +58,12 @@ rec {
     enable = true;
     inherit hostName;
   };
+
+  # Oray PgyVisitor SDN client
+  modules.pgy.enable = true;
+
+  # EasyTier decentralized P2P VPN
+  modules.easytier.enable = true;
 
   # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:8317.
   modules.cliproxyapi.enable = true;

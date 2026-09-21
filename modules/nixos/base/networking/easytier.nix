@@ -28,40 +28,48 @@
 # =============================================================
 {
   config,
+  lib,
   pkgs,
   myvars,
   ...
 }:
 let
+  cfg = config.modules.easytier;
   hostName = config.networking.hostName;
   et = myvars.networking.easytier;
 in
 {
-  # make the easytier command usable to users
-  environment.systemPackages = [ pkgs.easytier ];
+  options.modules.easytier = {
+    enable = lib.mkEnableOption "EasyTier decentralized P2P VPN";
+  };
 
-  # enable the easytier service
-  services.easytier = {
-    enable = true;
-    instances.main = {
-      environmentFiles = [
-        config.age.secrets."easytier-env".path
-      ];
-      settings = {
-        hostname = hostName;
-        network_name = null;
-        network_secret = null;
-        ipv4 = et.instances.${hostName};
-        listeners = [
-          "tcp://0.0.0.0:11010"
-          "udp://0.0.0.0:11010"
+  config = lib.mkIf cfg.enable {
+    # make the easytier command usable to users
+    environment.systemPackages = [ pkgs.easytier ];
+
+    # enable the easytier service
+    services.easytier = {
+      enable = true;
+      instances.main = {
+        environmentFiles = [
+          config.age.secrets."easytier-env".path
+        ];
+        settings = {
+          hostname = hostName;
+          network_name = null;
+          network_secret = null;
+          ipv4 = et.instances.${hostName};
+          listeners = [
+            "tcp://0.0.0.0:11010"
+            "udp://0.0.0.0:11010"
+          ];
+        };
+        # Give the virtual NIC a recognizable name instead of the default tun0.
+        extraArgs = [
+          "--dev-name"
+          "easytier0"
         ];
       };
-      # Give the virtual NIC a recognizable name instead of the default tun0.
-      extraArgs = [
-        "--dev-name"
-        "easytier0"
-      ];
     };
   };
 }
