@@ -101,6 +101,14 @@ in
         mode = "0700";
       }
 
+      # new-api (database)
+      {
+        directory = "/var/lib/new-api";
+        # user = "new-api";
+        # group = "new-api";
+        mode = "0700";
+      }
+
       # m365-copilot2api (accounts, tokens, sessions, API keys, settings)
       {
         directory = "/var/lib/m365-copilot2api";
