@@ -31,6 +31,7 @@ let
     })
     nur-DataEraserC.packages.${pkgs.system}.qq-mode-console
     nur-DataEraserC.packages.${pkgs.system}.dsh-plugin-guard
+    # nur-DataEraserC.packages.${pkgs.system}.dsh-git-worktree
   ];
 in
 {
@@ -68,6 +69,7 @@ in
           })
           nur-DataEraserC.packages.${pkgs.system}.qq-mode-console 
           nur-DataEraserC.packages.${pkgs.system}.dsh-plugin-guard
+          # nur-DataEraserC.packages.${pkgs.system}.dsh-git-worktree
         ];
         web.bundles = webBundles;
 
