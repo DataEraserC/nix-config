@@ -120,7 +120,7 @@ rec {
   modules.easytier.enable = true;
 
   # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:8317.
-  modules.cliproxyapi.enable = true;
+  modules.cliproxyapi.enable = false;
 
   # M365 Copilot2API gateway, bound to 0.0.0.0:4141.
   modules.m365-copilot2api.enable = true;
