@@ -21,7 +21,7 @@
   };
 
   home.packages = with pkgs; [
-    xorg.xhost # to fix sudo graphical application
+    xhost # to fix sudo graphical application
     wev # debug which key is pressed
     libinput # debug input subsystem
     cliphist # Wayland clipboard manager

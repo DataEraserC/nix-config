@@ -47,5 +47,5 @@
     # wezterm start --cwd %f
   };
 
-  documentation.man.generateCaches = false;
+  documentation.man.cache.enable = false;
 }

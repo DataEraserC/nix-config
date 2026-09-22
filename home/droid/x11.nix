@@ -19,7 +19,7 @@ let
 
   myx = writeShellScriptBin "myx" ''
     export DISPLAY=$1 #TODO dynamic?
-    LD_PRELOAD=${id_so}/id.so ${xorg.xorgserver}/bin/Xvfb $1 -ac -listen tcp &
+    LD_PRELOAD=${id_so}/id.so ${xorgserver}/bin/Xvfb $1 -ac -listen tcp &
     sleep 5
     ${x11vnc}/bin/x11vnc -display $1 -passwd test -rfbport 5902 -noshm -forever &  #not sure why noshm still needed
     awesome &

@@ -375,7 +375,6 @@
 
     vscode-server = {
       url = "github:nix-community/nixos-vscode-server";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     nixpkgs-wayland = {
@@ -521,7 +520,6 @@
     # pve-nixos
     proxmox-nixos = {
       url = "github:SaumonNet/proxmox-nixos";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     # noctalia-shell
