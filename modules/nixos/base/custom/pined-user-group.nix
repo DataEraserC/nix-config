@@ -21,6 +21,8 @@
     opencode2api = { };
     # ollama
     ollama = { };
+    # new-api
+    new-api = { };
   };
   users.users = {
     gnome-remote-desktop = {
@@ -47,6 +49,11 @@
       isNormalUser = lib.mkDefault false;
       isSystemUser = lib.mkDefault true;
       group = "ollama";
+    };
+    new-api = {
+      isNormalUser = lib.mkDefault false;
+      isSystemUser = lib.mkDefault true;
+      group = "new-api";
     };
   };
 }

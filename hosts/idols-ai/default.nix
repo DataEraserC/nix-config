@@ -128,6 +128,9 @@ rec {
   # opencode2api gateway, bound to 0.0.0.0:4142 (API) and 0.0.0.0:4143 (WebUI).
   modules.opencode2api.enable = true;
 
+  # new-api LLM gateway, bound to 0.0.0.0:3000.
+  modules.new-api.enable = true;
+
   # Power off after staying offline for 30min(no access to the gateway or a
   # public host). Options here are the nix defaults; for temporary live tweaks
   # without a rebuild use `sudo auto-shutdown {disable|enable|grace|reset}`
