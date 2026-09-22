@@ -86,6 +86,12 @@ rec {
         remotePort = 8317;
       }
       {
+        name = "new-api";
+        localPort = 33000;
+        remoteHost = "10.126.126.150";
+        remotePort = 3000;
+      }
+      {
         name = "M365-Copilot2API";
         localPort = 34141;
         remoteHost = "10.126.126.150";
