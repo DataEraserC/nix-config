@@ -219,6 +219,12 @@ in
           owner = "opencode2api";
           group = "opencode2api";
         };
+        "new-api-session-secret" = {
+          file = "${mysecrets}/agenix/new-api-session-secret.age";
+          mode = "0600";
+          owner = "new-api";
+          group = "new-api";
+        };
       };
 
       # place secrets in /etc/
