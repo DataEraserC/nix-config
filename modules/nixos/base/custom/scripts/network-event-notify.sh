@@ -27,7 +27,30 @@ notify_status(){
 
   IPV4_ADDR=$(ip -4 addr show dev "$INTERFACE" 2>/dev/null | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n1)
   IPV6_ADDR=$(ip -6 addr show dev "$INTERFACE" 2>/dev/null | grep -oP '(?<=inet6\s)[0-9a-f:]+' | grep -v '^fe80:' | head -n1)
-  PUBLIC_IP=$(curl -s -m 10 -4 ifconfig.co 2>/dev/null || curl -s -m 10 -6 ifconfig.co 2>/dev/null || true)
+  get_public_ip() {
+    local family endpoint response
+
+    for family in -4 -6; do
+      for endpoint in \
+        "https://api64.ipify.org" \
+        "https://ifconfig.co/ip" \
+        "https://icanhazip.com"; do
+        response="$(curl -fsS --max-time 5 "$family" "$endpoint" 2>/dev/null || true)"
+        response="${response//$'\r'/}"
+        response="${response//$'\n'/}"
+
+        if [[ "$response" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] ||
+           [[ "$response" =~ ^[0-9A-Fa-f:]+$ && "$response" == *:* ]]; then
+          printf '%s\n' "$response"
+          return 0
+        fi
+      done
+    done
+
+    return 1
+  }
+
+  PUBLIC_IP=$(get_public_ip || true)
 
   case "$STATUS" in
     down|vpn-down) TAGS="warning"; PRIO="high" ;;
