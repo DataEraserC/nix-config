@@ -60,12 +60,14 @@ let
       qqBridgeHome = "/home/${myvars.username}/.local/share/qq-bridge";
     })
     nur-DataEraserC.packages.${pkgs.system}.qq-mode-console
-    # The long-lived group-chat server launch (see ~/tmp/dsh-web) redirects
-    # dsh stdout/stderr into `~/.dsh/guard/logs/`; that log home, the
-    # incident reports, and the boot-guard rollback all belong to
-    # dsh-plugin-guard — the QQ surface depends on it for exactly that part.
-    # Unstable otherwise, so it stays parked commented out here; enable it
-    # for web-qq once validated.
+    # The group-chat server launch must write dsh stdout to
+    # `~/.dsh/guard/logs/server-<stamp>.out.log`: with `dsh.authToken`
+    # left empty, qq-bridge discovers the DSH launch token from the newest
+    # file matching that exact pattern, and re-discovers after a 401 or a
+    # restart. The log home, the `server-<stamp>.out.log` naming, and its
+    # retention are all provided by dsh-plugin-guard — web-qq depends on
+    # it for exactly that part. Unstable otherwise; parked commented out,
+    # enable for web-qq once validated.
     # nur-DataEraserC.packages.${pkgs.system}.dsh-plugin-guard
   ];
 
