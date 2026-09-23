@@ -64,6 +64,10 @@ in
       # Nautilus now shares GTK's file-chooser setting, see below.
     };
 
+    # Disable donation reminder in GNOME Settings
+    # I'm so sorry for the GNOME developers, but I don't have the money to donate to GNOME, and I don't want to be reminded about it every time I open GNOME Settings.
+    settings."org/gnome/settings-daemon/plugins/housekeeping" = { donation-reminder-enabled = false; };
+
     # Show hidden files in nautilus (and in GTK4 file chooser dialogs).
     # Nautilus reads `show-hidden` from `org.gtk.gtk4.Settings.FileChooser` at path
     # `/org/gtk/gtk4/settings/file-chooser/`, see
