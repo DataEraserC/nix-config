@@ -13,26 +13,31 @@ let
   # Composition shared by the Web profiles. A profile owns its own bundle list,
   # so the exposed variant restates it instead of inheriting it; the plugin
   # packages themselves are hoisted once under `$DSH_HOME/profiles/node_modules`.
-  webBundles = [
+  webBase = [
     pkgs.dsh.bundles.web-app
     pkgs.dsh.bundles.modsearch
-    pkgs.dsh.bundles.turn-rewind
     pkgs.dsh.bundles.web-ui
-    pkgs.dsh.bundles.cpa
     pkgs.dsh.bundles.remote
-    # pkgs.dsh.bundles.message-edit
-    pkgs.dsh.bundles.agent-teams
-    # pkgs.dsh.bundles.ads
-    pkgs.dsh.bundles.navbar
-    nur-DataEraserC.packages.${pkgs.system}.opencode2dsh
-    nur-DataEraserC.packages.${pkgs.system}.dsh-bas-remote
-    (nur-DataEraserC.packages.${pkgs.system}.qq-bridge-dsh.override {
-      qqBridgeHome = "/home/${myvars.username}/.local/share/qq-bridge";
-    })
-    nur-DataEraserC.packages.${pkgs.system}.qq-mode-console
-    nur-DataEraserC.packages.${pkgs.system}.dsh-plugin-guard
-    # nur-DataEraserC.packages.${pkgs.system}.dsh-git-worktree
   ];
+  webBundles = 
+    webBase ++
+    [
+      pkgs.dsh.bundles.turn-rewind
+      pkgs.dsh.bundles.cpa
+      # pkgs.dsh.bundles.message-edit
+      pkgs.dsh.bundles.agent-teams
+      # pkgs.dsh.bundles.ads
+      pkgs.dsh.bundles.navbar
+      nur-DataEraserC.packages.${pkgs.system}.opencode2dsh
+      nur-DataEraserC.packages.${pkgs.system}.dsh-bas-remote
+      (nur-DataEraserC.packages.${pkgs.system}.qq-bridge-dsh.override {
+        qqBridgeHome = "/home/${myvars.username}/.local/share/qq-bridge";
+      })
+      nur-DataEraserC.packages.${pkgs.system}.qq-mode-console
+      nur-DataEraserC.packages.${pkgs.system}.dsh-plugin-guard
+      # nur-DataEraserC.packages.${pkgs.system}.dsh-git-worktree
+      nur-DataEraserC.packages.${pkgs.system}.dsh-worktree
+    ];
 in
 {
   imports = [ deepseek-harness.nixosModules.default ];
@@ -70,8 +75,10 @@ in
           nur-DataEraserC.packages.${pkgs.system}.qq-mode-console 
           nur-DataEraserC.packages.${pkgs.system}.dsh-plugin-guard
           # nur-DataEraserC.packages.${pkgs.system}.dsh-git-worktree
+          nur-DataEraserC.packages.${pkgs.system}.dsh-worktree
         ];
         web.bundles = webBundles;
+        web-failsafe.bundles = webBase;
 
         # The same composition as `web`, with the webserver row patched to bind
         # every interface. dsh refuses `--host 0.0.0.0` at startup, so the bind
@@ -90,6 +97,18 @@ in
         #   dsh --profile nix-web-lan --no-open
         web-lan = {
           bundles = webBundles;
+          patch = ''
+            - id: webserver
+              config:
+                host: 0.0.0.0
+                port: !!js ctx.webStartup.port ?? 3080
+                compression: gzip
+                compressionLevel: 1
+                compressionThresholdBytes: 1024
+          '';
+        };
+        web-lan-failsafe = {
+          bundles = webBase;
           patch = ''
             - id: webserver
               config:
