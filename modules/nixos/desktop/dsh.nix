@@ -22,7 +22,9 @@ let
   # Base shared by every profile of both surfaces: interface-agnostic
   # plugins that are known to work everywhere. A `*-failsafe` profile is
   # exactly `<entry> ++ baseBundles` — the fallback when one of the extras
-  # below breaks the composition.
+  # below breaks the composition. modsearch is the essential search
+  # replacement and belongs in every profile; without it dsh's search
+  # capability is crippled.
   baseBundles = [
     pkgs.dsh.bundles.modsearch
     pkgs.dsh.bundles.remote
@@ -31,29 +33,47 @@ let
   # Extras shared by the full `tui` and `web` profiles: optional plugins
   # layered on top of the base. Later bundles override earlier Cordis
   # configuration, so keep risky additions here — the failsafe profiles
-  # omit this list entirely.
+  # omit this list entirely. The unstable QQ stack lives in `qqBundles`
+  # below and ships only in `web-qq`.
   extraBundles = [
     pkgs.dsh.bundles.turn-rewind
-    pkgs.dsh.bundles.cpa
+    # Retired: cliproxyapi is no longer deployed.
+    # pkgs.dsh.bundles.cpa
+    # Incompatible with the current kernel; keep disabled until it is fixed.
     # pkgs.dsh.bundles.message-edit
     pkgs.dsh.bundles.agent-teams
     # pkgs.dsh.bundles.ads
     pkgs.dsh.bundles.navbar
     nur-DataEraserC.packages.${pkgs.system}.opencode2dsh
     nur-DataEraserC.packages.${pkgs.system}.dsh-bas-remote
+    # nur-DataEraserC.packages.${pkgs.system}.dsh-git-worktree
+    nur-DataEraserC.packages.${pkgs.system}.dsh-worktree
+  ];
+
+  # QQ group-chat stack: unstable, so it stays out of the full profiles and
+  # ships only in `web-qq`. Group chat drives dsh through opencode2dsh, so
+  # the bridge pairs with it and needs nothing beyond the shared entry and
+  # base.
+  qqBundles = [
+    nur-DataEraserC.packages.${pkgs.system}.opencode2dsh
     (nur-DataEraserC.packages.${pkgs.system}.qq-bridge-dsh.override {
       qqBridgeHome = "/home/${myvars.username}/.local/share/qq-bridge";
     })
     nur-DataEraserC.packages.${pkgs.system}.qq-mode-console
-    nur-DataEraserC.packages.${pkgs.system}.dsh-plugin-guard
-    # nur-DataEraserC.packages.${pkgs.system}.dsh-git-worktree
-    nur-DataEraserC.packages.${pkgs.system}.dsh-worktree
+    # The long-lived group-chat server launch (see ~/tmp/dsh-web) redirects
+    # dsh stdout/stderr into `~/.dsh/guard/logs/`; that log home, the
+    # incident reports, and the boot-guard rollback all belong to
+    # dsh-plugin-guard — the QQ surface depends on it for exactly that part.
+    # Unstable otherwise, so it stays parked commented out here; enable it
+    # for web-qq once validated.
+    # nur-DataEraserC.packages.${pkgs.system}.dsh-plugin-guard
   ];
 
   tuiBundles = tuiEntry ++ baseBundles ++ extraBundles;
   tuiFailsafeBundles = tuiEntry ++ baseBundles;
   webBundles = webEntry ++ baseBundles ++ extraBundles;
   webFailsafeBundles = webEntry ++ baseBundles;
+  webQQBundles = webEntry ++ baseBundles ++ qqBundles;
 
   # The webserver row patched to bind every interface, shared by the two
   # LAN profiles. dsh refuses `--host 0.0.0.0` at startup, so the bind
@@ -107,6 +127,10 @@ in
         #   dsh --profile nix-web-failsafe
         tui-failsafe.bundles = tuiFailsafeBundles;
         web-failsafe.bundles = webFailsafeBundles;
+
+        # Group-chat surface: entry + base + QQ stack, no other extras.
+        #   dsh --profile nix-web-qq
+        web-qq.bundles = webQQBundles;
 
         # The same composition as `web`, with the webserver row patched to
         # bind every interface (see `webLanPatch` above):
