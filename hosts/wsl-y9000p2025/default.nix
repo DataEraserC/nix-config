@@ -79,6 +79,9 @@ rec {
   # new-api LLM gateway, bound to 0.0.0.0:3000.
   modules.new-api.enable = true;
 
+  # Route CLI traffic through the local / LAN SOCKS proxies.
+  modules.proxychains.enable = true;
+
   # networking.useNetworkd = true;
   # systemd.network.enable = true;
 

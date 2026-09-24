@@ -20,12 +20,9 @@
   # WSL has no wireless hardware, disable wpa_supplicant
   networking.wireless.enable = lib.mkForce false;
 
-  # Service accounts required by agenix secrets (cpolar.yml, alist-jwt)
-  users.users.alist = {
-    isSystemUser = true;
-    group = "nogroup";
-  };
-
+  # Service accounts required by agenix secrets (cpolar.yml).
+  # alist is superseded by the unconditional account in ../base/custom/alist.nix
+  # (this stub declared group = "nogroup", which conflicts with it).
   users.users.cpolar = {
     isSystemUser = true;
     group = "cpolar";

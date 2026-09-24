@@ -4,6 +4,7 @@
   lib,
   disko,
   myvars,
+  mysecrets,
   nur-DataEraserC,
   nixGL,
   ...
@@ -133,6 +134,23 @@ rec {
 
   # new-api LLM gateway, bound to 0.0.0.0:3000.
   modules.new-api.enable = true;
+
+  # alist (openlist) file listing, bound to 0.0.0.0:5244.
+  modules.alist.enable = true;
+
+  # Route CLI traffic through the local / LAN SOCKS proxies.
+  modules.proxychains.enable = true;
+
+  # WARP tunnel + its root CA cert, replaces the connection between this
+  # device and the Internet. Download:
+  # https://developers.cloudflare.com/cloudflare-one/connections/connect-devices/warp/install-cloudflare-cert/
+  features.cloudflare-warp = {
+    enable = true;
+    certificate = "${mysecrets}/public/Cloudflare_CA.pem";
+  };
+
+  # firmware update tool
+  services.fwupd.enable = true;
 
   # Power off after staying offline for 30min(no access to the gateway or a
   # public host). Options here are the nix defaults; for temporary live tweaks

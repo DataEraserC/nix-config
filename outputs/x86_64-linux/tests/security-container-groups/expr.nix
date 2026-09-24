@@ -1,6 +1,6 @@
-{ outputs, ... }:
+{ myvars, outputs, ... }:
 let
-  userGroups = outputs.nixosConfigurations.ai-niri.config.users.users.ryan.extraGroups;
+  userGroups = outputs.nixosConfigurations.ai-niri.config.users.users.${myvars.username}.extraGroups;
 in
 {
   userHasDockerAccess = builtins.elem "docker" userGroups;
