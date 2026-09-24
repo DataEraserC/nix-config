@@ -74,6 +74,9 @@ rec {
   # opencode2api gateway, bound to 0.0.0.0:4142 (API) and 0.0.0.0:4143 (WebUI).
   modules.opencode2api.enable = true;
 
+  # mimocode2api gateway, bound to 0.0.0.0:4144.
+  modules.mimocode2api.enable = true;
+
   # new-api LLM gateway, bound to 0.0.0.0:3000.
   modules.new-api.enable = true;
 
