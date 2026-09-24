@@ -58,6 +58,27 @@ rec {
     inherit hostName;
   };
 
+  # Oray PgyVisitor SDN client
+  modules.pgy.enable = false;
+
+  # EasyTier decentralized P2P VPN
+  modules.easytier.enable = false;
+
+  # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:8317.
+  modules.cliproxyapi.enable = false;
+
+  # M365 Copilot2API gateway, bound to 0.0.0.0:4141.
+  modules.m365-copilot2api.enable = true;
+
+  # opencode2api gateway, bound to 0.0.0.0:4142 (API) and 0.0.0.0:4143 (WebUI).
+  modules.opencode2api.enable = true;
+
+  # mimocode2api gateway, bound to 0.0.0.0:4144 (VPN interfaces only).
+  modules.mimocode2api.enable = true;
+
+  # new-api LLM gateway, bound to 0.0.0.0:3000.
+  modules.new-api.enable = true;
+
   # networking.useNetworkd = true;
   # systemd.network.enable = true;
 
