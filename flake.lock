@@ -485,11 +485,11 @@
         "systems": "systems_6"
       },
       "locked": {
-        "lastModified": 1790115409,
-        "narHash": "sha256-Fa/HxlCdewMUglDnWOiaeacKW+wnIb27tyiPRr1a1nU=",
+        "lastModified": 1790202136,
+        "narHash": "sha256-4Dy3fHmLn3F6igUiPMqjrTVnKsBmKRJL6mlz3g0g+kI=",
         "owner": "nix-community",
         "repo": "browser-previews",
-        "rev": "cada41520c582d39073ac5dd3213b4d60a25435c",
+        "rev": "d4a4327ea62222491519f0c08da9d6a5e877177b",
         "type": "github"
       },
       "original": {
@@ -915,11 +915,11 @@
         "systems": "systems_40"
       },
       "locked": {
-        "lastModified": 1790103682,
-        "narHash": "sha256-yTnGKjxRvWDKHu2gpHs2pLrDieWBbdIPx6a5B1+X3VA=",
+        "lastModified": 1790158124,
+        "narHash": "sha256-ik6ZkBVXP15U18X3B3FxY0hKya8LG61YnYOmFuvmj+I=",
         "owner": "Moraxyc",
         "repo": "deepseek-harness.nix",
-        "rev": "01b4052b30bf68b7140727b4dd150c0ea82679ff",
+        "rev": "a89c804d7aebcc0a9cb0de3cc740c1c7728a0ff2",
         "type": "github"
       },
       "original": {
@@ -4272,10 +4272,10 @@
     "mysecrets": {
       "flake": false,
       "locked": {
-        "lastModified": 1790063501,
-        "narHash": "sha256-4TsWFJkmyOe198T/ro0wvCbPK2Tk7Dn8dIF+DXn0FJg=",
+        "lastModified": 1790267714,
+        "narHash": "sha256-+IYPNEc4V/G8YcFFIM1OIE0lfgSJPyiwmomE4YW2sXY=",
         "ref": "refs/heads/master",
-        "rev": "467c557064bfee1332967f55e0ff8486d4f8180c",
+        "rev": "799d82b2bdd9cd05dfa546c837c9c4061aef7d51",
         "shallow": true,
         "type": "git",
         "url": "file:////home/nixos/nix-config/secrets"
@@ -4889,11 +4889,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1788984335,
-        "narHash": "sha256-+0ZKjnIAn75ttr0FUlABWoOwYwsAmUPCb3ZYtH2PKw0=",
+        "lastModified": 1790193925,
+        "narHash": "sha256-AWexxBn5kSj3k5r7HIw0WInJ5pvLkLkpubJFLpks2kQ=",
         "owner": "Mic92",
         "repo": "nixfmt-rs",
-        "rev": "55a5fbe5e1d357f3e3fb3cb66e9d087cae85bdc9",
+        "rev": "10a7ab26f38cb427b08701c097fd05d0541eb98f",
         "type": "github"
       },
       "original": {
@@ -4939,11 +4939,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1788984335,
-        "narHash": "sha256-+0ZKjnIAn75ttr0FUlABWoOwYwsAmUPCb3ZYtH2PKw0=",
+        "lastModified": 1790193925,
+        "narHash": "sha256-AWexxBn5kSj3k5r7HIw0WInJ5pvLkLkpubJFLpks2kQ=",
         "owner": "Mic92",
         "repo": "nixfmt-rs",
-        "rev": "55a5fbe5e1d357f3e3fb3cb66e9d087cae85bdc9",
+        "rev": "10a7ab26f38cb427b08701c097fd05d0541eb98f",
         "type": "github"
       },
       "original": {
@@ -6451,11 +6451,11 @@
         "treefmt-nix": "treefmt-nix_6"
       },
       "locked": {
-        "lastModified": 1790180883,
-        "narHash": "sha256-891ibEql7cjZAAT7XG3F0L6FElwacjcYY869XkbtIqk=",
+        "lastModified": 1790274109,
+        "narHash": "sha256-8VRZxobeTiYNh7ROWbXg02MAHqU+BF6GigV1ElSEFRw=",
         "owner": "DataEraserC",
         "repo": "nur-packages",
-        "rev": "e5ece7ef922669b920359c60c0422bd9eea936f6",
+        "rev": "b3e4d194d9949c866372043ff1307382c0a93a63",
         "type": "github"
       },
       "original": {
@@ -6511,11 +6511,11 @@
         "treefmt-nix": "treefmt-nix_10"
       },
       "locked": {
-        "lastModified": 1790180883,
-        "narHash": "sha256-891ibEql7cjZAAT7XG3F0L6FElwacjcYY869XkbtIqk=",
+        "lastModified": 1790274109,
+        "narHash": "sha256-8VRZxobeTiYNh7ROWbXg02MAHqU+BF6GigV1ElSEFRw=",
         "owner": "DataEraserC",
         "repo": "nur-packages",
-        "rev": "e5ece7ef922669b920359c60c0422bd9eea936f6",
+        "rev": "b3e4d194d9949c866372043ff1307382c0a93a63",
         "type": "github"
       },
       "original": {

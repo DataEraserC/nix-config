@@ -48,6 +48,8 @@ let
     nur-DataEraserC.packages.${pkgs.system}.dsh-bas-remote
     # nur-DataEraserC.packages.${pkgs.system}.dsh-git-worktree
     nur-DataEraserC.packages.${pkgs.system}.dsh-worktree
+    nur-DataEraserC.packages.${pkgs.system}.modlens
+    # nur-DataEraserC.packages.${pkgs.system}.dsh-oauthpro
   ];
 
   # QQ group-chat stack: unstable, so it stays out of the full profiles and
