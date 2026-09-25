@@ -8,7 +8,7 @@
   ...
 }:
 let
-  cfg = config.modules.desktop.dsh;
+  cfg = config.modules.dsh;
 
   # Temporary test fix: apply FishBottle7/opencode2dsh#14 — ZenAdapter never
   # implements imageRequestPricing(), so dsh-llm's pricing lookup throws
@@ -119,7 +119,7 @@ in
 {
   imports = [ deepseek-harness.nixosModules.default ];
 
-  options.modules.desktop.dsh = {
+  options.modules.dsh = {
     enable = lib.mkEnableOption "DeepSeek Harness (dsh)";
   };
 
