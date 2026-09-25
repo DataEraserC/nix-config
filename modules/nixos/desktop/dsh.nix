@@ -10,6 +10,18 @@
 let
   cfg = config.modules.desktop.dsh;
 
+  # Temporary test fix: apply FishBottle7/opencode2dsh#14 — ZenAdapter never
+  # implements imageRequestPricing(), so dsh-llm's pricing lookup throws
+  # "TypeError: this.adapters.get(...)?.adapter.imageRequestPricing is not a
+  # function" on every /compact (manual or automatic). nur-DataEraserC pins
+  # v0.3.2, which predates the PR (still open upstream). The patch is
+  # regenerated against v0.3.2 with paths relative to sourceRoot
+  # source/packages/plugin. Drop this override once nur-DataEraserC ships a
+  # release containing the fix.
+  opencode2dsh = nur-DataEraserC.packages.${pkgs.system}.opencode2dsh.overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ [ ./opencode2dsh-pr14.patch ];
+  });
+
   # Entry: each surface owns its own launcher bundle, so a profile restates
   # its entry instead of inheriting the other surface's. The plugin packages
   # themselves are hoisted once under `$DSH_HOME/profiles/node_modules`.
@@ -44,7 +56,7 @@ let
     pkgs.dsh.bundles.agent-teams
     # pkgs.dsh.bundles.ads
     pkgs.dsh.bundles.navbar
-    nur-DataEraserC.packages.${pkgs.system}.opencode2dsh
+    opencode2dsh
     nur-DataEraserC.packages.${pkgs.system}.dsh-bas-remote
     # nur-DataEraserC.packages.${pkgs.system}.dsh-git-worktree
     nur-DataEraserC.packages.${pkgs.system}.dsh-worktree
@@ -57,7 +69,7 @@ let
   # the bridge pairs with it and needs nothing beyond the shared entry and
   # base.
   qqBundles = [
-    nur-DataEraserC.packages.${pkgs.system}.opencode2dsh
+    opencode2dsh
     (nur-DataEraserC.packages.${pkgs.system}.qq-bridge-dsh.override {
       qqBridgeHome = "/home/${myvars.username}/.local/share/qq-bridge";
     })
