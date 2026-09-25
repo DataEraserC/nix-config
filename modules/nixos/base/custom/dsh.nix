@@ -62,6 +62,7 @@ let
     nur-DataEraserC.packages.${pkgs.system}.dsh-worktree
     nur-DataEraserC.packages.${pkgs.system}.modlens
     # nur-DataEraserC.packages.${pkgs.system}.dsh-oauthpro
+    nur-DataEraserC.packages.${pkgs.system}.dsh-notifier
   ];
 
   # QQ group-chat stack: unstable, so it stays out of the full profiles and
