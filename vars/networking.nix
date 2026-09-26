@@ -169,40 +169,6 @@ rec {
     };
   };
 
-  # VPN interfaces grouped by physical device (not in hostsAddr since they are virtual overlays)
-  vpnInterfaces = {
-    y9000p2025 = {
-      zerotier = {
-        iface = "zt5u4z6wb4";
-        ipv4 = "10.147.20.150";
-        ipv6 = "fe80::150";
-      };
-      tailscale = {
-        iface = "tailscale0";
-        ipv4 = "100.95.92.150";
-        ipv6 = "fe80::150";
-      };
-    };
-  };
-
-  # EasyTier - decentralized P2P VPN overlay network addresses
-  # NOTE: network_name and network_secret are stored as agenix secrets (easytier.env)
-  # and injected via environmentFiles in the easytier module.
-  easytier = rec {
-    instances = rec {
-      idols-ai = "10.126.126.150/24";
-      ai = idols-ai;
-      wsl-work = "10.126.126.170/24";
-      work = wsl-work;
-      apatch-infiniti = "10.126.126.154/24";
-      infiniti = apatch-infiniti;
-    };
-
-    # The same addresses without their CIDR suffix, for consumers that need a
-    # plain IP (e.g. /etc/hosts entries in `genericHosts`, ping probes).
-    ips = lib.mapAttrs (_: addr: lib.head (lib.splitString "/" addr)) instances;
-  };
-
   hostsInterface = lib.attrsets.mapAttrs (key: val: {
     interfaces."${val.iface}" = {
       useDHCP = false;
@@ -266,12 +232,19 @@ rec {
   };
   # ==========================================================================
   # Overlay endpoints - devices × networks, the single source of truth behind
-  # `peers` and `genericHosts` below.
+  # `peers`, `easytier.instances` and `genericHosts` below: every overlay
+  # address is declared exactly once, here.
   #
-  # Each device declares the hostname class it uses (`class`) plus one
-  # attribute per overlay network it has an address on. `genericHosts` renders
+  # Each machine instance ("device") declares the hostname class it uses
+  # (`class`), optionally the hostName of the NixOS host running on it (the
+  # key for host-name-addressed views like `easytier.instances`), and one
+  # attribute per overlay network, structured as IP + prefix length:
+  #   addrs.<net> = { ip; prefixLength; iface?; }
+  # (`iface` is only needed where something addresses the NIC itself; the
+  # network follows from ip & prefixLength, e.g. 10.126.126.150/24 belongs to
+  # 10.126.126.0/24.) `genericHosts` renders one
   #   <device>_<class>_<network>.mayuri.org
-  # for every declared address, so growing the matrix stays data-only:
+  # line per declared address, so growing the matrix stays data-only:
   #   - new device (e.g. another wsl box): add an entry here;
   #   - new network (easytier, oray, ...): add `addrs.<net>` to the devices
   #     that have one, and optionally extend `networkOrder` to position it;
@@ -282,43 +255,80 @@ rec {
     mondrian = {
       class = "android_cli";
       addrs = {
-        zerotier = "10.147.20.151";
-        tailscale = "100.95.92.151";
+        zerotier = {
+          ip = "10.147.20.151";
+          prefixLength = 24;
+        };
+        tailscale = {
+          ip = "100.95.92.151";
+          prefixLength = 32;
+        };
       };
     };
     pstar = {
       class = "android_cli";
       addrs = {
-        zerotier = "10.147.20.153";
-        tailscale = "100.95.92.153";
+        zerotier = {
+          ip = "10.147.20.153";
+          prefixLength = 24;
+        };
+        tailscale = {
+          ip = "100.95.92.153";
+          prefixLength = 32;
+        };
       };
     };
     infiniti = {
       class = "android_cli";
       addrs = {
-        zerotier = "10.147.20.154";
-        tailscale = "100.95.92.154";
-        # easytier runs on this device as the `apatch-infiniti` instance.
-        easytier = easytier.ips.infiniti;
+        zerotier = {
+          ip = "10.147.20.154";
+          prefixLength = 24;
+        };
+        tailscale = {
+          ip = "100.95.92.154";
+          prefixLength = 32;
+        };
+        # easytier on the android side, runs outside this flake.
+        easytier = {
+          ip = "10.126.126.154";
+          prefixLength = 24;
+        };
       };
     };
 
     # --- this machine: NixOS on the y9000p2025 laptop ---
     y9000p2025 = {
       class = "nixos";
+      hostName = "ai"; # hosts/idols-ai, easytier is managed by easytier.nix
       addrs = {
-        zerotier = vpnInterfaces.y9000p2025.zerotier.ipv4;
-        tailscale = vpnInterfaces.y9000p2025.tailscale.ipv4;
-        # easytier instance of hosts/idols-ai (hostName "ai").
-        easytier = easytier.ips.ai;
+        zerotier = {
+          ip = "10.147.20.150";
+          prefixLength = 24;
+          iface = "zt5u4z6wb4";
+        };
+        tailscale = {
+          ip = "100.95.92.150";
+          prefixLength = 32;
+          iface = "tailscale0";
+        };
+        easytier = {
+          ip = "10.126.126.150";
+          prefixLength = 24;
+          iface = "easytier0";
+        };
       };
     };
 
     # --- WSL distro on the work laptop ---
     work = {
       class = "wsl";
+      hostName = "work"; # hosts/wsl-work, easytier is managed by easytier.nix
       addrs = {
-        easytier = easytier.ips.work;
+        easytier = {
+          ip = "10.126.126.170";
+          prefixLength = 24;
+        };
       };
     };
   };
@@ -342,9 +352,27 @@ rec {
   # Endpoints of the other devices on the overlay networks, keyed by device
   # name, so hosts can reference them symbolically (e.g. auto-shutdown's
   # channel probes) instead of hardcoding IPs. Derived from `overlayDevices`
-  # above: device → { network = bare IP; }, keeping hosts-file entries and
-  # these names from drifting apart.
-  peers = lib.mapAttrs (_: dev: dev.addrs) (removeAttrs overlayDevices [ selfDevice ]);
+  # above: device → { network = ip; }.
+  peers = lib.mapAttrs (_: dev: lib.mapAttrs (_: addr: addr.ip) dev.addrs) (
+    removeAttrs overlayDevices [ selfDevice ]
+  );
+
+  # EasyTier - decentralized P2P VPN overlay network. Network credentials are
+  # stored as agenix secrets (easytier.env) and injected via environmentFiles
+  # in the easytier module; the addresses themselves are not duplicated here:
+  # `instances` is derived from `overlayDevices`, keyed by the hostName each
+  # device declares, because easytier.nix looks up `instances.${hostName}`
+  # for the running host. Devices without easytier or without a hostName
+  # (e.g. the android side) are skipped.
+  easytier.instances = lib.listToAttrs (
+    lib.concatMap (
+      dev:
+      lib.optional (dev ? hostName && dev.addrs ? easytier) {
+        name = dev.hostName;
+        value = "${dev.addrs.easytier.ip}/${toString dev.addrs.easytier.prefixLength}";
+      }
+    ) (lib.attrValues overlayDevices)
+  );
 
   # /etc/hosts entries for the overlay endpoints: the devices × networks
   # cross product of `overlayDevices`, one group per device - static entries
@@ -352,8 +380,6 @@ rec {
   # are separated by a blank line and the payload ends with a newline.
   genericHosts =
     let
-      # tolerate CIDR-form addresses ("10.126.126.154/24").
-      bareIp = addr: lib.head (lib.splitString "/" addr);
       netNames =
         dev:
         let
@@ -365,7 +391,7 @@ rec {
       deviceGroup =
         device: dev:
         lib.concatStringsSep "\n" (
-          map (net: "${bareIp dev.addrs.${net}} ${device}_${dev.class}_${net}.mayuri.org") (netNames dev)
+          map (net: "${dev.addrs.${net}.ip} ${device}_${dev.class}_${net}.mayuri.org") (netNames dev)
         );
       remoteGroups = lib.mapAttrsToList deviceGroup (removeAttrs overlayDevices [ selfDevice ]);
       groups = staticHosts ++ remoteGroups ++ [ (deviceGroup selfDevice overlayDevices.${selfDevice}) ];
