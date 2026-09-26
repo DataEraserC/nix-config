@@ -23,6 +23,19 @@ let
   ipv4WithMask = "${ipv4}/24";
   ipv6WithMask = "${ipv6}/64";
 
+  # --- auto-shutdown channel probes(see modules.auto-shutdown below) -------
+  # easytier.ips holds the bare IPs derived from easytier.instances (CIDR form).
+  easytierIp = instance: myvars.networking.easytier.ips.${instance};
+
+  # One ping-based condition per overlay endpoint; addresses come from named
+  # vars only, never hardcoded.
+  pingCondition = name: ip: {
+    inherit name;
+    command = pkgs.writeShellScript "auto-shutdown-${lib.replaceStrings [ " " ] [ "-" ] name}" ''
+      exec ${pkgs.iputils}/bin/ping -c 1 -W 2 ${ip}
+    '';
+  };
+
 in
 rec {
   imports = [
@@ -152,16 +165,33 @@ rec {
   # firmware update tool
   services.fwupd.enable = true;
 
-  # Power off after staying offline for 30min(no access to the gateway or a
-  # public host). Options here are the nix defaults; for temporary live tweaks
-  # without a rebuild use `sudo auto-shutdown {disable|enable|grace|reset}`
-  # (changes reset on reboot). See modules/nixos/base/auto-shutdown.nix.
+  # Power off when NO channel to reach this device remains for 30min. The
+  # offline-assessment is "do I still have any channel to connect in through",
+  # so every overlay channel gets its own probe and `mode = "any"` keeps the
+  # machine on while even one channel answers. All endpoints come from named
+  # vars: easytier -> myvars.networking.easytier.ips,
+  # tailscale/zerotier -> myvars.networking.peers.
+  # For temporary live tweaks without a rebuild use
+  # `sudo auto-shutdown {disable|enable|grace|reset}`(changes reset on reboot).
+  # See modules/nixos/base/custom/auto-shutdown.nix.
   modules.auto-shutdown = {
     enable = true;
-    targets = [
-      # myvars.networking.mainGateway
-      "10.126.126.154"
-      "10.126.126.170"
+    mode = "any";
+    conditions = [
+      # easytier: the primary and most stable channel -> probe both peers
+      (pingCondition "easytier infiniti" (easytierIp "apatch-infiniti"))
+      (pingCondition "easytier wsl-work" (easytierIp "wsl-work"))
+      # tailscale: the android peer answers `tailscale ping` but not ICMP,
+      # so probe at the tailscale layer(exit 0 on pong, non-zero on timeout)
+      {
+        name = "tailscale infiniti";
+        command = pkgs.writeShellScript "auto-shutdown-tailscale-infiniti" ''
+          exec ${pkgs.tailscale}/bin/tailscale ping -c 1 ${myvars.networking.peers.infiniti.tailscale}
+        '';
+      }
+      # zerotier: ICMP probe of the android endpoint(passes while that device
+      # is online on the zerotier network; zerotier-cli cannot map IP->node)
+      (pingCondition "zerotier infiniti" myvars.networking.peers.infiniti.zerotier)
     ];
     gracePeriod = "30min";
     checkInterval = "10min";

@@ -188,7 +188,7 @@ rec {
   # EasyTier - decentralized P2P VPN overlay network addresses
   # NOTE: network_name and network_secret are stored as agenix secrets (easytier.env)
   # and injected via environmentFiles in the easytier module.
-  easytier = {
+  easytier = rec {
     instances = rec {
       idols-ai = "10.126.126.150/24";
       ai = idols-ai;
@@ -197,6 +197,10 @@ rec {
       apatch-infiniti = "10.126.126.154/24";
       infiniti = apatch-infiniti;
     };
+
+    # The same addresses without their CIDR suffix, for consumers that need a
+    # plain IP (e.g. /etc/hosts entries in `genericHosts`, ping probes).
+    ips = lib.mapAttrs (_: addr: lib.head (lib.splitString "/" addr)) instances;
   };
 
   hostsInterface = lib.attrsets.mapAttrs (key: val: {
@@ -260,19 +264,111 @@ rec {
             "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
         };
   };
-  genericHosts = ''
-    155.248.179.129 oracle_ubuntu_1.mayuri.org
+  # ==========================================================================
+  # Overlay endpoints - devices × networks, the single source of truth behind
+  # `peers` and `genericHosts` below.
+  #
+  # Each device declares the hostname class it uses (`class`) plus one
+  # attribute per overlay network it has an address on. `genericHosts` renders
+  #   <device>_<class>_<network>.mayuri.org
+  # for every declared address, so growing the matrix stays data-only:
+  #   - new device (e.g. another wsl box): add an entry here;
+  #   - new network (easytier, oray, ...): add `addrs.<net>` to the devices
+  #     that have one, and optionally extend `networkOrder` to position it;
+  #   - new naming scheme: pick another `class` token for the device.
+  # ==========================================================================
+  overlayDevices = {
+    # --- remote android devices, driven through the Termux CLI ---
+    mondrian = {
+      class = "android_cli";
+      addrs = {
+        zerotier = "10.147.20.151";
+        tailscale = "100.95.92.151";
+      };
+    };
+    pstar = {
+      class = "android_cli";
+      addrs = {
+        zerotier = "10.147.20.153";
+        tailscale = "100.95.92.153";
+      };
+    };
+    infiniti = {
+      class = "android_cli";
+      addrs = {
+        zerotier = "10.147.20.154";
+        tailscale = "100.95.92.154";
+        # easytier runs on this device as the `apatch-infiniti` instance.
+        easytier = easytier.ips.infiniti;
+      };
+    };
 
-    10.147.20.151 mondrian_android_cli_zerotier.mayuri.org
-    100.95.92.151 mondrian_android_cli_tailscale.mayuri.org
+    # --- this machine: NixOS on the y9000p2025 laptop ---
+    y9000p2025 = {
+      class = "nixos";
+      addrs = {
+        zerotier = vpnInterfaces.y9000p2025.zerotier.ipv4;
+        tailscale = vpnInterfaces.y9000p2025.tailscale.ipv4;
+        # easytier instance of hosts/idols-ai (hostName "ai").
+        easytier = easytier.ips.ai;
+      };
+    };
 
-    10.147.20.153 pstar_android_cli_zerotier.mayuri.org
-    100.95.92.153 pstar_android_cli_tailscale.mayuri.org
+    # --- WSL distro on the work laptop ---
+    work = {
+      class = "wsl";
+      addrs = {
+        easytier = easytier.ips.work;
+      };
+    };
+  };
 
-    10.147.20.154 infiniti_android_cli_zerotier.mayuri.org
-    100.95.92.154 infiniti_android_cli_tailscale.mayuri.org
+  # Key of this machine inside `overlayDevices`: its group is rendered last
+  # in `genericHosts` and it is excluded from the derived `peers` view.
+  selfDevice = "y9000p2025";
 
-    10.147.20.150 y9000p2025_nixos_zerotier.mayuri.org
-    100.95.92.150 y9000p2025_nixos_tailscale.mayuri.org
-  '';
+  # Order of the networks inside one device group of `genericHosts`;
+  # networks not listed here (future ones) are appended alphabetically.
+  networkOrder = [
+    "zerotier"
+    "tailscale"
+    "easytier"
+    "oray"
+  ];
+
+  # /etc/hosts entries that belong to no overlay device, rendered first.
+  staticHosts = [ "155.248.179.129 oracle_ubuntu_1.mayuri.org" ];
+
+  # Endpoints of the other devices on the overlay networks, keyed by device
+  # name, so hosts can reference them symbolically (e.g. auto-shutdown's
+  # channel probes) instead of hardcoding IPs. Derived from `overlayDevices`
+  # above: device → { network = bare IP; }, keeping hosts-file entries and
+  # these names from drifting apart.
+  peers = lib.mapAttrs (_: dev: dev.addrs) (removeAttrs overlayDevices [ selfDevice ]);
+
+  # /etc/hosts entries for the overlay endpoints: the devices × networks
+  # cross product of `overlayDevices`, one group per device - static entries
+  # first, remote devices alphabetically, this machine's group last. Groups
+  # are separated by a blank line and the payload ends with a newline.
+  genericHosts =
+    let
+      # tolerate CIDR-form addresses ("10.126.126.154/24").
+      bareIp = addr: lib.head (lib.splitString "/" addr);
+      netNames =
+        dev:
+        let
+          present = lib.attrNames dev.addrs;
+        in
+        # known networks in canonical order first, unknown ones appended.
+        lib.filter (net: lib.elem net present) networkOrder
+        ++ lib.filter (net: !(lib.elem net networkOrder)) present;
+      deviceGroup =
+        device: dev:
+        lib.concatStringsSep "\n" (
+          map (net: "${bareIp dev.addrs.${net}} ${device}_${dev.class}_${net}.mayuri.org") (netNames dev)
+        );
+      remoteGroups = lib.mapAttrsToList deviceGroup (removeAttrs overlayDevices [ selfDevice ]);
+      groups = staticHosts ++ remoteGroups ++ [ (deviceGroup selfDevice overlayDevices.${selfDevice}) ];
+    in
+    lib.concatStringsSep "\n\n" groups + "\n";
 }
