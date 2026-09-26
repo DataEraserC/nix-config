@@ -467,6 +467,12 @@ in
 
         ".wine"
         ".winboat"
+        # WinBoat VM disk image lives in ~/winboat (bind-mounted into the
+        # container as /storage). It is NOT under ~/.winboat, so it must be
+        # preserved too - otherwise the ephemeral root wipes the Windows disk
+        # on every reboot and podman fails with: crun: cannot stat
+        # `/home/nixos/winboat`: No such file or directory
+        "winboat"
         ".hmcl" # HMCL launcher accounts/config
         ".minecraft"
         "GOG Games"
