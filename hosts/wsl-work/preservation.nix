@@ -539,6 +539,7 @@ in
         ".config/CherryStudio"
         ".cache/huggingface"
         ".lingma"
+        ".modlens"
 
         ".vmware"
         "VirtualBox VMs"
