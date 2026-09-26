@@ -71,6 +71,11 @@ done
 # --------------------------------------------------------------------
 STATE_DIR=/run/power-event-notify
 STATE_FILE="$STATE_DIR/state"
+# create the state dir unconditionally: it only exists after a previous write,
+# so without this every state write below fails with "No such file or
+# directory" on udev-triggered runs and dedup against duplicate uevents never
+# works(observed in journalctl -u power-event-notify).
+install -d -m 0755 "$STATE_DIR"
 
 PREV=""
 [ -f "$STATE_FILE" ] && PREV="$(cat "$STATE_FILE" 2>/dev/null)"
@@ -78,7 +83,6 @@ PREV=""
 if [ -z "$PREV" ]; then
   if [ "${SEED_IF_EMPTY:-0}" = "1" ]; then
     # timer mode: first run after boot establishes the baseline, no notify.
-    install -d -m 0755 "$STATE_DIR"
     printf '%s\n' "$CUR" > "$STATE_FILE"
     echo "power-event-notify: baseline state $CUR(no notification on first run)" >&2
     exit 0
@@ -124,13 +128,18 @@ MSG="**Host** ${HOST_NAME}
 $POWER_LINE
 **Time** $(date --iso-8601=seconds)"
 
-ntfy publish \
+if ntfy publish \
   --title "$TITLE" \
   --tags "$TAGS" \
   --priority "$PRIO" \
   --markdown \
-  "$NTFY_TOPIC" "$MSG" || echo "ntfy publish failed" >&2
-
-# remember the state we just handled so duplicate uevents are ignored.
-printf '%s\n' "$CUR" > "$STATE_FILE"
+  "$NTFY_TOPIC" "$MSG"; then
+  # remember the state we just handled so duplicate uevents are ignored.
+  # persisted only after a successful publish: a failed publish stays a
+  # pending transition, so the next uevent for the same state retries it.
+  printf '%s\n' "$CUR" > "$STATE_FILE" \
+    || echo "cannot persist state($STATE_FILE), dedup degraded" >&2
+else
+  echo "ntfy publish failed" >&2
+fi
 exit 0
