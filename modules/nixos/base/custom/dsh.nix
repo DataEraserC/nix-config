@@ -155,6 +155,21 @@ let
         compressionLevel: 1
         compressionThresholdBytes: 1024
   '';
+
+  # Model catalog (Settings > 模型配置), exported from the live profile as
+  # JSON and appended to the home-level `patch` below. It used to be a
+  # runtime Settings write into the active profile's `cordis.patch.yml`,
+  # where the default `mode = "managed"` reverted it on the next `dsh`
+  # launch (the seed wrapper fingerprints that file against the store copy)
+  # — every restart silently dropped the catalog. Declared at the home
+  # layer it survives restarts and reaches every profile.
+  #
+  # The rows hold only credential *references* (`apiKeyEnv`), never key
+  # material: the values live in `$DSH_HOME/.credentials.yaml` (mode 600).
+  # Editing these rows in the UI now fails loudly ("overridden by a home
+  # patch") instead of losing data — to change the catalog, edit
+  # dsh-model-patch.json and rebuild.
+  modelPatch = builtins.fromJSON (builtins.readFile ./dsh-model-patch.json);
 in
 {
   imports = [ deepseek-harness.nixosModules.default ];
@@ -197,7 +212,8 @@ in
             model = "mimo-v2.6-flash-free";
           };
         }
-      ];
+      ]
+      ++ modelPatch;
 
       profiles = {
         # Full profiles: entry + shared base + shared extras.
