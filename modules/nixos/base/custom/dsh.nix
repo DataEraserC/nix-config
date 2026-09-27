@@ -184,6 +184,12 @@ in
 
       nur-DataEraserC.packages.${pkgs.system}.qq-bridge
       nur-DataEraserC.packages.${pkgs.system}.dsh-plugin-guard
+      # modlens is declared as a dsh bundle above and ships inside dsh's own
+      # closure, but neither path links its bin into PATH, so `modlens` was
+      # not runnable from a shell (the dsh tool calls it by absolute store
+      # path, which is why modlens_read_image worked anyway). Adding it here
+      # exposes the CLI for manual `doctor` / `config set` / `analyze` use.
+      nur-DataEraserC.packages.${pkgs.system}.modlens
     ];
 
     programs.dsh = {
