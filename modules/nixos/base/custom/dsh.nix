@@ -10,16 +10,41 @@
 let
   cfg = config.modules.dsh;
 
-  # Temporary test fix: apply FishBottle7/opencode2dsh#14 — ZenAdapter never
-  # implements imageRequestPricing(), so dsh-llm's pricing lookup throws
-  # "TypeError: this.adapters.get(...)?.adapter.imageRequestPricing is not a
-  # function" on every /compact (manual or automatic). nur-DataEraserC pins
-  # v0.3.2, which predates the PR (still open upstream). The patch is
-  # regenerated against v0.3.2 with paths relative to sourceRoot
-  # source/packages/plugin. Drop this override once nur-DataEraserC ships a
-  # release containing the fix.
+  # Temporary fixes for FishBottle7/opencode2dsh, applied on top of the v0.3.2
+  # that nur-DataEraserC pins (both PRs were still open upstream at the time of
+  # writing; both patches are regenerated against v0.3.2 with paths relative to
+  # sourceRoot source/packages/plugin). Drop each patch once nur-DataEraserC
+  # ships a release containing its fix.
+  #
+  #  - opencode2dsh#14: ZenAdapter never implements imageRequestPricing(), so
+  #    dsh-llm's pricing lookup throws "TypeError: this.adapters.get(...)?.
+  #    adapter.imageRequestPricing is not a function" on every /compact
+  #    (manual or automatic).
+  #
+  #  - opencode2dsh#23 (dsh-017): DSH 0.1.7 removed the client's
+  #    `settingsScope` service and the keyed `settings.plugin.item` slot, but
+  #    the plugin still listed them as fiber dependencies — the web surface
+  #    parked the whole plugin at
+  #      pending (waiting for service: settingsScope)
+  #    so the IP 池 settings card never appeared and the plugin never
+  #    activated. The patch moves the client onto `configForms` +
+  #    the `plugins.item` slot, exports `Config` with a volatile `ipPool` node
+  #    (replacing `ctx.settings.register()`), and rewrites
+  #    `dsh.client.inject` to package-row tokens. It also re-resolves the
+  #    workspace dependencies: schemastery ≥ 3.18.4 is REQUIRED at runtime
+  #    because `IpPoolConfigSchema.volatile()` does not exist in 3.18.1, so
+  #    pnpm-lock.yaml changes and the fixed-output pnpmDeps must be refetched
+  #    against the patched lockfile (the patch is applied inside sourceRoot of
+  #    that fetch too) — hence the pnpmDeps override with the recomputed hash.
   opencode2dsh = nur-DataEraserC.packages.${pkgs.system}.opencode2dsh.overrideAttrs (old: {
-    patches = (old.patches or [ ]) ++ [ ./opencode2dsh-pr14.patch ];
+    patches = (old.patches or [ ]) ++ [
+      ./opencode2dsh-pr14.patch
+      ./opencode2dsh-pr23.patch
+    ];
+    pnpmDeps = old.pnpmDeps.override {
+      patches = [ ./opencode2dsh-pr23.patch ];
+      hash = "sha256-oTImIPNGDoTxZnUdgGqRe0hU/cJz2rjnMbaM3Jv/iuw=";
+    };
   });
 
   # Entry: each surface owns its own launcher bundle, so a profile restates
