@@ -242,17 +242,10 @@ in
       defaultProfile = config.programs.dsh.profiles.tui.materializedName;
     };
 
-    system.userActivationScripts.dsh-qq-presets = {
-      text = ''
-        mkdir -p ~/.dsh/.agent-presets/qq-chat
-        cp -r ${
-          nur-DataEraserC.packages.${pkgs.system}.qq-bridge-dsh
-        }/share/qq-bridge-presets/qq-chat/. ~/.dsh/.agent-presets/qq-chat/
-        mkdir -p ~/.dsh/.agent-presets/qq-chat-v2
-        cp -r ${
-          nur-DataEraserC.packages.${pkgs.system}.qq-bridge-dsh
-        }/share/qq-bridge-presets/qq-chat-v2/. ~/.dsh/.agent-presets/qq-chat-v2/
-      '';
-    };
+    # QQ presets (qq-chat / qq-chat-v2) now ship with the qq-bridge-dsh
+    # bundle: nur generates the `@deepseek-ai/dsh-agent-preset` declarations
+    # at build time (generate-preset-rows.py), so the old activation script
+    # that copied files into ~/.dsh/.agent-presets is gone — dsh 0.1.7's
+    # registry never scanned that directory anyway.
   };
 }
