@@ -101,6 +101,10 @@ let
     opencode2dsh
     (nur-DataEraserC.packages.${pkgs.system}.qq-bridge-dsh.override {
       qqBridgeHome = "/home/${myvars.username}/.local/share/qq-bridge";
+      # QQ presets' execution-time guard (qq-tool-restrict.mjs) rejects
+      # anything outside its whitelist: admit modlens' vision tool here
+      # (exact name → SAFE_EXACT; dev_* stays denied no matter what).
+      extraAllowedTools = [ "modlens_read_image" ];
     })
     nur-DataEraserC.packages.${pkgs.system}.qq-mode-console
     # The group-chat server launch must write dsh stdout to
