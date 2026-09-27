@@ -546,6 +546,10 @@ in
         ".cache/huggingface"
         ".lingma"
         ".modlens"
+        # antigravity-cli (`agy`, used by modlens): OAuth login + config live
+        # in ~/.gemini (config/) and state/logs in ~/.gemini/antigravity-cli/.
+        # Persisted so the login survives the root-fs wipe on boot.
+        ".gemini"
 
         ".vmware"
         "VirtualBox VMs"

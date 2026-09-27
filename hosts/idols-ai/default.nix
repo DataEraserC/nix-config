@@ -88,6 +88,12 @@ rec {
   ];
   environment.systemPackages = [
     pkgs.ntfs3g
+    # antigravity-cli (`agy`): installed for dsh/modlens, NOT as a standalone
+    # agent CLI like opencode/kimi-code. modlens's `antigravity-cli` vision
+    # provider spawns `agy` as a subprocess from PATH, so it must be on the
+    # system profile. State (OAuth login, config, logs) lives in ~/.gemini,
+    # which preservation.nix keeps across boots.
+    pkgs.antigravity-cli
   ];
 
   # powerManagement.resumeCommands = ''
