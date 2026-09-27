@@ -169,6 +169,32 @@ in
 
     programs.dsh = {
       enable = true;
+
+      # Home-level layer (`$DSH_HOME/cordis.patch.yml`): dsh 0.1.7 applies it
+      # as "machine-local preferences that apply to every profile"
+      # (profile-boot), i.e. it sits below the profile layers. The two rows
+      # below used to be runtime Settings writes into the *active* profile's
+      # `cordis.patch.yml`, where they had two problems: the default
+      # `mode = "managed"` restores that file on the next activation and
+      # silently drops local edits, and they only ever reached `nix-web`
+      # (e.g. tui had no default model row at all). Declared here they
+      # survive restarts and apply to every profile uniformly.
+      patch = [
+        {
+          id = "ui-settings-general";
+          name = "@deepseek-ai/dsh-client-ui-settings-general";
+          config.welcomeNoticeVersion = "2026-08-13.1";
+        }
+        {
+          id = "agent-default-model";
+          name = "@deepseek-ai/dsh-agent-default-model";
+          config = {
+            provider = "opencode2dsh";
+            model = "mimo-v2.6-flash-free";
+          };
+        }
+      ];
+
       profiles = {
         # Full profiles: entry + shared base + shared extras.
         tui.bundles = tuiBundles;
