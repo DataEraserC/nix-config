@@ -5,6 +5,7 @@
   config,
   myvars,
   lib,
+  mylib,
   ...
 }:
 let
@@ -155,21 +156,6 @@ let
         compressionLevel: 1
         compressionThresholdBytes: 1024
   '';
-
-  # Model catalog (Settings > 模型配置), exported from the live profile as
-  # JSON and appended to the home-level `patch` below. It used to be a
-  # runtime Settings write into the active profile's `cordis.patch.yml`,
-  # where the default `mode = "managed"` reverted it on the next `dsh`
-  # launch (the seed wrapper fingerprints that file against the store copy)
-  # — every restart silently dropped the catalog. Declared at the home
-  # layer it survives restarts and reaches every profile.
-  #
-  # The rows hold only credential *references* (`apiKeyEnv`), never key
-  # material: the values live in `$DSH_HOME/.credentials.yaml` (mode 600).
-  # Editing these rows in the UI now fails loudly ("overridden by a home
-  # patch") instead of losing data — to change the catalog, edit
-  # dsh-model-patch.json and rebuild.
-  modelPatch = builtins.fromJSON (builtins.readFile ./dsh-model-patch.json);
 in
 {
   imports = [ deepseek-harness.nixosModules.default ];
@@ -197,29 +183,19 @@ in
 
       # Home-level layer (`$DSH_HOME/cordis.patch.yml`): dsh 0.1.7 applies it
       # as "machine-local preferences that apply to every profile"
-      # (profile-boot), i.e. it sits below the profile layers. The two rows
-      # below used to be runtime Settings writes into the *active* profile's
-      # `cordis.patch.yml`, where they had two problems: the default
-      # `mode = "managed"` restores that file on the next activation and
-      # silently drops local edits, and they only ever reached `nix-web`
-      # (e.g. tui had no default model row at all). Declared here they
-      # survive restarts and apply to every profile uniformly.
-      patch = [
-        {
-          id = "ui-settings-general";
-          name = "@deepseek-ai/dsh-client-ui-settings-general";
-          config.welcomeNoticeVersion = "2026-08-13.1";
-        }
-        {
-          id = "agent-default-model";
-          name = "@deepseek-ai/dsh-agent-default-model";
-          config = {
-            provider = "opencode2dsh";
-            model = "mimo-v2.6-flash-free";
-          };
-        }
-      ]
-      ++ modelPatch;
+      # (profile-boot), below the profile layers. The rows used to be
+      # declared here (the two Settings rows plus the model catalog from
+      # dsh-model-patch.json); they now live verbatim in the repo file
+      # `modules/nixos/base/custom/cordis.patch.yml`, which activation
+      # symlinks to `$DSH_HOME/cordis.patch.yml` (see below).
+      #
+      # Leaving `patch` null is load-bearing, not an omission: the seed
+      # wrapper copies the home file only when a home patch is declared
+      # (`homePatchFile != null`), so null is what lets that symlink survive
+      # every launch untouched. To change the rows, edit the repo file and
+      # rebuild/switch; the rows hold only `apiKeyEnv` references, never key
+      # material (values stay in `$DSH_HOME/.credentials.yaml`, mode 600).
+      patch = null;
 
       profiles = {
         # Full profiles: entry + shared base + shared extras.
@@ -266,6 +242,24 @@ in
         };
       };
       defaultProfile = config.programs.dsh.profiles.tui.materializedName;
+    };
+
+    # Keep the home patch on a leash instead of a copy: activation symlinks
+    # `$DSH_HOME/cordis.patch.yml` at the repo file above (out-of-store when
+    # the configPath pool is set, a store copy otherwise). With
+    # `programs.dsh.patch = null` the seed wrapper neither validates nor
+    # copies that path — its `validate_owned_file` would die on a symlink —
+    # so the link survives every `dsh` launch, while the boot loader follows
+    # it with a plain YAML read (comments allowed) and applies the rows.
+    system.activationScripts.dsh-cordis-patch = {
+      deps = [ "users" ];
+      text = ''
+        dshHome="/home/${myvars.username}/.dsh"
+        if [ ! -d "$dshHome" ]; then
+          install -d -m 755 -o ${myvars.username} -g users "$dshHome"
+        fi
+        ln -sfnT ${mylib.mklinkRelativeToRoot config "modules/nixos/base/custom/cordis.patch.yml"} "$dshHome/cordis.patch.yml"
+      '';
     };
 
     # QQ presets (qq-chat / qq-chat-v2) now ship with the qq-bridge-dsh
