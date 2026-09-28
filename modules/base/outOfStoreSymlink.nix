@@ -1,6 +1,7 @@
 {
   lib,
   config,
+  pkgs,
   ...
 }:
 with lib;
@@ -22,6 +23,20 @@ in
       };
     };
   };
+  # home-manager provides config.lib.file.mkOutOfStoreSymlink in its own module
+  # tree (modules/files.nix), but the system module tree has no equivalent, so
+  # mylib.mkSymlinkOrFallback / mklinkRelativeToRoot could not be called with a
+  # NixOS/darwin config. Define the same helper here: it yields a store path
+  # whose only content is a symlink to the real out-of-store file, so the link
+  # target stays writable without copying it into the store.
+  config.lib.file.mkOutOfStoreSymlink =
+    path:
+    let
+      pathStr = toString path;
+      name = lib.strings.sanitizeDerivationName (baseNameOf pathStr);
+    in
+    pkgs.runCommandLocal name { } "ln -s ${lib.escapeShellArg pathStr} $out";
+
   config.warnings = lib.flatten (
     lib.mapAttrsToList (
       key: value:

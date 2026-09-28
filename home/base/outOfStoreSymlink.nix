@@ -1,3 +1,8 @@
+# NOTE: sibling of modules/base/outOfStoreSymlink.nix — keep the option
+# declaration below in sync. Unlike that file, the function
+# config.lib.file.mkOutOfStoreSymlink is NOT defined here: home-manager
+# provides it itself (modules/files.nix), while the system module tree needs
+# its own definition.
 {
   lib,
   config,
