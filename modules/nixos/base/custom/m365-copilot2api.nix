@@ -35,21 +35,14 @@ let
   cfg = config.modules.m365-copilot2api;
   system = pkgs.stdenv.hostPlatform.system;
 
-  # Temporary bump: nur-DataEraserC still pins v0.7.0, whose stream_text.go
-  # withholds the tail of every streamed reply and whose commonPrefixLen()
-  # slices cumulative snapshots mid-rune (HEXUXIU/M365-Copilot2API#93).
-  # d6d5a56 is the tip of the unreleased dev-pr-integration branch, which
-  # fixes both. Drop this override once nur-DataEraserC ships a release that
-  # contains those fixes.
-  m365Copilot2api = nur-DataEraserC.packages.${system}.m365-copilot2api.overrideAttrs (_: {
-    version = "0.7.0-unstable-2026-09-15";
-    src = pkgs.fetchFromGitHub {
-      owner = "HEXUXIU";
-      repo = "M365-Copilot2API";
-      rev = "d6d5a567bf394578c66f0e09c7d16275dedc2355";
-      hash = "sha256-VjT7ziRgTQxW5P37fUNtr8D13SNkUqC1QljRGkZIFww=";
-    };
-  });
+  # Auto-updates from nur-DataEraserC flow straight through here. The former
+  # dev-branch override (HEXUXIU/M365-Copilot2API#93: withheld stream tails,
+  # mid-rune snapshot splits, leaked citation markers) was dropped once the
+  # upstream release carried those fixes — the maintainer closed #93 against
+  # v0.7.0 (2026-09-27) and v0.7.1 added the stream/UTF-8 regression tests.
+  # The override pinned only version + src while inheriting the base
+  # vendorHash, so it broke as soon as an auto-update moved that hash.
+  m365Copilot2api = nur-DataEraserC.packages.${system}.m365-copilot2api;
 in
 {
   imports = [ nur-DataEraserC.nixosModules.m365-copilot2api ];
