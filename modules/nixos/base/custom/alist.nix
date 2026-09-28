@@ -38,7 +38,6 @@ in
     users.users.alist = {
       isSystemUser = true;
       group = "alist";
-      uid = 999; # pinned, matches the live idols-ai allocation - do not change lightly
     };
 
     # The NUR module only declares this group while services.alist is enabled,

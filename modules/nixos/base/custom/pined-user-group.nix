@@ -23,6 +23,8 @@
     ollama = { };
     # new-api
     new-api = { };
+    # new-api
+    alist = { };
   };
   users.users = {
     gnome-remote-desktop = {
@@ -54,6 +56,11 @@
       isNormalUser = lib.mkDefault false;
       isSystemUser = lib.mkDefault true;
       group = "new-api";
+    };
+    alist = {
+      isNormalUser = lib.mkDefault false;
+      isSystemUser = lib.mkDefault true;
+      group = "alist";
     };
   };
 }
