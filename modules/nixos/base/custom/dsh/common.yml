@@ -2,7 +2,7 @@
 ---
 # Home-level DSH patch ($DSH_HOME/cordis.patch.yml): machine-wide rows that
 # apply under every profile layer. Nix is the source of truth — NixOS activation
-# (modules/nixos/base/custom/dsh.nix) symlinks this file into $DSH_HOME, and
+# (modules/nixos/base/custom/dsh/default.nix) symlinks this file into $DSH_HOME, and
 # programs.dsh.patch stays null so the dsh seed wrapper never rewrites that
 # symlink on launch. Edit here, then rebuild and switch. Rows carry only
 # credential references (`apiKeyEnv`): key values live in

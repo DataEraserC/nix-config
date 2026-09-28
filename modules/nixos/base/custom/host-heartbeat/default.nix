@@ -11,7 +11,7 @@
 #   title "<host> · <event>", tags -> emoji, priority by importance.
 #   this service: title "<host> · heartbeat", tags "computer", priority "min".
 #
-# Architecture note: the script's logic lives in ./scripts/host-heartbeat-notify.sh
+# Architecture note: the script's logic lives in ./host-heartbeat-notify.sh
 # as a plain shell file(no nix interpolation inside), all config-dependent values
 # are injected into the systemd unit via `environment`. This keeps the script
 # free of nix indented-string escaping/indentation pitfalls and easy to test.
@@ -38,7 +38,7 @@ let
   cpolarStatus = cpolar-status.packages.${pkgs.system}.default;
 
   script = pkgs.writeShellScript "host-heartbeat-notify" (
-    builtins.readFile ./scripts/host-heartbeat-notify.sh
+    builtins.readFile ./host-heartbeat-notify.sh
   );
 in
 {

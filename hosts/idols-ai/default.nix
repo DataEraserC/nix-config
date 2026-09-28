@@ -174,7 +174,7 @@ rec {
   # myvars.networking.peers (easytier/zerotier/tailscale).
   # For temporary live tweaks without a rebuild use
   # `sudo auto-shutdown {disable|enable|grace|reset}`(changes reset on reboot).
-  # See modules/nixos/base/custom/auto-shutdown.nix.
+  # See modules/nixos/base/custom/auto-shutdown/default.nix.
   modules.auto-shutdown = {
     enable = true;
     mode = "any";
