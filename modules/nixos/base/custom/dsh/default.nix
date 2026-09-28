@@ -95,6 +95,12 @@ let
   # omit this list entirely. The unstable QQ stack lives in `qqBundles`
   # below and ships only in the `web-qq*` profiles.
   extraBundles = [
+    # Snapshot the profile patch document and replay Settings-UI edits that
+    # dsh-sync-profiles reverts on managed profiles: restores happen only
+    # while the .nix-managed fingerprint still matches, so a `just local`
+    # nix change still wins. Headless and zero-dependency, but kept out of
+    # the *-failsafe profiles so the escape hatch stays a pure baseline.
+    nur-DataEraserC.packages.${pkgs.system}.dsh-settings-persist
     nur-DataEraserC.packages.${pkgs.system}.dsh-turn-rewind
     # Retired: cliproxyapi is no longer deployed.
     # pkgs.dsh.bundles.cpa
