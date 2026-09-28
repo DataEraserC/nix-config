@@ -11,42 +11,62 @@
 let
   cfg = config.modules.dsh;
 
-  # Temporary fixes for FishBottle7/opencode2dsh, applied on top of the v0.3.2
-  # that nur-DataEraserC pins (both PRs were still open upstream at the time of
-  # writing; both patches are regenerated against v0.3.2 with paths relative to
-  # sourceRoot source/packages/plugin). Drop each patch once nur-DataEraserC
-  # ships a release containing its fix.
+  # Temporary fixes for FishBottle7/opencode2dsh, carried as a pinned commit
+  # of the DataEraserC fork instead of local patch files: the upstream repo
+  # does not merge the PRs we need, and three stacked patch files were a
+  # maintenance burden (context drift on every upstream tag). The fork branch
+  # `master-patches` (rev pinned below) is upstream master (0.3.3 era) plus,
+  # in order:
   #
-  #  - opencode2dsh#14: ZenAdapter never implements imageRequestPricing(), so
-  #    dsh-llm's pricing lookup throws "TypeError: this.adapters.get(...)?.
-  #    adapter.imageRequestPricing is not a function" on every /compact
-  #    (manual or automatic).
+  #  - opencode2dsh#14 (author superzzm2026, cherry-picked with -x): ZenAdapter
+  #    never implements imageRequestPricing(), so dsh-llm's pricing lookup
+  #    throws "TypeError: ... imageRequestPricing is not a function" on every
+  #    /compact (manual or automatic).
   #
-  #  - opencode2dsh#23 (dsh-017): DSH 0.1.7 removed the client's
-  #    `settingsScope` service and the keyed `settings.plugin.item` slot, but
-  #    the plugin still listed them as fiber dependencies — the web surface
-  #    parked the whole plugin at
-  #      pending (waiting for service: settingsScope)
-  #    so the IP 池 settings card never appeared and the plugin never
-  #    activated. The patch moves the client onto `configForms` +
-  #    the `plugins.item` slot, exports `Config` with a volatile `ipPool` node
-  #    (replacing `ctx.settings.register()`), and rewrites
-  #    `dsh.client.inject` to package-row tokens. It also re-resolves the
-  #    workspace dependencies: schemastery ≥ 3.18.4 is REQUIRED at runtime
-  #    because `IpPoolConfigSchema.volatile()` does not exist in 3.18.1, so
-  #    pnpm-lock.yaml changes and the fixed-output pnpmDeps must be refetched
-  #    against the patched lockfile (the patch is applied inside sourceRoot of
-  #    that fetch too) — hence the pnpmDeps override with the recomputed hash.
-  opencode2dsh = nur-DataEraserC.packages.${pkgs.system}.opencode2dsh.overrideAttrs (old: {
-    patches = (old.patches or [ ]) ++ [
-      ./opencode2dsh-pr14.patch
-      ./opencode2dsh-pr23.patch
-    ];
-    pnpmDeps = old.pnpmDeps.override {
-      patches = [ ./opencode2dsh-pr23.patch ];
-      hash = "sha256-oTImIPNGDoTxZnUdgGqRe0hU/cJz2rjnMbaM3Jv/iuw=";
-    };
-  });
+  #  - opencode2dsh#23 (dsh-017, author W1ngD1nGa5ter, cherry-picked with -x):
+  #    DSH 0.1.7 removed the client's `settingsScope` service, so the plugin
+  #    parked at `pending (waiting for service: settingsScope)` and the IP 池
+  #    settings card never appeared. Moves the client onto `configForms` and
+  #    bumps @deepseek-ai/dsh-client-ui-settings to 0.1.7-rc.2 (schemastery ≥
+  #    3.18.4 is required at runtime for `IpPoolConfigSchema.volatile()`), so
+  #    pnpm-lock.yaml and the fixed-output pnpmDeps hash change with it.
+  #
+  #  - local singbox force-TLS fix (commit authored here, Assisted-by trailer):
+  #    buildOutbound() only emitted a `tls` block when the Clash entry carried
+  #    tls/sni/fingerprint, but hysteria2 and tuic are QUIC+TLS protocols that
+  #    sing-box rejects with "TLS required" — and real subscriptions do ship
+  #    hy2 entries with neither flag (the HK-HY2 node of xn--m7r52rosihxm.com
+  #    has no sni), failing `sing-box check` for the whole config and stalling
+  #    every subscription node at 待转换. Forces TLS on for both types the way
+  #    anytls already did (GoProxy forceTLS).
+  #
+  # Both original commits keep their upstream author/message; the new commit
+  # is ours. Rebase the fork branch onto the next upstream tag when
+  # nur-DataEraserC catches up, then drop this override entirely. `patches = [ ]`
+  # clears whatever upstream adds later, so only the pinned tree ships.
+  opencode2dsh = nur-DataEraserC.packages.${pkgs.system}.opencode2dsh.overrideAttrs (
+    old:
+    let
+      forkSrc = pkgs.fetchFromGitHub {
+        owner = "DataEraserC";
+        repo = "opencode2dsh";
+        rev = "b41b2238cd764c74998e03f6f99d7a60878b3435";
+        hash = "sha256-1ZQh8+k6x2p0sRKKl2HGSm370/IDAa1kaugyxH/UKpo=";
+      };
+    in
+    {
+      src = forkSrc;
+      patches = [ ];
+      pnpmDeps = old.pnpmDeps.override {
+        src = forkSrc;
+        # pnpmDeps patches are empty: the fork tree already carries the
+        # lockfile change. Hash matches the patched lockfile (schemastery
+        # 3.18.4 / dsh-client-ui-settings 0.1.7-rc.2 resolution).
+        patches = [ ];
+        hash = "sha256-oTImIPNGDoTxZnUdgGqRe0hU/cJz2rjnMbaM3Jv/iuw=";
+      };
+    }
+  );
 
   # Entry: each surface owns its own launcher bundle, so a profile restates
   # its entry instead of inheriting the other surface's. The plugin packages
