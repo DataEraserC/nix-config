@@ -44,6 +44,12 @@
     parted
     smartmontools # smartctl -a /dev/nvme0n1
     nvme-cli
+
+    # editors: sudo's env_reset strips $EDITOR, and TUI tools such as yazi
+    # fall back to `${EDITOR:-vi}` — root needs `vi`/`nano` in the system
+    # profile, otherwise `sudo yazi` cannot open files for editing.
+    vim # provides vi/vim/vimdiff/view for root & sudo sessions
+    nano # simple editor for root; also installed by nixpkgs' programs.nano
   ];
 
   # BCC - Tools for BPF-based Linux IO analysis, networking, monitoring, and more
