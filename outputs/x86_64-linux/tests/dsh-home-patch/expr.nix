@@ -6,9 +6,9 @@
 }:
 let
   cfg = outputs.nixosConfigurations.ai-niri.config;
-  yml = builtins.readFile ../../../../modules/nixos/base/custom/cordis.patch.yml;
+  yml = builtins.readFile ../../../../modules/nixos/base/custom/dsh/common.yml;
   activation = cfg.system.activationScripts.dsh-cordis-patch.text;
-  homeLink = mylib.mklinkRelativeToRoot cfg "modules/nixos/base/custom/cordis.patch.yml";
+  homeLink = mylib.mklinkRelativeToRoot cfg "modules/nixos/base/custom/dsh/common.yml";
 in
 {
   # patch 必须保持 null：seed 脚本只在声明了 home patch（homePatchFile != null）
@@ -24,5 +24,6 @@ in
   # activation 负责把仓库文件链接到 $DSH_HOME/cordis.patch.yml
   activationSymlinksHomePatch =
     lib.hasInfix "ln -sfnT" activation && lib.hasInfix "cordis.patch.yml" activation;
-  homeLinkTargetsCordisPatch = lib.hasSuffix "cordis.patch.yml" (toString homeLink);
+  # mkOutOfStoreSymlink 的 toString 是 store 路径，其名字 = 源文件 basename
+  homeLinkTargetsCordisPatch = lib.hasSuffix "common.yml" (toString homeLink);
 }

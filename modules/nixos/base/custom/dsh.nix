@@ -39,11 +39,11 @@ let
   #    that fetch too) — hence the pnpmDeps override with the recomputed hash.
   opencode2dsh = nur-DataEraserC.packages.${pkgs.system}.opencode2dsh.overrideAttrs (old: {
     patches = (old.patches or [ ]) ++ [
-      ./opencode2dsh-pr14.patch
-      ./opencode2dsh-pr23.patch
+      ./dsh/opencode2dsh-pr14.patch
+      ./dsh/opencode2dsh-pr23.patch
     ];
     pnpmDeps = old.pnpmDeps.override {
-      patches = [ ./opencode2dsh-pr23.patch ];
+      patches = [ ./dsh/opencode2dsh-pr23.patch ];
       hash = "sha256-oTImIPNGDoTxZnUdgGqRe0hU/cJz2rjnMbaM3Jv/iuw=";
     };
   });
@@ -156,6 +156,28 @@ let
         compressionLevel: 1
         compressionThresholdBytes: 1024
   '';
+
+  # Every profile's `cordis.patch.yml` rows come from the repo file
+  # `dsh/<key>.yml` (dotfile-style: edit + prettier + `just local`).
+  # Mode stays `managed`, so the profile file on disk is a store snapshot of
+  # that repo file and is restored on the next launch — in-place edits never
+  # persist by design.
+  repoPatch = key: builtins.readFile (./dsh/${key}.yml);
+
+  # Compose a LAN profile's patch: the Nix webserver row first, the repo yml
+  # rows after it, so a same-id row declared in the git file wins. The yml's
+  # %YAML/--- document header cannot follow a document that already started,
+  # so strip those lines, and strip a bare `[]` (no rows yet) for the same
+  # reason; `#` comments are legal between items and survive verbatim.
+  mergeWebLan =
+    yml: web:
+    let
+      isHeaderLine =
+        line: builtins.match "%YAML.*" line != null || builtins.match "---[[:space:]]*" line != null;
+      isBareEmptySeq = line: builtins.match "[[:space:]]*[][[:space:]]*" line != null;
+      keepLine = line: !(isHeaderLine line || isBareEmptySeq line);
+    in
+    web + "\n" + lib.concatStringsSep "\n" (lib.filter keepLine (lib.splitString "\n" yml));
 in
 {
   imports = [ deepseek-harness.nixosModules.default ];
@@ -186,7 +208,7 @@ in
       # (profile-boot), below the profile layers. The rows used to be
       # declared here (the two Settings rows plus the model catalog from
       # dsh-model-patch.json); they now live verbatim in the repo file
-      # `modules/nixos/base/custom/cordis.patch.yml`, which activation
+      # `modules/nixos/base/custom/dsh/common.yml`, which activation
       # symlinks to `$DSH_HOME/cordis.patch.yml` (see below).
       #
       # Leaving `patch` null is load-bearing, not an omission: the seed
@@ -197,35 +219,56 @@ in
       # material (values stay in `$DSH_HOME/.credentials.yaml`, mode 600).
       patch = null;
 
+      # Each profile's patch layer is its repo yml (`repoPatch`); the four
+      # LAN profiles merge `webLanPatch` ahead of the git rows (see
+      # `mergeWebLan` above).
       profiles = {
         # Full profiles: entry + shared base + shared extras.
-        tui.bundles = tuiBundles;
-        web.bundles = webBundles;
+        tui = {
+          bundles = tuiBundles;
+          patch = repoPatch "tui";
+        };
+        web = {
+          bundles = webBundles;
+          patch = repoPatch "web";
+        };
 
         # Minimal fallback for the plain surfaces: entry + shared base only.
         #   dsh --profile nix-tui-failsafe
         #   dsh --profile nix-web-failsafe
-        tui-failsafe.bundles = tuiFailsafeBundles;
-        web-failsafe.bundles = webFailsafeBundles;
+        tui-failsafe = {
+          bundles = tuiFailsafeBundles;
+          patch = repoPatch "tui-failsafe";
+        };
+        web-failsafe = {
+          bundles = webFailsafeBundles;
+          patch = repoPatch "web-failsafe";
+        };
 
         # Group-chat combos: full = the whole web stack + the QQ stack, so
         # one instance serves both the web and the qq use; the failsafe drops
         # only the shared extras (the former `web-qq` composition).
         #   dsh --profile nix-web-qq
         #   dsh --profile nix-web-qq-failsafe
-        web-qq.bundles = webQQBundles;
-        web-qq-failsafe.bundles = webQQFailsafeBundles;
+        web-qq = {
+          bundles = webQQBundles;
+          patch = repoPatch "web-qq";
+        };
+        web-qq-failsafe = {
+          bundles = webQQFailsafeBundles;
+          patch = repoPatch "web-qq-failsafe";
+        };
 
         # The same composition as `web`, with the webserver row patched to
         # bind every interface (see `webLanPatch` above):
         #   dsh --profile nix-web-lan --no-open
         web-lan = {
           bundles = webBundles;
-          patch = webLanPatch;
+          patch = mergeWebLan (repoPatch "web-lan") webLanPatch;
         };
         web-lan-failsafe = {
           bundles = webFailsafeBundles;
-          patch = webLanPatch;
+          patch = mergeWebLan (repoPatch "web-lan-failsafe") webLanPatch;
         };
 
         # The two qq combos with the same LAN webserver patch — deliberate
@@ -234,11 +277,11 @@ in
         #   dsh --profile nix-web-qq-lan-failsafe --no-open
         web-qq-lan = {
           bundles = webQQBundles;
-          patch = webLanPatch;
+          patch = mergeWebLan (repoPatch "web-qq-lan") webLanPatch;
         };
         web-qq-lan-failsafe = {
           bundles = webQQFailsafeBundles;
-          patch = webLanPatch;
+          patch = mergeWebLan (repoPatch "web-qq-lan-failsafe") webLanPatch;
         };
       };
       defaultProfile = config.programs.dsh.profiles.tui.materializedName;
@@ -258,7 +301,7 @@ in
         if [ ! -d "$dshHome" ]; then
           install -d -m 755 -o ${myvars.username} -g users "$dshHome"
         fi
-        ln -sfnT ${mylib.mklinkRelativeToRoot config "modules/nixos/base/custom/cordis.patch.yml"} "$dshHome/cordis.patch.yml"
+        ln -sfnT ${mylib.mklinkRelativeToRoot config "modules/nixos/base/custom/dsh/common.yml"} "$dshHome/cordis.patch.yml"
       '';
     };
 
