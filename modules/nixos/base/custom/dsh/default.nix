@@ -108,7 +108,8 @@ let
     # pkgs.dsh.bundles.message-edit
     pkgs.dsh.bundles.agent-teams
     # pkgs.dsh.bundles.ads
-    pkgs.dsh.bundles.navbar
+    # Archived: dsh ships a built-in navbar implementation now.
+    # pkgs.dsh.bundles.navbar
     opencode2dsh
     nur-DataEraserC.packages.${pkgs.system}.dsh-bas-remote
     # nur-DataEraserC.packages.${pkgs.system}.dsh-git-worktree
