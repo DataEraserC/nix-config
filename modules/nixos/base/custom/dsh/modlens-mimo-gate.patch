@@ -1,0 +1,23 @@
+diff --git a/dsh/index.js b/dsh/index.js
+index 26c54ca..b03b7b5 100644
+--- a/dsh/index.js
++++ b/dsh/index.js
+@@ -701,8 +701,16 @@ function registerVisionProvider(ctx, config, ownProviders, evidenceCache) {
+     if (Array.isArray(info?.inputModalities) && info.inputModalities.includes('image')) return false
+     // MiMo needs the gate reversed. Xiaomi's bare version ids name native
+     // omni models, while a -pro segment marks text-only flagships. There is no
+-    // vision marker to exclude, so only the named text subset is safe to include.
+-    if (bare.startsWith('mimo') && !/(^|-)pro(?:-|:|$)/i.test(bare)) return false
++    // vision marker to exclude, so when the catalog omits modalities the name
++    // is all there is and only the named text subset is safe to include — a
++    // vision model handed a wrapper twin loses its native sight. But a route
++    // that declares its modalities has spoken for itself: image input was
++    // vetoed above, and a text-only declaration means this route cannot carry
++    // an image at all, so evidence text is the only channel a pasted image has
++    // left. The declaration outranks the name once one exists (issue #80 stays
++    // intact for third-party ids copied without modalities).
++    if (bare.startsWith('mimo') && !/(^|-)pro(?:-|:|$)/i.test(bare) && !Array.isArray(info?.inputModalities))
++      return false
+     return true
+   }
+   // Keep this activation bound to the exact service implementation that made

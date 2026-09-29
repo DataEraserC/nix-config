@@ -40,6 +40,19 @@ let
         };
       });
 
+  # TEMP: modlens 3.26.5 的反向 MiMo 门（issue #80：裸 ID 视为原生 omni、须带
+  # -pro 段）把 mimo-v2.6-flash-free 挡在 (modlens vision) 变体之外；而
+  # opencode2dsh 硬编码 ["text"]、openai-compat 路由默认纯文本，两个渠道都传
+  # 不了原生图片，粘贴只剩占位符。补丁与 fork DataEraserC/modlens@ce6db0e 的
+  # dsh/index.js 修改一致：路由声明了 modality 时以声明为准（image 已在上一行
+  # 被否决，text-only 即不可能传图），门只在 modality 缺失时按名字判。上游发布
+  # 含该修复的版本后，删掉本绑定并把两处引用改回 nur 包。
+  modlensPatched = nur-DataEraserC.packages.${pkgs.system}.modlens.overrideAttrs (old: {
+    postPatch = (old.postPatch or "") + ''
+      patch --no-backup-if-mismatch -p1 < ${./modlens-mimo-gate.patch}
+    '';
+  });
+
   # Temporary fixes for FishBottle7/opencode2dsh, carried as a pinned commit
   # of the DataEraserC fork instead of local patch files: the upstream repo
   # does not merge the PRs we need, and three stacked patch files were a
@@ -196,7 +209,7 @@ let
     nur-DataEraserC.packages.${pkgs.system}.dsh-bas-remote
     # nur-DataEraserC.packages.${pkgs.system}.dsh-git-worktree
     nur-DataEraserC.packages.${pkgs.system}.dsh-worktree
-    nur-DataEraserC.packages.${pkgs.system}.modlens
+    modlensPatched
     # nur-DataEraserC.packages.${pkgs.system}.dsh-oauthpro
     # only work on 0.1.7-alpha.1 || 0.1.7-alpha.2 || 0.1.7-rc.1 || 0.1.7-rc.2
     # nur-DataEraserC.packages.${pkgs.system}.dsh-notifier
@@ -317,7 +330,7 @@ in
       # not runnable from a shell (the dsh tool calls it by absolute store
       # path, which is why modlens_read_image worked anyway). Adding it here
       # exposes the CLI for manual `doctor` / `config set` / `analyze` use.
-      nur-DataEraserC.packages.${pkgs.system}.modlens
+      modlensPatched
     ];
 
     programs.dsh = {
