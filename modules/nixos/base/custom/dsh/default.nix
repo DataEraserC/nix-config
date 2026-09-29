@@ -40,8 +40,26 @@ let
   #    every subscription node at 待转换. Forces TLS on for both types the way
   #    anytls already did (GoProxy forceTLS).
   #
-  # Both original commits keep their upstream author/message; the new commit
-  # is ours. Rebase the fork branch onto the next upstream tag when
+  #  - ports-follow-use lifecycle (0.4.0, Assisted-by trailer): disable now
+  #    stops the supervisor (the old path only swapped the dispatcher back and
+  #    leaked the child plus every loopback port), an idle sweep stops it after
+  #    singbox.idleStopMs without pool use (default 10min, 0 = always on), and
+  #    reload is serialized + idempotent (an unchanged 30min subscription
+  #    refresh no longer respawns the child). Dispatch to a stopped core serves
+  #    direct and wakes it; probing wakes it before the first byte. Adds the
+  #    singBoxRunning status field and the card's idle-stop knob. The commit
+  #    also vendors the upstream Windows-path test fixture (3 tests were
+  #    unrunnable on Linux). pnpmDeps hash UNCHANGED: the fixed-output output
+  #    is a pure pnpm store snapshot keyed by the lockfile (package.json
+  #    version is not an input). Caveat — that snapshot is only as complete as
+  #    one good fetch: npm throttling in the sandbox makes pnpm silently drop
+  #    optional platform bindings, and a degraded store hashes just as
+  #    "valid", failing prepack later with rolldown MODULE_NOT_FOUND for
+  #    @rolldown/binding-linux-x64-gnu. Fix: delete the -opencode2dsh-pnpm-deps
+  #    output and rebuild until the store index lists that binding.
+  #
+  # The first two commits keep their upstream author/message; the later ones
+  # are ours. Rebase the fork branch onto the next upstream tag when
   # nur-DataEraserC catches up, then drop this override entirely. `patches = [ ]`
   # clears whatever upstream adds later, so only the pinned tree ships.
   opencode2dsh = nur-DataEraserC.packages.${pkgs.system}.opencode2dsh.overrideAttrs (
@@ -50,8 +68,8 @@ let
       forkSrc = pkgs.fetchFromGitHub {
         owner = "DataEraserC";
         repo = "opencode2dsh";
-        rev = "b41b2238cd764c74998e03f6f99d7a60878b3435";
-        hash = "sha256-1ZQh8+k6x2p0sRKKl2HGSm370/IDAa1kaugyxH/UKpo=";
+        rev = "2dcc79cf00610d4c0b8a051103487a481cad0cde";
+        hash = "sha256-Xh0DINgCVxuBsufniP5LOvbJmbI2e5wexKuea308Nn4=";
       };
     in
     {
