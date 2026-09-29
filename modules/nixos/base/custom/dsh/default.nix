@@ -73,6 +73,26 @@ let
   #    enable-flip conversions and on the 30s sweep, throttled to 60s.
   #    diffWrites moved to a pure module with 6 regression tests.
   #
+  #  - R1 self-lock + leaked runtime + cold enable (0.4.2, Assisted-by
+  #    trailer): three live-observed defects from the 0.4.1 verification.
+  #    (a) The real undici setGlobalDispatcher returns void, so #previous
+  #    was never captured, disable() skipped the restore and our router
+  #    lingered in the global slot — the next install() read its OWN layer
+  #    as a foreign owner (deferredReason "owned by PoolRoutingDispatcher"
+  #    forever, while a stale router kept routing). Fixed: pre-swap capture
+  #    via getGlobalDispatcher, fallback to a fresh default Agent on
+  #    disable (setGlobalDispatcher(undefined) throws UND_ERR_INVALID_ARG),
+  #    and a stale own-name layer is adopted instead of deferred.
+  #    (b) ensureRuntime had no in-flight memo: a boot apply racing
+  #    loader/volatile-update fired two startIpPool calls and leaked a
+  #    second runtime with live timers and its own installer (status and
+  #    routing each telling a different story). (c) The enable flip never
+  #    pre-warmed the child: plaintext exits are loopback ports of
+  #    sing-box, so the first requests after saving all failed with
+  #    Connection error before the on-demand spawn could win the race;
+  #    wakes now also create the supervisor on demand. 3 regression tests
+  #    fail on the old code.
+  #
   # The first two commits keep their upstream author/message; the later ones
   # are ours. Rebase the fork branch onto the next upstream tag when
   # nur-DataEraserC catches up, then drop this override entirely. `patches = [ ]`
@@ -83,8 +103,8 @@ let
       forkSrc = pkgs.fetchFromGitHub {
         owner = "DataEraserC";
         repo = "opencode2dsh";
-        rev = "15307b964e6cb91d1461446cb99460d6ac03601e";
-        hash = "sha256-lvU+79lzvTqKLnvMZubGfbFmHwxxam1zz32CX3B46TE=";
+        rev = "ddadfe1ce3dd7b6aa25edd8d3ba088272efda6b0";
+        hash = "sha256-VL3RiS3GSLdZjADG5aIrR+wltZS2qR3EiFtU6yEMJlY=";
       };
     in
     {
