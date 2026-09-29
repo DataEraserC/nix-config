@@ -58,6 +58,21 @@ let
   #    @rolldown/binding-linux-x64-gnu. Fix: delete the -opencode2dsh-pnpm-deps
   #    output and rebuild until the store index lists that binding.
   #
+  #  - settings save + routing engagement (0.4.1, Assisted-by trailer): the
+  #    card's diff no longer drops a write that equals the composition base —
+  #    the pool's base default is enabled: false, so toggling the switch OFF
+  #    produced zero writes, Save stayed disabled and the served value never
+  #    flipped back (the original 无法保存 report: on saves, off never does).
+  #    Exit routing now also engages from pool occupancy regardless of source:
+  #    install() gates on total>0, which is false at boot for a
+  #    subscription-only pool (free's onAdmitted retry never fires for
+  #    free-dry pools) and still false during an enable flip (conversions
+  #    land after the gate) — 247 converted exits sat with every loopback
+  #    port open while the dispatcher install was never called (live:
+  #    enabled=false, empty deferredReason). installWhenOccupied() runs after
+  #    enable-flip conversions and on the 30s sweep, throttled to 60s.
+  #    diffWrites moved to a pure module with 6 regression tests.
+  #
   # The first two commits keep their upstream author/message; the later ones
   # are ours. Rebase the fork branch onto the next upstream tag when
   # nur-DataEraserC catches up, then drop this override entirely. `patches = [ ]`
@@ -68,8 +83,8 @@ let
       forkSrc = pkgs.fetchFromGitHub {
         owner = "DataEraserC";
         repo = "opencode2dsh";
-        rev = "2dcc79cf00610d4c0b8a051103487a481cad0cde";
-        hash = "sha256-Xh0DINgCVxuBsufniP5LOvbJmbI2e5wexKuea308Nn4=";
+        rev = "15307b964e6cb91d1461446cb99460d6ac03601e";
+        hash = "sha256-lvU+79lzvTqKLnvMZubGfbFmHwxxam1zz32CX3B46TE=";
       };
     in
     {
