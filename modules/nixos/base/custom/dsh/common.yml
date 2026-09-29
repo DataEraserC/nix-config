@@ -8,10 +8,6 @@
 # credential references (`apiKeyEnv`): key values live in
 # $DSH_HOME/.credentials.yaml (mode 600) and never enter the store.
 - config:
-    welcomeNoticeVersion: 2026-08-13.1
-  id: ui-settings-general
-  name: "@deepseek-ai/dsh-client-ui-settings-general"
-- config:
     model: mimo-v2.6-flash-free
     provider: opencode2dsh
   id: agent-default-model
