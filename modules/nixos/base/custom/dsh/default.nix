@@ -232,6 +232,10 @@ let
     # nur-DataEraserC.packages.${pkgs.system}.dsh-oauthpro
     # only work on 0.1.7-alpha.1 || 0.1.7-alpha.2 || 0.1.7-rc.1 || 0.1.7-rc.2
     # nur-DataEraserC.packages.${pkgs.system}.dsh-notifier
+    # pkgs.dsh.bundles.chat-import
+    # pkgs.dsh.bundles.annotation
+    nur-DataEraserC.packages.${pkgs.system}.dsh-chat-import
+    nur-DataEraserC.packages.${pkgs.system}.dsh-annotation
   ];
 
   # QQ group-chat stack: unstable, so it stays out of the plain profiles and
