@@ -6477,11 +6477,11 @@
         "treefmt-nix": "treefmt-nix_6"
       },
       "locked": {
-        "lastModified": 1790674762,
-        "narHash": "sha256-F5AajoC5vsOTIwVa5fbGj3mR7hwv0M93WzCI2sIlWxY=",
+        "lastModified": 1790695735,
+        "narHash": "sha256-QbNsZa0/JbZZWKeX/ANQlOm0nEIrztFnq3Knl+Wyd/0=",
         "owner": "DataEraserC",
         "repo": "nur-packages",
-        "rev": "4b95074536214811bdfa70fa4c85b3d9e39cb3b0",
+        "rev": "dc974773383067c8ae7f9e83f050efa2d8b96680",
         "type": "github"
       },
       "original": {
@@ -7230,6 +7230,23 @@
         "type": "github"
       }
     },
+    "qq-bridge-fork": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1790691165,
+        "narHash": "sha256-G4GF9BGT4LmOEoc73aJEW229fgSQ3uK9Qg4bFKLcPeo=",
+        "owner": "DataEraserC",
+        "repo": "qq-bridge",
+        "rev": "ecb38885946740e993ce3443083457a01e28f3ad",
+        "type": "github"
+      },
+      "original": {
+        "owner": "DataEraserC",
+        "ref": "feat/message-media-tool",
+        "repo": "qq-bridge",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "Hyprspace": "Hyprspace",
@@ -7321,6 +7338,7 @@
         "preservation": "preservation",
         "proxmox-nixos": "proxmox-nixos",
         "pyclipsync": "pyclipsync",
+        "qq-bridge-fork": "qq-bridge-fork",
         "sops-nix": "sops-nix",
         "suyu": "suyu",
         "vscode-remote-workaround": "vscode-remote-workaround",

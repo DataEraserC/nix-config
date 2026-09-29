@@ -2,6 +2,8 @@
   pkgs,
   deepseek-harness,
   nur-DataEraserC,
+  # TEMP-TEST(qq_get_message_media): 本地 fork 源码的 path input
+  qq-bridge-fork,
   config,
   myvars,
   lib,
@@ -10,6 +12,33 @@
 }:
 let
   cfg = config.modules.dsh;
+
+  # TEMP-TEST(qq_get_message_media): 用 fork（flake input qq-bridge-fork）覆盖
+  # qq-bridge-unwrapped 的 src，再喂给下面三处 .override 的 unwrapped 参数，让
+  # bridge 服务、DSH MCP servers、agent presets 三件套都跑 fork 代码（新工具
+  # qq_get_message_media）。刻意用 overrideAttrs 而不是改 nur 侧的 default.nix：
+  # qq-bridge-unwrapped 文件与上游保持逐字一致，nix-update / 自动更新不受影响。
+  # 测完：删掉 flake.nix 的 qq-bridge-fork input、本绑定与三处 unwrapped 覆盖行
+  # （wrapper 的 unwrapped ? 参数已合入 nur main dc974773，保留无妨）。
+  qqBridgeForkUnwrapped =
+    nur-DataEraserC.packages.${pkgs.system}.qq-bridge-unwrapped.overrideAttrs
+      (_: {
+        src = builtins.path {
+          path = qq-bridge-fork;
+          # 解包目录必须叫 source：buildDshBundle 的 sourceRoot 写死
+          # "source/plugins/..."，而目录型 src 是按 store 名字拷出来的
+          # （fetchFromGitHub 的 tarball 解包后也是 source）。
+          name = "source";
+          # 不把 .git 与依赖目录带进 store（依赖 0.1.5→0.1.7 未变，运行时 node_modules
+          # 由构建期 npm 流水线生成）。
+          filter =
+            path: _type:
+            let
+              base = baseNameOf path;
+            in
+            base != "node_modules" && base != ".git";
+        };
+      });
 
   # Temporary fixes for FishBottle7/opencode2dsh, carried as a pinned commit
   # of the DataEraserC fork instead of local patch files: the upstream repo
@@ -182,6 +211,8 @@ let
     opencode2dsh
     (nur-DataEraserC.packages.${pkgs.system}.qq-bridge-dsh.override {
       qqBridgeHome = "/home/${myvars.username}/.local/share/qq-bridge";
+      # TEMP-TEST(qq_get_message_media)
+      unwrapped = qqBridgeForkUnwrapped;
     })
     # Agent presets (qq-chat / qq-chat-v2) own the execution-time guard
     # since they became their own bundle: QQ presets' qq-tool-restrict.mjs
@@ -190,6 +221,8 @@ let
     # The override moved here with the guard implementation.
     (nur-DataEraserC.packages.${pkgs.system}.qq-agent-presets.override {
       extraAllowedTools = [ "modlens_read_image" ];
+      # TEMP-TEST(qq_get_message_media): presets 的 src 跟随 unwrapped.src
+      unwrapped = qqBridgeForkUnwrapped;
     })
     nur-DataEraserC.packages.${pkgs.system}.qq-mode-console
     # The group-chat server launch must write dsh stdout to
@@ -274,7 +307,10 @@ in
     environment.systemPackages = [
       # pkgs.dsh.dsh-desktop
 
-      nur-DataEraserC.packages.${pkgs.system}.qq-bridge
+      # TEMP-TEST(qq_get_message_media): wrapper 也指向 fork 构建（passthru.unwrapped）
+      (nur-DataEraserC.packages.${pkgs.system}.qq-bridge.override {
+        unwrapped = qqBridgeForkUnwrapped;
+      })
       nur-DataEraserC.packages.${pkgs.system}.dsh-plugin-guard
       # modlens is declared as a dsh bundle above and ships inside dsh's own
       # closure, but neither path links its bin into PATH, so `modlens` was
