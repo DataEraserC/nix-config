@@ -135,6 +135,25 @@ let
   #    wakes now also create the supervisor on demand. 3 regression tests
   #    fail on the old code.
   #
+  #  - K-lane port ceiling (0.5.0, Assisted-by trailer): the per-node
+  #    inbound shape made 260 subscription nodes occupy 30001-30262
+  #    permanently — 端口占用本身就是冗余 (user decision: only bind a local
+  #    port when actually dialing). generateConfig now emits K local SOCKS5
+  #    lanes (singbox.lanes, default 16, knob 1-64) plus N port-less
+  #    outbounds with stable content-derived tags behind per-lane
+  #    selectors, plus experimental.clash_api.external_controller — local
+  #    ports = K + 1 constant regardless of node count, and still only
+  #    while the child runs (ports follow use unchanged). LanePool binds a
+  #    node to a free lane with a millisecond clash-API selector switch
+  #    (affects new dials only; in-flight keep-alive streams measured
+  #    untouched); dispatcher/admission/probing borrow lanes with a 10s
+  #    queue, epoch-stamped bindings that drop the per-lane agent on every
+  #    rebind, and a direct fallback on every failure path (never
+  #    fail-closed). Disable/crash/reset voids all bindings. Lane changes
+  #    respawn the child (sameNodes idempotency now includes the lane
+  #    count). Docs §1.2.4. pnpmDeps hash UNCHANGED: the lockfile is
+  #    byte-identical (package.json version is not a pnpm-store input).
+  #
   # The first two commits keep their upstream author/message; the later ones
   # are ours. Rebase the fork branch onto the next upstream tag when
   # nur-DataEraserC catches up, then drop this override entirely. `patches = [ ]`
@@ -145,8 +164,8 @@ let
       forkSrc = pkgs.fetchFromGitHub {
         owner = "DataEraserC";
         repo = "opencode2dsh";
-        rev = "ddadfe1ce3dd7b6aa25edd8d3ba088272efda6b0";
-        hash = "sha256-VL3RiS3GSLdZjADG5aIrR+wltZS2qR3EiFtU6yEMJlY=";
+        rev = "95d35abaf09ecaf1b7ee421722ab4277099964aa";
+        hash = "sha256-hv60oyJpLhPG3QBydIcwY2a4rsBQme3G1rx0KwR2lRU=";
       };
     in
     {
