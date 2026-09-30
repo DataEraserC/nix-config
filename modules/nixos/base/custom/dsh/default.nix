@@ -347,6 +347,15 @@ let
   # 的 no-op 判定照常成立（无每次启动的回写循环），上游 seeder 只做路径替换、
   # 其余逐字保留。*-failsafe 不含这些 bundle 名，交集后仍是纯基线；qqBundles 不在
   # 名单里（qq 相关卡片维持现状）；不改上游 deepseek-harness.nix 任何文件。
+  #
+  # 【何时可删】上游满足任一条件即可删掉本函数与 programs.dsh.package 覆盖：
+  #   ① resolve-dsh-bundles.mjs 的 profile 子命令把 bundle manifest 的
+  #      {name, version} 写进 dependencies（新模板 deps 不再是 {}）；或
+  #   ② 插件页 installed 判定把 installation.dependencies / selected 并进来
+  #      （selected-only 或安装锚点依赖也算已安装）。
+  # 验收命令：nix build --no-link --print-out-paths
+  #   '.#nixosConfigurations.<host>.config.programs.dsh.package.passthru.profileTemplates'
+  #   出来后任一模板 jq -c .dependencies 非 {} 即上游已修。
   patchProfileDeps =
     artifacts:
     let
