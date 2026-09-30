@@ -255,10 +255,17 @@ let
     # Agent presets (qq-chat / qq-chat-v2) own the execution-time guard
     # since they became their own bundle: QQ presets' qq-tool-restrict.mjs
     # rejects anything outside its whitelist — admit modlens' vision tool
-    # here (exact name → SAFE_EXACT; dev_* stays denied no matter what).
+    # and modsearch's search surface here: `web_search` is the dsh built-in
+    # whose provider modsearch swaps, `x_search` / `read_page` are modsearch's
+    # additions (exact names → SAFE_EXACT; dev_* stays denied no matter what).
     # The override moved here with the guard implementation.
     (nur-DataEraserC.packages.${pkgs.system}.qq-agent-presets.override {
-      extraAllowedTools = [ "modlens_read_image" ];
+      extraAllowedTools = [
+        "modlens_read_image"
+        "web_search"
+        "x_search"
+        "read_page"
+      ];
       # presets 的 src 跟随 unwrapped.src
       unwrapped = qqBridgeForkUnwrapped;
     })
