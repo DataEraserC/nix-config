@@ -2,7 +2,7 @@
   pkgs,
   deepseek-harness,
   nur-DataEraserC,
-  # TEMP-TEST(qq_get_message_media): 本地 fork 源码的 path input
+  # qq-bridge fork 源码的 path input（详见 flake.nix 的 qq-bridge-fork）
   qq-bridge-fork,
   config,
   myvars,
@@ -13,13 +13,11 @@
 let
   cfg = config.modules.dsh;
 
-  # TEMP-TEST(qq_get_message_media): 用 fork（flake input qq-bridge-fork）覆盖
-  # qq-bridge-unwrapped 的 src，再喂给下面三处 .override 的 unwrapped 参数，让
-  # bridge 服务、DSH MCP servers、agent presets 三件套都跑 fork 代码（新工具
-  # qq_get_message_media）。刻意用 overrideAttrs 而不是改 nur 侧的 default.nix：
-  # qq-bridge-unwrapped 文件与上游保持逐字一致，nix-update / 自动更新不受影响。
-  # 测完：删掉 flake.nix 的 qq-bridge-fork input、本绑定与三处 unwrapped 覆盖行
-  # （wrapper 的 unwrapped ? 参数已合入 nur main dc974773，保留无妨）。
+  # 用 fork（flake input qq-bridge-fork）覆盖 qq-bridge-unwrapped 的 src，再喂给
+  # 下面三处 .override 的 unwrapped 参数，让 bridge 服务、DSH MCP servers、
+  # agent presets 三件套都跑 fork 代码（新工具 qq_get_message_media）。刻意用
+  # overrideAttrs 而不是改 nur 侧的 default.nix：qq-bridge-unwrapped 文件与上游
+  # 保持逐字一致，nix-update / 自动更新不受影响。
   qqBridgeForkUnwrapped =
     nur-DataEraserC.packages.${pkgs.system}.qq-bridge-unwrapped.overrideAttrs
       (_: {
@@ -252,7 +250,6 @@ let
     opencode2dsh
     (nur-DataEraserC.packages.${pkgs.system}.qq-bridge-dsh.override {
       qqBridgeHome = "/home/${myvars.username}/.local/share/qq-bridge";
-      # TEMP-TEST(qq_get_message_media)
       unwrapped = qqBridgeForkUnwrapped;
     })
     # Agent presets (qq-chat / qq-chat-v2) own the execution-time guard
@@ -262,7 +259,7 @@ let
     # The override moved here with the guard implementation.
     (nur-DataEraserC.packages.${pkgs.system}.qq-agent-presets.override {
       extraAllowedTools = [ "modlens_read_image" ];
-      # TEMP-TEST(qq_get_message_media): presets 的 src 跟随 unwrapped.src
+      # presets 的 src 跟随 unwrapped.src
       unwrapped = qqBridgeForkUnwrapped;
     })
     nur-DataEraserC.packages.${pkgs.system}.qq-mode-console
@@ -457,7 +454,7 @@ in
     environment.systemPackages = [
       # pkgs.dsh.dsh-desktop
 
-      # TEMP-TEST(qq_get_message_media): wrapper 也指向 fork 构建（passthru.unwrapped）
+      # wrapper 也指向 fork 构建（passthru.unwrapped）
       (nur-DataEraserC.packages.${pkgs.system}.qq-bridge.override {
         unwrapped = qqBridgeForkUnwrapped;
       })
