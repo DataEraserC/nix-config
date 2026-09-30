@@ -53,12 +53,15 @@ let
     '';
   });
 
-  # Temporary fixes for FishBottle7/opencode2dsh, carried as a pinned commit
-  # of the DataEraserC fork instead of local patch files: the upstream repo
-  # does not merge the PRs we need, and three stacked patch files were a
+  # Pinned fork commit instead of local patch files: the upstream repo did
+  # not merge the PRs we needed, and three stacked patch files were a
   # maintenance burden (context drift on every upstream tag). The fork branch
-  # `master-patches` (rev pinned below) is upstream master (0.3.3 era) plus,
-  # in order:
+  # `master-patches` (rev pinned below) is now a true MERGE of upstream
+  # master (0.3.5 era, b69e25d) with our IP-pool line — both histories stay
+  # reachable, future upstream syncs are ordinary merges, and GitHub shows
+  # 0 behind. The first two picks below (#14, #23) were adopted upstream
+  # during that sync (1f270f4 / 36e83bb), so the only content delta against
+  # upstream is the pool line; the commits in order:
   #
   #  - opencode2dsh#14 (author superzzm2026, cherry-picked with -x): ZenAdapter
   #    never implements imageRequestPricing(), so dsh-llm's pricing lookup
@@ -164,8 +167,8 @@ let
       forkSrc = pkgs.fetchFromGitHub {
         owner = "DataEraserC";
         repo = "opencode2dsh";
-        rev = "95d35abaf09ecaf1b7ee421722ab4277099964aa";
-        hash = "sha256-hv60oyJpLhPG3QBydIcwY2a4rsBQme3G1rx0KwR2lRU=";
+        rev = "225ac1c64eeb72bcdab13f835b531c8fd9b35dea";
+        hash = "sha256-O4vrLD3Tbf4+oh+I5gM9lC2Jt3EPnrfM0VwsHP/1ZgM=";
       };
     in
     {
