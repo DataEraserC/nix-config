@@ -341,12 +341,14 @@ let
   # package.json 顶层 dependencies），可上游 resolve-dsh-bundles.mjs 的 profile
   # 子命令把 dependencies 写死成 {}，nix 同步出的 profile 从不声明 extraBundles —
   # 于是这些插件在插件页根本不出现，IP 池那行配置（plugins.row.config）也无从进入。
-  # 这里在 nix 侧补：构建期读各 extraBundle 的 nix-support/dsh-bundles.json，
-  # 把 本 profile bundles ∩ extraBundles 的 {name: version} 写进模板 dependencies，
-  # 并按 makeProfileTemplate 同一算法重算 .nix-managed 指纹 —— dsh-sync-profiles
-  # 的 no-op 判定照常成立（无每次启动的回写循环），上游 seeder 只做路径替换、
-  # 其余逐字保留。*-failsafe 不含这些 bundle 名，交集后仍是纯基线；qqBundles 不在
-  # 名单里（qq 相关卡片维持现状）；不改上游 deepseek-harness.nix 任何文件。
+  # 这里在 nix 侧补：构建期读 extraBundles/baseBundles/qqBundles 各 bundle 的
+  # nix-support/dsh-bundles.json，把 本 profile bundles ∩ 名单 的 {name: version}
+  # 写进模板 dependencies，并按 makeProfileTemplate 同一算法重算 .nix-managed
+  # 指纹 —— dsh-sync-profiles 的 no-op 判定照常成立（无每次启动的回写循环），
+  # 上游 seeder 只做路径替换、其余逐字保留。交集保证“拥有”不越界：baseBundles
+  # 本就全档加载（含 *-failsafe，出卡是如实标注），qqBundles 只落 web-qq*，
+  # 纯 extras 仍绕开 plain *-failsafe；enabled（= dsh.profile.bundles）不受影响，
+  # 注入只改 dependencies 这个“已安装”标记。不改上游 deepseek-harness.nix 任何文件。
   #
   # 【何时可删】上游满足任一条件即可删掉本函数与 programs.dsh.package 覆盖：
   #   ① resolve-dsh-bundles.mjs 的 profile 子命令把 bundle manifest 的
@@ -359,7 +361,9 @@ let
   patchProfileDeps =
     artifacts:
     let
-      extraManifests = map (bundle: "${bundle}/nix-support/dsh-bundles.json") (lib.unique extraBundles);
+      injectedManifests = map (bundle: "${bundle}/nix-support/dsh-bundles.json") (
+        lib.unique (extraBundles ++ baseBundles ++ qqBundles)
+      );
       targetNames = map (spec: spec.targetName) (lib.attrValues artifacts.profileSpecs);
       patchedTemplates =
         pkgs.runCommand "deepseek-harness-profiles-with-deps"
@@ -372,11 +376,11 @@ let
           ''
             set -euo pipefail
 
-            # name → manifest version，只收 extraBundles 的 manifest；profiles 用
-            # 下面的交集再筛一遍（failsafe 的 bundles 不含这些名字）。
+            # name → manifest version，只收 extra/base/qq 三个名单的 manifest；
+            # profiles 用下面的交集再筛一遍，只留该档 bundles 真在跑的名字。
             extraDeps=./extra-deps.json
             printf '{}\n' > "$extraDeps"
-            for manifest in ${lib.escapeShellArgs extraManifests}; do
+            for manifest in ${lib.escapeShellArgs injectedManifests}; do
               jq -r '.bundles[] | [.name, .version] | @tsv' "$manifest" |
                 while IFS=$'\t' read -r name version; do
                   tmp=$(mktemp)
