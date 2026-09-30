@@ -39,12 +39,14 @@ let
       });
 
   # TEMP: modlens 3.26.5 的反向 MiMo 门（issue #80：裸 ID 视为原生 omni、须带
-  # -pro 段）把 mimo-v2.6-flash-free 挡在 (modlens vision) 变体之外；而
-  # opencode2dsh 硬编码 ["text"]、openai-compat 路由默认纯文本，两个渠道都传
-  # 不了原生图片，粘贴只剩占位符。补丁与 fork DataEraserC/modlens@ce6db0e 的
-  # dsh/index.js 修改一致：路由声明了 modality 时以声明为准（image 已在上一行
-  # 被否决，text-only 即不可能传图），门只在 modality 缺失时按名字判。上游发布
-  # 含该修复的版本后，删掉本绑定并把两处引用改回 nur 包。
+  # -pro 段）把 mimo-v2.6-flash-free 挡在 (modlens vision) 变体之外，路由即使
+  # 已声明 modality 也一并否决。opencode2dsh 侧的硬编码 ["text"] 已过时：
+  # zen-adapter 的 isVisionModel 对 mimo-v2.6 声明 ['text','image']，dsh 传原生
+  # 图片字节；openai-compat 路由仍默认纯文本 —— 未声明 modality 的渠道传不了图。
+  # 补丁与 fork DataEraserC/modlens@ce6db0e 的 dsh/index.js 修改一致：路由声明了
+  # modality 时以声明为准（image 已在上一行被否决，text-only 即不可能传图），门
+  # 只在 modality 缺失时按名字判。上游发布含该修复的版本后，删掉本绑定并把两处
+  # 引用改回 nur 包。
   modlensPatched = nur-DataEraserC.packages.${pkgs.system}.modlens.overrideAttrs (old: {
     postPatch = (old.postPatch or "") + ''
       patch --no-backup-if-mismatch -p1 < ${./modlens-mimo-gate.patch}
