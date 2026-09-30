@@ -6477,11 +6477,11 @@
         "treefmt-nix": "treefmt-nix_6"
       },
       "locked": {
-        "lastModified": 1790709137,
-        "narHash": "sha256-emCu4E9q7X3KsyERG/DLAfUazcUdtRogZ4ECbDCLZuA=",
+        "lastModified": 1790745826,
+        "narHash": "sha256-8LqCp9msH/S5kbPubXal/NQrsdmavlR1jUsoPZBE8dI=",
         "owner": "DataEraserC",
         "repo": "nur-packages",
-        "rev": "24c5799028e1ad2333153d91625dd8ca92eeb2b5",
+        "rev": "548eaf90fe6645061dd46c6cb31030d5a80ca196",
         "type": "github"
       },
       "original": {

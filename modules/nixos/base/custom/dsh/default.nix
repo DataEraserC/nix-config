@@ -220,7 +220,9 @@ let
     # pkgs.dsh.bundles.cpa
     # Incompatible with the current kernel; keep disabled until it is fixed.
     # pkgs.dsh.bundles.message-edit
-    pkgs.dsh.bundles.agent-teams
+    # dsh.nix pins 0.1.21 (peer ranges stop before DSH 0.2.0-rc.2); the nur package
+    # carries upstream's fixed 0.1.22. Drop back once deepseek-harness.nix catches up.
+    nur-DataEraserC.packages.${pkgs.system}.dsh-agent-teams
     # pkgs.dsh.bundles.ads
     # Archived: dsh ships a built-in navbar implementation now.
     # pkgs.dsh.bundles.navbar
