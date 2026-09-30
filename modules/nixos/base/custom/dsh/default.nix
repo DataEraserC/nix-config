@@ -336,6 +336,102 @@ let
       keepLine = line: !(isHeaderLine line || isBareEmptySeq line);
     in
     web + "\n" + lib.concatStringsSep "\n" (lib.filter keepLine (lib.splitString "\n" yml));
+
+  # 主页>插件 的卡片过滤是 `installed = dependencies.includes(name)`（读 profile
+  # package.json 顶层 dependencies），可上游 resolve-dsh-bundles.mjs 的 profile
+  # 子命令把 dependencies 写死成 {}，nix 同步出的 profile 从不声明 extraBundles —
+  # 于是这些插件在插件页根本不出现，IP 池那行配置（plugins.row.config）也无从进入。
+  # 这里在 nix 侧补：构建期读各 extraBundle 的 nix-support/dsh-bundles.json，
+  # 把 本 profile bundles ∩ extraBundles 的 {name: version} 写进模板 dependencies，
+  # 并按 makeProfileTemplate 同一算法重算 .nix-managed 指纹 —— dsh-sync-profiles
+  # 的 no-op 判定照常成立（无每次启动的回写循环），上游 seeder 只做路径替换、
+  # 其余逐字保留。*-failsafe 不含这些 bundle 名，交集后仍是纯基线；qqBundles 不在
+  # 名单里（qq 相关卡片维持现状）；不改上游 deepseek-harness.nix 任何文件。
+  patchProfileDeps =
+    artifacts:
+    let
+      extraManifests = map (bundle: "${bundle}/nix-support/dsh-bundles.json") (lib.unique extraBundles);
+      targetNames = map (spec: spec.targetName) (lib.attrValues artifacts.profileSpecs);
+      patchedTemplates =
+        pkgs.runCommand "deepseek-harness-profiles-with-deps"
+          {
+            nativeBuildInputs = [
+              pkgs.coreutils
+              pkgs.jq
+            ];
+          }
+          ''
+            set -euo pipefail
+
+            # name → manifest version，只收 extraBundles 的 manifest；profiles 用
+            # 下面的交集再筛一遍（failsafe 的 bundles 不含这些名字）。
+            extraDeps=./extra-deps.json
+            printf '{}\n' > "$extraDeps"
+            for manifest in ${lib.escapeShellArgs extraManifests}; do
+              jq -r '.bundles[] | [.name, .version] | @tsv' "$manifest" |
+                while IFS=$'\t' read -r name version; do
+                  tmp=$(mktemp)
+                  jq --arg name "$name" --arg version "$version" '.[$name] = $version' \
+                    "$extraDeps" > "$tmp"
+                  mv "$tmp" "$extraDeps"
+                done
+            done
+
+            mkdir -p "$out"
+            for target in ${lib.escapeShellArgs targetNames}; do
+              mkdir -p "$out/$target"
+              cp --dereference --no-preserve=mode -r \
+                ${artifacts.profileTemplates}/"$target"/. "$out/$target/"
+              jq --slurpfile extra "$extraDeps" '
+                . as $profile
+                | .dependencies = (.dependencies + ($extra[0]
+                    | to_entries
+                    | map(select(.key as $name
+                        | $profile.dsh.profile.bundles | index($name) != null))
+                    | from_entries))
+              ' "$out/$target/package.json" > "$out/$target/package.json.tmp"
+              mv "$out/$target/package.json.tmp" "$out/$target/package.json"
+              # 与 makeProfileTemplate 相同的指纹算法，模板内容变了就重算。
+              fingerprint=$(
+                cd "$out/$target"
+                sha256sum -- package.json cordis.patch.yml pnpm-workspace.yaml | sha256sum | cut -d' ' -f1
+              )
+              {
+                printf 'owner=nix\n'
+                printf 'schema=1\n'
+                printf 'profile=%s\n' "$target"
+                printf 'fingerprint=%s\n' "$fingerprint"
+              } > "$out/$target/.nix-managed"
+            done
+          '';
+      # 上游 seeder 把模板集合路径烤进了脚本；只 sed 换成补过的集合，sync 逻辑
+      # 逐字保留，上游更新时自动跟随。替换后残留原路径则直接 fail（防上游改了
+      # 路径拼接方式而这里悄悄失效）。
+      patchedSeeder =
+        pkgs.runCommand "dsh-sync-profiles-with-deps"
+          {
+            nativeBuildInputs = [
+              pkgs.coreutils
+              pkgs.gnugrep
+            ];
+          }
+          ''
+            set -euo pipefail
+            mkdir -p "$out/bin"
+            sed 's|${artifacts.profileTemplates}|${patchedTemplates}|g' \
+              ${artifacts.seedProfiles}/bin/dsh-sync-profiles > "$out/bin/dsh-sync-profiles"
+            chmod +x "$out/bin/dsh-sync-profiles"
+            if grep -Fq ${lib.escapeShellArg artifacts.profileTemplates} "$out/bin/dsh-sync-profiles"; then
+              echo "dsh: patched seeder still references the unpatched templates" >&2
+              exit 1
+            fi
+          '';
+    in
+    artifacts
+    // {
+      profileTemplates = patchedTemplates;
+      seedProfiles = patchedSeeder;
+    };
 in
 {
   imports = [ deepseek-harness.nixosModules.default ];
@@ -363,6 +459,37 @@ in
 
     programs.dsh = {
       enable = true;
+
+      # 把补过 dependencies 的模板接进 nix 同步链（bin/dsh → dsh-seed-profile →
+      # dsh-sync-profiles，模板集合路径烤死在 seeder 脚本里）。mkDsh 只认
+      # `package.override`，所以用上游给 split integrations 留的 profileSeeder
+      # 插槽整只换掉 seeder；profileDefaultProfile 顶替原来 validatedDefaultProfile
+      # 提供的无参默认 profile（行为逐字不变）。再包一层 passthru，desktop/HM
+      # 将来启用时经 mkProfileArtifacts 拿到的也是补过的模板。base 用
+      # pkgs.dsh.dsh：它就是 mkPackageOption 的默认值（override 链会保留
+      # profileSeeder 参数）。
+      package =
+        let
+          artifacts = pkgs.dsh.dsh.passthru.mkProfileArtifacts {
+            inherit (config.programs.dsh) profiles agentPresets defaultProfile;
+            desktopProfile =
+              if config.programs.dsh.desktop.enable then config.programs.dsh.desktop.profile else null;
+            homePatch = config.programs.dsh.patch;
+          };
+          patched = patchProfileDeps artifacts;
+          base = pkgs.dsh.dsh.override (_: {
+            profileSeeder = patched.seedProfiles;
+            profileDefaultProfile = config.programs.dsh.defaultProfile;
+          });
+        in
+        base
+        // {
+          passthru = (base.passthru or { }) // {
+            mkProfileArtifacts = args: patchProfileDeps (base.passthru.mkProfileArtifacts args);
+            profileTemplates = patched.profileTemplates;
+            seedProfiles = patched.seedProfiles;
+          };
+        };
 
       # Home-level layer (`$DSH_HOME/cordis.patch.yml`): dsh 0.1.7 applies it
       # as "machine-local preferences that apply to every profile"
