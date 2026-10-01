@@ -164,11 +164,14 @@ let
   opencode2dsh = nur-DataEraserC.packages.${pkgs.system}.opencode2dsh.overrideAttrs (
     old:
     let
+      # 6c29fd8 carries the IP-pool subscription fix (nested-non-empty-first
+      # pick); the lockfile is byte-identical to 225ac1c, so the pnpmDeps
+      # fixed-output hash is unchanged (no dependency rebuild).
       forkSrc = pkgs.fetchFromGitHub {
         owner = "DataEraserC";
         repo = "opencode2dsh";
-        rev = "225ac1c64eeb72bcdab13f835b531c8fd9b35dea";
-        hash = "sha256-O4vrLD3Tbf4+oh+I5gM9lC2Jt3EPnrfM0VwsHP/1ZgM=";
+        rev = "6c29fd81ed7147303b75c9abb08691044e8bb0e0";
+        hash = "sha256-ngCrDVY+d68ykBbBWh9YNu4S3nuy3kS0UajJThINo88=";
       };
     in
     {
