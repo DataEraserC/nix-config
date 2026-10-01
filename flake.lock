@@ -479,11 +479,11 @@
         "systems": "systems_6"
       },
       "locked": {
-        "lastModified": 1790375278,
-        "narHash": "sha256-oGv6aatLyq8Eha1ZA5wbkdRhlE3WdmOt9yajLeTgnCk=",
+        "lastModified": 1790809434,
+        "narHash": "sha256-k/FgJ+P6RUzwimTzxuzEbwSkayOCl6fdAsSk1msEFPE=",
         "owner": "nix-community",
         "repo": "browser-previews",
-        "rev": "ef13999ddd920d61e5c7cfae16177de7ffb62e61",
+        "rev": "c736695d184cad25db02a3c9ff586a29a0acec7c",
         "type": "github"
       },
       "original": {
@@ -863,11 +863,11 @@
         "systems": "systems_13"
       },
       "locked": {
-        "lastModified": 1790761695,
-        "narHash": "sha256-3zTeohfzaCe35+AlYF8N8VRPRz+6kvrxsXdtJqOzR7U=",
+        "lastModified": 1790868051,
+        "narHash": "sha256-VkW2hsDjA/aN5m/xTFSnMds8Rqxz1IdP2OYMZtxKZRE=",
         "owner": "moraxyc",
         "repo": "deepseek-harness.nix",
-        "rev": "8a9dffb015effb2be034d39458196e421272e019",
+        "rev": "8ec5bbf026abf94ba1eb9df78595ff42765761c0",
         "type": "github"
       },
       "original": {
@@ -909,11 +909,11 @@
         "systems": "systems_40"
       },
       "locked": {
-        "lastModified": 1790590573,
-        "narHash": "sha256-F5zU2Eeg7TgRnWCigXD/3OHGwFdKMOodSGFjUJ2mKJc=",
+        "lastModified": 1790850391,
+        "narHash": "sha256-K5WOyh468yKT1BUoTIyC4Be1E5GlrDyyDMnFCLnUXp4=",
         "owner": "Moraxyc",
         "repo": "deepseek-harness.nix",
-        "rev": "6dad3d4ed671ac0225948dd3eae9a2d7937f0a63",
+        "rev": "6bc6213c71b03a7f12e7b748f8f22850f4a621ad",
         "type": "github"
       },
       "original": {
@@ -4883,11 +4883,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1790193925,
-        "narHash": "sha256-AWexxBn5kSj3k5r7HIw0WInJ5pvLkLkpubJFLpks2kQ=",
+        "lastModified": 1790798706,
+        "narHash": "sha256-1OER9hLIEEncfw5vAXwoERRB8KIouCfmbbZjrsRLP2s=",
         "owner": "Mic92",
         "repo": "nixfmt-rs",
-        "rev": "10a7ab26f38cb427b08701c097fd05d0541eb98f",
+        "rev": "79e587b7be6a6e7b3e4f377af2a17684974cd001",
         "type": "github"
       },
       "original": {
@@ -4933,11 +4933,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1790193925,
-        "narHash": "sha256-AWexxBn5kSj3k5r7HIw0WInJ5pvLkLkpubJFLpks2kQ=",
+        "lastModified": 1790798706,
+        "narHash": "sha256-1OER9hLIEEncfw5vAXwoERRB8KIouCfmbbZjrsRLP2s=",
         "owner": "Mic92",
         "repo": "nixfmt-rs",
-        "rev": "10a7ab26f38cb427b08701c097fd05d0541eb98f",
+        "rev": "79e587b7be6a6e7b3e4f377af2a17684974cd001",
         "type": "github"
       },
       "original": {
@@ -6055,11 +6055,11 @@
     },
     "nixpkgs_21": {
       "locked": {
-        "lastModified": 1790578696,
-        "narHash": "sha256-ZoxIApko70jCdbH3l20HWXOBaT2HZd87orzd2yJ9dVE=",
+        "lastModified": 1790822859,
+        "narHash": "sha256-69xHQhAeMAD2wDXO7T2pcOZIF9Sga2W+JkmY2a11Ops=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "7a0f122f5090cf4c2ade2a13a0e229d4e19ba71f",
+        "rev": "c59305bab2065cfecc4944690d9eedbb56f3a9fa",
         "type": "github"
       },
       "original": {
@@ -6477,11 +6477,11 @@
         "treefmt-nix": "treefmt-nix_6"
       },
       "locked": {
-        "lastModified": 1790800305,
-        "narHash": "sha256-8cwDxL+eb8PFQBJtSOafJV+woJHZ6WR26kIsM5WW2VU=",
+        "lastModified": 1790866741,
+        "narHash": "sha256-V8VEZqhGh/4j7x8adNiv0Gm9lAHTUHqQag/itKtWCsU=",
         "owner": "DataEraserC",
         "repo": "nur-packages",
-        "rev": "da094e494ff751ca88a48d6ccbafaec19a528e9c",
+        "rev": "88ce06694105fb272926cc30dd67db49be55badd",
         "type": "github"
       },
       "original": {
@@ -6537,11 +6537,11 @@
         "treefmt-nix": "treefmt-nix_10"
       },
       "locked": {
-        "lastModified": 1790709137,
-        "narHash": "sha256-emCu4E9q7X3KsyERG/DLAfUazcUdtRogZ4ECbDCLZuA=",
+        "lastModified": 1790866741,
+        "narHash": "sha256-V8VEZqhGh/4j7x8adNiv0Gm9lAHTUHqQag/itKtWCsU=",
         "owner": "DataEraserC",
         "repo": "nur-packages",
-        "rev": "24c5799028e1ad2333153d91625dd8ca92eeb2b5",
+        "rev": "88ce06694105fb272926cc30dd67db49be55badd",
         "type": "github"
       },
       "original": {
