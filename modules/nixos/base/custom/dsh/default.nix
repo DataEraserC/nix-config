@@ -474,13 +474,14 @@ in
       # path, which is why modlens_read_image worked anyway). Adding it here
       # exposes the CLI for manual `doctor` / `config set` / `analyze` use.
       modlensPatched
-      # browser4 (MCP-driven browser automation: Rust CLI + prebuilt Java
-      # runtime bundle via passthru.runtime). PATH exposure so the harness
-      # can shell out to `browser4-cli`; the wrapper defaults FORCE_REMOTE_BUNDLE
-      # and BROWSER4_RUNTIME_DIR itself. Chrome still needs an explicit
-      # BROWSER4_BROWSER_PATH on NixOS — see the package's AGENTS.md.
-      nur-DataEraserC.packages.${pkgs.system}.browser4
     ];
+
+    # browser4（MCP 驱动的浏览器自动化）经 modules.browser4 →
+    # programs.dataEraserc.browser4 进 PATH：包装层自带 store runtime、
+    # 自动建日志目录、拦截 BROWSER4_RUNTIME_DIR 覆盖（详见 nur 包 AGENTS.md）。
+    # 后端不是 systemd 服务，长驻请用 harness 后台任务；Chrome 路径用
+    # modules.browser4.browserPath 单独配置。
+    modules.browser4.enable = lib.mkDefault true;
 
     programs.dsh = {
       enable = true;
