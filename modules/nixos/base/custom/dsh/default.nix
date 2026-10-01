@@ -474,6 +474,12 @@ in
       # path, which is why modlens_read_image worked anyway). Adding it here
       # exposes the CLI for manual `doctor` / `config set` / `analyze` use.
       modlensPatched
+      # browser4 (MCP-driven browser automation: Rust CLI + prebuilt Java
+      # runtime bundle via passthru.runtime). PATH exposure so the harness
+      # can shell out to `browser4-cli`; the wrapper defaults FORCE_REMOTE_BUNDLE
+      # and BROWSER4_RUNTIME_DIR itself. Chrome still needs an explicit
+      # BROWSER4_BROWSER_PATH on NixOS — see the package's AGENTS.md.
+      nur-DataEraserC.packages.${pkgs.system}.browser4
     ];
 
     programs.dsh = {
