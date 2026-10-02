@@ -164,16 +164,22 @@ let
   opencode2dsh = nur-DataEraserC.packages.${pkgs.system}.opencode2dsh.overrideAttrs (
     old:
     let
-      # 946ac03 = 6c29fd8 (IP-pool nested-URL fix) + the upstream 0.3.6
-      # sync merge (reasoning-only recovery in zen-adapter); the only
-      # conflict was packages/plugin/package.json, resolved keeping the
-      # fork's 0.5.0 version, and the lockfile stayed byte-identical to
-      # 225ac1c, so the pnpmDeps fixed-output hash is unchanged.
+      # db1f4d2 = 946ac03 + the empty-proxyHosts fix (Assisted-by trailer):
+      # the schema resolves ipPool.proxyHosts to [] when the profile omits
+      # it, and the router constructor's `?? DEFAULT` kept that empty array
+      # — new Set([]).has(host) failed for EVERY host, so all zen traffic
+      # routed direct and 429 concentrated on one Clash exit IP while the
+      # pool and status card looked green (live-observed 2026-10-02). An
+      # empty array now defaults exactly like setProxyHosts, and the status
+      # bridge prefers the LIVE router's set over settings/fallback so the
+      # two can never diverge silently again. No dependency changes: the
+      # pnpmDeps fixed-output hash is unchanged (lockfile byte-identical to
+      # 946ac03).
       forkSrc = pkgs.fetchFromGitHub {
         owner = "DataEraserC";
         repo = "opencode2dsh";
-        rev = "946ac03c57d040bc25a4278aba859f8b38c7ce14";
-        hash = "sha256-jGKsFliIjRj1FhcJHndohiPjJrwhlGkbeQffiEHF1bs=";
+        rev = "db1f4d270c449ebc8dda5bfe28fbfebcf7c4a84e";
+        hash = "sha256-NcCTuXm9Wlo0QKnc+QxVHaOplLJIWW5YZFuPZ//C56U=";
       };
     in
     {
