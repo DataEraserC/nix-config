@@ -281,12 +281,53 @@ let
     # whose provider modsearch swaps, `x_search` / `read_page` are modsearch's
     # additions (exact names → SAFE_EXACT; dev_* stays denied no matter what).
     # The override moved here with the guard implementation.
+    # dsh-ego-browser's 33 registered ego_* tools split by surface: the 24
+    # browser-observation/interaction ones below go to the allow list, the 9
+    # local-execution / local-file / credential / host-state ones go to
+    # extraRestrictedTools — guard-only rejection still leaves the name in the
+    # model schema where it baits sim sessions, so they must be hidden by the
+    # same restrict path as dev_*. The two lists must stay disjoint.
     (nur-DataEraserC.packages.${pkgs.system}.qq-agent-presets.override {
       extraAllowedTools = [
         "modlens_read_image"
         "web_search"
         "x_search"
         "read_page"
+        "ego_captcha"
+        "ego_check"
+        "ego_click"
+        "ego_dialog"
+        "ego_drag"
+        "ego_fill"
+        "ego_help"
+        "ego_hover"
+        "ego_http"
+        "ego_js"
+        "ego_key"
+        "ego_navigate"
+        "ego_page_info"
+        "ego_read_element"
+        "ego_screenshot"
+        "ego_scroll"
+        "ego_select"
+        "ego_snapshot"
+        "ego_space_close"
+        "ego_space_open"
+        "ego_wait"
+        "ego_wait_for_response"
+        "ego_wait_for_selector"
+        "ego_wait_for_url"
+      ];
+      extraRestrictedTools = [
+        "ego_auth_flush"
+        "ego_cdp"
+        "ego_cli"
+        "ego_doctor"
+        "ego_download"
+        "ego_login_import"
+        "ego_script"
+        "ego_status"
+        "ego_upload"
       ];
       # presets 的 src 跟随 unwrapped.src
       unwrapped = qqBridgeForkUnwrapped;
