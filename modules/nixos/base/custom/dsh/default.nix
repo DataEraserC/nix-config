@@ -252,6 +252,13 @@ let
     # pkgs.dsh.bundles.annotation
     nur-DataEraserC.packages.${pkgs.system}.dsh-chat-import
     nur-DataEraserC.packages.${pkgs.system}.dsh-annotation
+    # Chrome-driven browser automation (ego_* tools). runtimeDeps pins
+    # google-chrome onto the dsh launcher PATH so auto-detect works even when
+    # dsh starts without the user profile PATH; chromePath / EGO_LINUX_CHROME
+    # remain the manual override. The optional sidebar partner
+    # pkgs.dsh.bundles.better-sidebar stays off — the floating observe ball
+    # is the fallback.
+    nur-DataEraserC.packages.${pkgs.system}.dsh-ego-browser
     pkgs.dsh.bundles.harbor
     pkgs.dsh.bundles.graph-memory
   ];
