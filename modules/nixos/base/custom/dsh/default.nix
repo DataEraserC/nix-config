@@ -252,6 +252,8 @@ let
     # pkgs.dsh.bundles.annotation
     nur-DataEraserC.packages.${pkgs.system}.dsh-chat-import
     nur-DataEraserC.packages.${pkgs.system}.dsh-annotation
+    pkgs.dsh.bundles.harbor
+    pkgs.dsh.bundles.graph-memory
   ];
 
   # QQ group-chat stack: unstable, so it stays out of the plain profiles and
