@@ -54,8 +54,24 @@ rec {
     ./ai
     ./proxmox.nix
     # ./tpm_luks.nix
-    ./dae.nix
   ];
+
+  # dae transparent proxy - the shared module lives in
+  # modules/nixos/base/custom/dae.nix and is only enabled on this host for now.
+  # Its main config is the host-local ./config.dae, the subscription comes from agenix.
+  modules.dae = {
+    enable = true;
+    installFiles = [
+      {
+        source = ./config.dae;
+        target = "/etc/dae/config.dae";
+      }
+      {
+        source = config.age.secrets."dae-subscription.dae".path;
+        target = "/etc/dae/config.d/subscription.dae";
+      }
+    ];
+  };
 
   # Zram consumes physical memory for compression, which can cause a deadlock and system hang if the model size approaches the physical memory limit.
   # Disable the whole module (zram device + its swappiness=180 sysctl tunings); this host uses a disk swapfile instead.

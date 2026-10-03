@@ -40,8 +40,7 @@ let
           modules.dsh.enable = true;
           modules.vscode-server.enable = true;
         }
-        inputs.daeuniverse.nixosModules.dae
-        inputs.daeuniverse.nixosModules.daed
+        # daeuniverse (dae/daed) modules are imported by modules/nixos/base/custom/dae.nix
         inputs.chaotic.nixosModules.default
         {
           modules.outOfStoreSymlink = {

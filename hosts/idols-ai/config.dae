@@ -350,8 +350,9 @@ routing {
     ### Preset rules.
 
     # Network managers in localhost should be direct to avoid false negative network connectivity check when binding to
-    # WAN.
-    pname(NetworkManager, systemd-resolved, dnsmasq, mihomo, netbird, zerotier-one, tailscaled, nekobox_core, sing-box, proxychains4, gg) -> must_direct
+    # WAN. This list also pins the local proxy/tunnel daemons (clash core verge-mihomo, EasyTier, WARP, Oray pgy, ...)
+    # so their outbound peering traffic is never re-hijacked by dae itself.
+    pname(NetworkManager, systemd-resolved, dnsmasq, mihomo, verge-mihomo, netbird, zerotier-one, tailscaled, easytier-core, warp-svc, pgy, nekobox_core, sing-box, proxychains4, gg) -> must_direct
 
     # Put it in the front to prevent broadcast, multicast and other packets that should be sent to the LAN from being
     # forwarded by the proxy.
