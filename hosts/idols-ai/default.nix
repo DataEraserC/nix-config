@@ -73,6 +73,11 @@ rec {
     ];
   };
 
+  # Sub-Store converts Clash-format subscriptions into base64 v2ray URI lists
+  # that dae can fetch (dae has no Clash-YAML parser). Loopback-only API on
+  # 127.0.0.1:24500 - see modules/nixos/base/custom/sub-store.nix.
+  modules.sub-store.enable = true;
+
   # Zram consumes physical memory for compression, which can cause a deadlock and system hang if the model size approaches the physical memory limit.
   # Disable the whole module (zram device + its swappiness=180 sysctl tunings); this host uses a disk swapfile instead.
   modules.zram.enable = false;
