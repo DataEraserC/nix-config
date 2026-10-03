@@ -13,29 +13,55 @@
 let
   cfg = config.modules.dsh;
 
+  # fork 同步三件套（每次 git merge 上游后按序核对）：
+  #   1. flake.lock 的 qq-bridge-fork narHash（nix flake update qq-bridge-fork）；
+  #   2. qqBridgeVersion ← fork package.json 的 version；
+  #   3. qqBridgeNpmDepsHash ← fork package-lock.json（FOD 不匹配时错误里的
+  #      "got: sha256-..." 即新值）。
+  qqBridgeVersion = "0.2.0-r3";
+  qqBridgeNpmDepsHash = "sha256-wrhFeMI4uNjtPDH6vHLyCTgOZAOtF8bbo/VLdWCz488=";
+
   # 用 fork（flake input qq-bridge-fork）覆盖 qq-bridge-unwrapped 的 src，再喂给
   # 下面三处 .override 的 unwrapped 参数，让 bridge 服务、DSH MCP servers、
-  # agent presets 三件套都跑 fork 代码（新工具 qq_get_message_media）。刻意用
-  # overrideAttrs 而不是改 nur 侧的 default.nix：qq-bridge-unwrapped 文件与上游
-  # 保持逐字一致，nix-update / 自动更新不受影响。
+  # agent presets 三件套都跑 fork 代码（master-downstream：上游 0.2.0-r3 合并 +
+  # 下游扩展，含工具 qq_get_message_media）。刻意用 overrideAttrs 而不是改 nur
+  # 侧的 default.nix：qq-bridge-unwrapped 文件与上游保持逐字一致，nix-update /
+  # 自动更新不受影响。
+  qqBridgeSrc = builtins.path {
+    path = qq-bridge-fork;
+    # 解包目录必须叫 source：buildDshBundle 的 sourceRoot 写死
+    # "source/plugins/..."，而目录型 src 是按 store 名字拷出来的
+    # （fetchFromGitHub 的 tarball 解包后也是 source）。
+    name = "source";
+    # 不把 .git 与依赖目录带进 store（运行时 node_modules 由构建期 npm 流水线生成）。
+    filter =
+      path: _type:
+      let
+        base = baseNameOf path;
+      in
+      base != "node_modules" && base != ".git";
+  };
+
+  # npmDeps 必须连 hash 一起显式覆写：nixpkgs extendMkDerivation 在 overrideAttrs
+  # 合并之前就把 npmDeps 物化进派生，只改 npmDepsHash 属性会得到「新哈希、旧依赖」
+  # 的错配（npmConfigHook 随即报 package-lock.json 不一致）。src 与 lock 同源，
+  # 与 npmConfigHook 的对账天然一致；fetcherVersion 与 buildNpmPackage 默认的
+  # NIX_NPM_FETCHER_VERSION=1 保持相等。
+  qqBridgeForkNpmDeps = pkgs.fetchNpmDeps {
+    src = qqBridgeSrc;
+    name = "qq-bridge-unwrapped-${qqBridgeVersion}-npm-deps";
+    hash = qqBridgeNpmDepsHash;
+    fetcherVersion = 1;
+  };
+
   qqBridgeForkUnwrapped =
     nur-DataEraserC.packages.${pkgs.system}.qq-bridge-unwrapped.overrideAttrs
       (_: {
-        src = builtins.path {
-          path = qq-bridge-fork;
-          # 解包目录必须叫 source：buildDshBundle 的 sourceRoot 写死
-          # "source/plugins/..."，而目录型 src 是按 store 名字拷出来的
-          # （fetchFromGitHub 的 tarball 解包后也是 source）。
-          name = "source";
-          # 不把 .git 与依赖目录带进 store（依赖 0.1.5→0.1.7 未变，运行时 node_modules
-          # 由构建期 npm 流水线生成）。
-          filter =
-            path: _type:
-            let
-              base = baseNameOf path;
-            in
-            base != "node_modules" && base != ".git";
-        };
+        src = qqBridgeSrc;
+        name = "qq-bridge-unwrapped-${qqBridgeVersion}";
+        version = qqBridgeVersion;
+        npmDepsHash = qqBridgeNpmDepsHash;
+        npmDeps = qqBridgeForkNpmDeps;
       });
 
   # TEMP: modlens 3.26.5 的反向 MiMo 门（issue #80：裸 ID 视为原生 omni、须带
@@ -332,7 +358,16 @@ let
       # presets 的 src 跟随 unwrapped.src
       unwrapped = qqBridgeForkUnwrapped;
     })
-    nur-DataEraserC.packages.${pkgs.system}.qq-mode-console
+    # qq-mode-console 自己 callPackage 了一份 unwrapped（nur 上游 0.1.7），其
+    # src / npmDepsHash / version 是在它自己的文件里求值期就绑定的，不随上面的
+    # fork 覆写走 —— fork 同步时这里必须一起改，否则控制台跑旧代码、bundle 元
+    # 数据却显示新版本。npmDeps 同样要显式覆写（见 qqBridgeForkNpmDeps 注释）。
+    (nur-DataEraserC.packages.${pkgs.system}.qq-mode-console.overrideAttrs (_: {
+      src = qqBridgeSrc;
+      version = qqBridgeVersion;
+      npmDepsHash = qqBridgeNpmDepsHash;
+      npmDeps = qqBridgeForkNpmDeps;
+    }))
     # The group-chat server launch must write dsh stdout to
     # `~/.dsh/guard/logs/server-<stamp>.out.log`: with `dsh.authToken`
     # left empty, qq-bridge discovers the DSH launch token from the newest
