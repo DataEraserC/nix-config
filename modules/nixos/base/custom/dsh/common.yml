@@ -25,6 +25,10 @@
             name: 1AgentRouter/claude-opus-5
           - id: 1AgentRouter/deepseek-v4-flash
             name: 1AgentRouter/deepseek-v4-flash
+            reasoningEfforts:
+              low: low
+              medium: medium
+              high: high
           - id: 1AgentRouter/gpt-6-astra
             name: 1AgentRouter/gpt-6-astra
           - id: 1FluxionAI/deepseek-v4-1-flash
@@ -1289,6 +1293,10 @@
             name: 2AgentRouter/claude-opus-5
           - id: 2AgentRouter/deepseek-v4-flash
             name: 2AgentRouter/deepseek-v4-flash
+            reasoningEfforts:
+              low: low
+              medium: medium
+              high: high
           - id: 2AgentRouter/gpt-6-astra
             name: 2AgentRouter/gpt-6-astra
           - id: 3AgentRouter/claude-opus-4-8
@@ -1297,6 +1305,10 @@
             name: 3AgentRouter/claude-opus-5
           - id: 3AgentRouter/deepseek-v4-flash
             name: 3AgentRouter/deepseek-v4-flash
+            reasoningEfforts:
+              low: low
+              medium: medium
+              high: high
           - id: 3AgentRouter/gpt-6-astra
             name: 3AgentRouter/gpt-6-astra
           - id: 4AgentRouter/claude-opus-4-8
@@ -1305,6 +1317,10 @@
             name: 4AgentRouter/claude-opus-5
           - id: 4AgentRouter/deepseek-v4-flash
             name: 4AgentRouter/deepseek-v4-flash
+            reasoningEfforts:
+              low: low
+              medium: medium
+              high: high
           - id: 4AgentRouter/gpt-6-astra
             name: 4AgentRouter/gpt-6-astra
           - id: MiniMax-M2.5
