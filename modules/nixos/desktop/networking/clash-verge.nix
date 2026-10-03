@@ -18,6 +18,6 @@
     package = pkgs-master.clash-verge-rev;
     autoStart = false;
     serviceMode = true;
-    tunMode = true;
+    tunMode = false;
   };
 }
