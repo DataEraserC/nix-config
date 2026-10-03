@@ -508,11 +508,11 @@
       inputs.deepseek-harness.follows = "deepseek-harness";
     };
 
-    # qq-bridge fork 源码（github 分支 feat/message-media-tool，flake=false）。
+    # qq-bridge fork 源码（github 分支 master-downstream，flake=false）。
     # 改完 fork 仓库要先 push 到 GitHub，再 `nix flake update qq-bridge-fork`
     # 刷新 narHash 后构建/切换。
     qq-bridge-fork = {
-      url = "github:DataEraserC/qq-bridge?ref=feat/message-media-tool";
+      url = "github:DataEraserC/qq-bridge?ref=master-downstream";
       flake = false;
     };
 

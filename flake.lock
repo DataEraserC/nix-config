@@ -7233,16 +7233,16 @@
     "qq-bridge-fork": {
       "flake": false,
       "locked": {
-        "lastModified": 1790691165,
-        "narHash": "sha256-G4GF9BGT4LmOEoc73aJEW229fgSQ3uK9Qg4bFKLcPeo=",
+        "lastModified": 1791021932,
+        "narHash": "sha256-Q/Cgieq9AsLYbQ0BIIEH6uR6KMbSPMVIXLiAfhB6MK8=",
         "owner": "DataEraserC",
         "repo": "qq-bridge",
-        "rev": "ecb38885946740e993ce3443083457a01e28f3ad",
+        "rev": "a61dc04fd518bd37f4031eeb404c481fb881fb68",
         "type": "github"
       },
       "original": {
         "owner": "DataEraserC",
-        "ref": "feat/message-media-tool",
+        "ref": "master-downstream",
         "repo": "qq-bridge",
         "type": "github"
       }
