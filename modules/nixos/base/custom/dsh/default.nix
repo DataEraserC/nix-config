@@ -64,15 +64,19 @@ let
         npmDeps = qqBridgeForkNpmDeps;
       });
 
-  # PATH 里的 qq-bridge 是两层：本层先按版本把 store 树同步进可写的
-  # QQ_BRIDGE_HOME，再 exec nur 侧 wrapper（数据目录、config 播种、exec node
-  # 仍归它管）。nur 的 wrapper 只在「package.json 不存在」时拷一次，升级后
-  # home 里还是旧代码：0.2.0-r3 那次 DSH 的 MCP servers 跑 store 新码、bridge
-  # 跑 home 里的 0.1.7，两个 send 工具在旧代码里根本没有路由，于是全部
-  # `not found`。同步逻辑放这儿而不是改 nur 的 default.nix —— 上游 wrapper
-  # 逐字不动，也不匹配它的脚本文本（它改脚本这里不会跟着坏）。config.json 与
-  # state/ 只存在于 home、store 树里没有，cp 覆盖不到它们。
-  qqBridgeVersionCheck =
+  # PATH 里的 qq-bridge 是两层：本层先把 store 树同步进可写的 QQ_BRIDGE_HOME，
+  # 再 exec nur 侧 wrapper（数据目录、config 播种、exec node 仍归它管）。nur 的
+  # wrapper 只在「package.json 不存在」时拷一次，升级后 home 里还是旧代码：
+  # 0.2.0-r3 那次 DSH 的 MCP servers 跑 store 新码、bridge 跑 home 里的 0.1.7，
+  # 两个 send 工具在旧代码里根本没有路由，于是全部 `not found`。同步逻辑放这儿
+  # 而不是改 nur 的 default.nix —— 上游 wrapper 逐字不动，也不匹配它的脚本文本
+  # （它改脚本这里不会跟着坏）。config.json 与 state/ 只存在于 home、store 树里
+  # 没有，cp 覆盖不到它们。
+  #
+  # 判据是 store 路径而不是 package.json 的 version：store 路径由内容决定，内容
+  # 一变就变，连「改了 fork 但忘了 bump qqBridgeVersion」也一并抓到（version 比对
+  # 会漏这种）。戳记写在 home 里，跟着数据目录一起被 impermanence 保留。
+  qqBridgeLauncher =
     let
       nurWrapper = nur-DataEraserC.packages.${pkgs.system}.qq-bridge.override {
         unwrapped = qqBridgeForkUnwrapped;
@@ -81,25 +85,19 @@ let
     pkgs.writeShellScriptBin "qq-bridge" ''
       set -e
 
-      export PATH="${
-        lib.makeBinPath [
-          pkgs.coreutils
-          pkgs.nodejs
-        ]
-      }:$PATH"
+      export PATH="${lib.makeBinPath [ pkgs.coreutils ]}:$PATH"
 
       # 数据目录解析顺序与 nur wrapper 保持一致，两层必须指向同一目录。
       QQ_BRIDGE_HOME="''${QQ_BRIDGE_HOME:-''${XDG_DATA_HOME:-$HOME/.local/share}/qq-bridge}"
       storeTree=${qqBridgeForkUnwrapped}/lib/node_modules/qq-bridge
+      stamp="$QQ_BRIDGE_HOME/.nix-store-tree"
 
       mkdir -p "$QQ_BRIDGE_HOME"
-      storeVersion=$(node -p "require('$storeTree/package.json').version")
-      # 读不到（首次运行、package.json 损坏）当空版本处理，重拷一次自愈。
-      homeVersion=$(node -p "require('$QQ_BRIDGE_HOME/package.json').version" 2>/dev/null || true)
 
-      if [ "$homeVersion" != "$storeVersion" ]; then
+      if [ ! -f "$stamp" ] || [ "$(cat "$stamp")" != "$storeTree" ]; then
         cp -r "$storeTree"/* "$QQ_BRIDGE_HOME/"
         chmod -R u+w "$QQ_BRIDGE_HOME"
+        printf '%s\n' "$storeTree" > "$stamp"
       fi
 
       exec ${nurWrapper}/bin/qq-bridge "$@"
@@ -601,8 +599,8 @@ in
     environment.systemPackages = [
       # pkgs.dsh.dsh-desktop
 
-      # qq-bridge：fork 构建 + 版本检查的启动层（见 qqBridgeVersionCheck）
-      qqBridgeVersionCheck
+      # qq-bridge：fork 构建 + store 同步的启动层（见 qqBridgeLauncher）
+      qqBridgeLauncher
       nur-DataEraserC.packages.${pkgs.system}.dsh-plugin-guard
       # modlens is declared as a dsh bundle above and ships inside dsh's own
       # closure, but neither path links its bin into PATH, so `modlens` was
