@@ -198,12 +198,20 @@ group {
         policy: random
     }
     ikuuu {
-        filter: subtag(ikuuu_qq_1)
-        filter: subtag(ikuuu_outlook_1)
+        filter: subtag(ikuuu_1)
+        filter: subtag(ikuuu_2)
         policy: min_moving_avg
     }
     lajichang {
         filter: subtag(lajichang)
+        policy: min_moving_avg
+    }
+    xxmad {
+        filter: subtag(xxmad)
+        policy: min_moving_avg
+    }
+    mojie {
+        filter: subtag(mojie)
         policy: min_moving_avg
     }
 
@@ -271,8 +279,8 @@ group {
     steam {
         # Filter nodes from the global node pool defined by the subscription and node section above.
         filter: subtag(lajichang) && !name(keyword: 'ExpireAt:')
-        filter: subtag(ikuuu_outlook_1) && !name(keyword: 'ExpireAt:')
-        filter: subtag(ikuuu_qq_1) && !name(keyword: 'ExpireAt:')
+        filter: subtag(ikuuu_2) && !name(keyword: 'ExpireAt:')
+        filter: subtag(ikuuu_1) && !name(keyword: 'ExpireAt:')
         filter: name(clash)
         # Select the node with min moving average of latencies from the group for every connection.
         policy: min_moving_avg
