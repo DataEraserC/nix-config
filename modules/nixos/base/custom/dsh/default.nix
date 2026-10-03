@@ -287,6 +287,7 @@ let
     nur-DataEraserC.packages.${pkgs.system}.dsh-ego-browser
     pkgs.dsh.bundles.harbor
     pkgs.dsh.bundles.graph-memory
+    pkgs.dsh.bundles.notification
   ];
 
   # QQ group-chat stack: unstable, so it stays out of the plain profiles and
