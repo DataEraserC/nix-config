@@ -8,7 +8,16 @@
 # The upstream Clash links are registered once via POST /api/subs (see below).
 #
 # Uses the nixpkgs package (pkgs.sub-store, bundled backend; no frontend assets).
-# Data lives in /var/lib/sub-store (root.json + <name>.json - SUB_STORE_DATA_BASE_PATH).
+# Data lives in /var/lib/sub-store (root.json + <name>.json - SUB_STORE_DATA_BASE_PATH):
+#   systemd StateDirectory, so it survives service restarts, reboots and nixos-rebuild
+#   (only RuntimeDirectory would be volatile). Files are written mode 0600 (UMask 0077).
+#
+# Web panel (modules.sub-store.frontend.enable, default on):
+#   Serves the official Sub-Store PWA (Sub-Store-Front-End release) from the same
+#   service on <frontend.port> (default http://127.0.0.1:24501/). The release's baked
+#   default backend URL (https://sub.store) is patched to http://<host>:<port>, so the
+#   panel manages this local backend out of the box; Settings > Custom Backend API can
+#   still override it. Panel and API are both loopback-only and unauthenticated.
 #
 # Check Service Status
 #   systemctl status sub-store
@@ -27,6 +36,30 @@
 let
   cfg = config.modules.sub-store;
   dataDir = "/var/lib/sub-store";
+
+  # Official web panel (PWA). Keep the version aligned with pkgs.sub-store - both
+  # follow the upstream release train, so 2.22.1 pairs with backend 2.22.26.
+  frontendVersion = "2.22.1";
+  frontendRelease = pkgs.fetchzip {
+    url = "https://github.com/sub-store-org/Sub-Store-Front-End/releases/download/${frontendVersion}/dist.zip";
+    hash = "sha256-N/qDGP//4RqwBNK2x+Q+AfTzBCtFPYuqmHOruO/KfVU=";
+  };
+  apiOrigin = "http://${cfg.host}:${toString cfg.port}";
+  # The release defaults to the hosted backend https://sub.store (one code assignment
+  # in the minified main chunk); rewrite it to the local API so the panel never talks
+  # to the official server.
+  frontendDist = pkgs.runCommand "sub-store-frontend-${frontendVersion}" { } ''
+    mkdir -p "$out"
+    cp -r ${frontendRelease}/. "$out"
+    chmod -R u+w "$out"
+    sed -i 's|="https://sub\.store"|="${apiOrigin}"|g' "$out"/chunks/main-*.js
+    # Fail the build if the expected default was not rewritten (e.g. after a frontend
+    # version bump changes the minified pattern).
+    if ! grep -Fq '="${apiOrigin}"' "$out"/chunks/main-*.js; then
+      echo "sub-store-frontend: default backend URL patch did not apply" >&2
+      exit 1
+    fi
+  '';
 in
 {
   options.modules.sub-store = {
@@ -48,6 +81,25 @@ in
         authentication, so keep it on loopback unless you front it with
         something else.
       '';
+    };
+
+    frontend = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = ''
+          Serve the official Sub-Store web panel (static PWA) from the same
+          service on a separate loopback port (see `frontend.port`), with its
+          default backend URL patched to this local API.
+        '';
+      };
+
+      port = lib.mkOption {
+        type = lib.types.port;
+        # keep the panel next to the API on 24500
+        default = 24501;
+        description = "TCP port of the Sub-Store web panel (frontend static server).";
+      };
     };
 
     extraEnvironment = lib.mkOption {
@@ -74,6 +126,13 @@ in
         SUB_STORE_BACKEND_API_HOST = cfg.host;
         SUB_STORE_BACKEND_API_PORT = toString cfg.port;
         SUB_STORE_DATA_BASE_PATH = dataDir;
+      }
+      // lib.optionalAttrs cfg.frontend.enable {
+        # Static panel assets; the backend starts its frontend server for them on a
+        # separate port (API and panel stay independent, UI calls the API by URL).
+        SUB_STORE_FRONTEND_PATH = frontendDist;
+        SUB_STORE_FRONTEND_HOST = cfg.host;
+        SUB_STORE_FRONTEND_PORT = toString cfg.frontend.port;
       }
       // cfg.extraEnvironment;
       serviceConfig = {
