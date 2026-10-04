@@ -47,48 +47,16 @@ let
     url = "https://github.com/sub-store-org/Sub-Store-Front-End/releases/download/${frontendVersion}/dist.zip";
     hash = "sha256-N/qDGP//4RqwBNK2x+Q+AfTzBCtFPYuqmHOruO/KfVU=";
   };
-  # Static local origin: shown in help texts, and the fallback when the page has
-  # no hostname (file://). Deliberately NOT derived from cfg.host - on hosts
-  # bound to 0.0.0.0 that value is not connectable from a browser; the runtime
-  # code default is rewritten below to derive from location.hostname instead.
-  staticOrigin = "http://127.0.0.1:${toString cfg.port}";
-  # The release references the official backend in TWO code paths (a constant and
-  # the `|| fallback` used when the hostAPI list is empty - the one that actually
-  # runs on first visit) plus several i18n help texts. Rewrite them all so the
-  # panel only ever talks to this local backend, then turn every quoted code-level
-  # occurrence into `http://${location.hostname}:<port>` so the API host always
-  # matches the host the page was opened with (127.0.0.1, LAN IP, SSH tunnel, ...).
+  # Rewrite the release's code-level default backend (https://sub.store) so the
+  # API host follows location.hostname at runtime - i.e. always the host the
+  # panel page was opened with. The whole patch (sed rewrite + guards + sw.js
+  # cache marker) lives in sub-store-frontend-patch.sh and receives the module
+  # values as plain arguments, keeping this derivation free of nested quoting.
   frontendDist = pkgs.runCommand "sub-store-frontend-${frontendVersion}" { } ''
     mkdir -p "$out"
     cp -r ${frontendRelease}/. "$out"
     chmod -R u+w "$out"
-    # 1) official URL -> local origin (code paths + help texts)
-    find "$out" -name '*.js' -exec sed -i 's#https://sub\.store#${staticOrigin}#g' {} +
-    if grep -rFq 'https://sub.store' "$out" --include='*.js'; then
-      echo "sub-store-frontend: official backend reference left over" >&2
-      exit 1
-    fi
-    # 2) quote-delimited occurrences are code-level defaults -> location.hostname
-    #    form. Help texts embed the origin unquoted and stay static.
-    staticBefore=$(grep -rhoF '"http://127.0.0.1:${toString cfg.port}"' "$out" --include='*.js' | wc -l || true)
-    if [ "$staticBefore" -lt 2 ]; then
-      echo "sub-store-frontend: expected >= 2 quoted code defaults, found $staticBefore" >&2
-      exit 1
-    fi
-    find "$out" -name '*.js' -exec sed -i 's#"http://127\.0\.0\.1:${toString cfg.port}"#`http://''${location.hostname||"127.0.0.1"}:${toString cfg.port}`#g' {} +
-    staticAfter=$(grep -rhoF '"http://127.0.0.1:${toString cfg.port}"' "$out" --include='*.js' | wc -l || true)
-    if [ "$staticAfter" -ne 0 ]; then
-      echo "sub-store-frontend: $staticAfter quoted code defaults left after dynamic patch" >&2
-      exit 1
-    fi
-    dynCount=$(grep -rhoF 'location.hostname' "$out" --include='*.js' | wc -l || true)
-    if [ "$dynCount" -ne "$staticBefore" ]; then
-      echo "sub-store-frontend: dynamic defaults $dynCount != expected $staticBefore" >&2
-      exit 1
-    fi
-    # 3) touch sw.js: a byte-different service worker makes browsers re-precache
-    #    on the next visit even though the hashed chunk filenames did not change.
-    printf '\n// nix-patch: %s location.hostname backend\n' "${frontendVersion}" >> "$out/sw.js"
+    bash ${./sub-store-frontend-patch.sh} "$out" ${toString cfg.port} "${frontendVersion}"
   '';
 in
 {
