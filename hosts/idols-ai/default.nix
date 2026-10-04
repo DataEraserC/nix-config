@@ -61,6 +61,13 @@ rec {
   # Its main config is the host-local ./config.dae, the subscription comes from agenix.
   modules.dae = {
     enable = true;
+    # dae fetches subscriptions only at startup/reload, so reload once an hour to
+    # pick up Sub-Store's refreshed node lists; the oneshot skips while dae is
+    # stopped (e. while it is kept off to avoid a rebuild failure).
+    autoReload = {
+      enable = true;
+      interval = "60min";
+    };
     installFiles = [
       {
         source = ./config.dae;
@@ -81,6 +88,19 @@ rec {
   modules.sub-store = {
     enable = true;
     host = "0.0.0.0";
+    # Re-fetch every registered upstream hourly so /download/<name>/v2ray always
+    # serves fresh nodes plus a #cacheKey disk fallback for dae's cold start.
+    autoRefresh = {
+      enable = true;
+      interval = "60min";
+      subs = [
+        "GarbageDump1"
+        "iKuuu1"
+        "iKuuu2"
+        "Mojie1"
+        "Xxmad1"
+      ];
+    };
   };
 
   # Zram consumes physical memory for compression, which can cause a deadlock and system hang if the model size approaches the physical memory limit.

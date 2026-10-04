@@ -58,6 +58,49 @@ let
     chmod -R u+w "$out"
     bash ${./sub-store-frontend-patch.sh} "$out" ${toString cfg.port} "${frontendVersion}"
   '';
+
+  # Parse a single-unit duration ("30min" / "2h" / "1day") into whole minutes.
+  # Only forced when autoRefresh is enabled (the env merge is a lazy mkIf).
+  autoRefreshMinutes =
+    let
+      m = builtins.match "([0-9]+)(min|h|hr|day)" cfg.autoRefresh.interval;
+    in
+    if m == null then
+      throw ''modules.sub-store.autoRefresh.interval: "${cfg.autoRefresh.interval}" is not a supported duration; use one unit, e.g. "30min", "2h" or "1day"''
+    else
+      let
+        count = builtins.fromJSON (builtins.elemAt m 0);
+        unit = builtins.elemAt m 1;
+      in
+      count
+      * (
+        if unit == "min" then
+          1
+        else if unit == "h" || unit == "hr" then
+          60
+        else
+          1440
+      );
+
+  # A cron minute field can only step by divisors of 60 (the hours field by
+  # divisors of 24), so anything else fails the eval with the accepted values.
+  cronEveryMinutes =
+    minutes:
+    if minutes > 0 && minutes < 60 && 60 / minutes * minutes == 60 then
+      "*/${toString minutes} * * * *"
+    else if
+      minutes >= 60 && minutes / 60 * 60 == minutes && 24 / (minutes / 60) * (minutes / 60) == 24
+    then
+      "0 */${toString (minutes / 60)} * * *"
+    else
+      throw "modules.sub-store.autoRefresh.interval: ${toString minutes}min cannot be expressed as a cron step; use a divisor of 60 (1 2 3 4 5 6 10 12 15 20 30 60) or full hours dividing a day (120 180 240 360 480 720 1440)";
+
+  # SUB_STORE_PRODUCE_CRON = "<cron>,<type>,<name>[;<cron>,<type>,<name>...]" - the
+  # backend splits entries on ';' and fields on ',' (so the cron expression itself
+  # must contain no commas), then runs sn({type, name}) per entry on that schedule.
+  produceCron = lib.concatMapStringsSep ";" (
+    name: "${cronEveryMinutes autoRefreshMinutes},sub,${name}"
+  ) cfg.autoRefresh.subs;
 in
 {
   options.modules.sub-store = {
@@ -102,6 +145,42 @@ in
       };
     };
 
+    autoRefresh = {
+      enable = lib.mkEnableOption ''
+        periodic upstream refresh via SUB_STORE_PRODUCE_CRON, which re-fetches
+        every subscription listed in `subs` and updates its #cacheKey disk cache
+      '';
+
+      interval = lib.mkOption {
+        type = lib.types.str;
+        default = "60min";
+        example = "2h";
+        description = ''
+          Time between refreshes as a duration with a single unit: minutes
+          (`30min`), hours (`2h`) or days (`1day`); seconds are not supported.
+          It is converted into the cron part of SUB_STORE_PRODUCE_CRON, so the
+          value must be a divisor of 60 minutes or full hours dividing a day
+          (the eval fails otherwise). Upstream fetches are additionally capped
+          by Sub-Store's 1h in-memory cache, so sub-hour intervals do not
+          re-download more often than hourly.
+        '';
+      };
+
+      subs = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ ];
+        example = [
+          "iKuuu1"
+          "iKuuu2"
+        ];
+        description = ''
+          Sub-Store subscription names to refresh on the interval, as shown in
+          the panel and by `GET /api/subs` (`data[].name`). Each name becomes
+          one `<interval>,sub,<name>` entry in SUB_STORE_PRODUCE_CRON.
+        '';
+      };
+    };
+
     extraEnvironment = lib.mkOption {
       type = lib.types.attrsOf lib.types.str;
       default = { };
@@ -117,6 +196,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    # autoRefresh without names would set an empty (silently ignored)
+    # SUB_STORE_PRODUCE_CRON - fail the eval instead of silently doing nothing.
+    assertions = lib.optional cfg.autoRefresh.enable {
+      assertion = cfg.autoRefresh.subs != [ ];
+      message = "modules.sub-store.autoRefresh.enable requires autoRefresh.subs to list at least one subscription name";
+    };
+
     systemd.services.sub-store = {
       description = "Sub-Store subscription manager";
       wantedBy = [ "multi-user.target" ];
@@ -133,6 +219,9 @@ in
         SUB_STORE_FRONTEND_PATH = frontendDist;
         SUB_STORE_FRONTEND_HOST = cfg.host;
         SUB_STORE_FRONTEND_PORT = toString cfg.frontend.port;
+      }
+      // lib.optionalAttrs cfg.autoRefresh.enable {
+        SUB_STORE_PRODUCE_CRON = produceCron;
       }
       // cfg.extraEnvironment;
       serviceConfig = {

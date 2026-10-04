@@ -14,6 +14,29 @@
 }:
 let
   cfg = config.modules.dae;
+
+  # Parse a single-unit duration ("30min" / "2h" / "1day") into whole minutes.
+  # Only forced when autoReload is enabled (the timer attrs are lazy mkIfs).
+  autoReloadMinutes =
+    let
+      m = builtins.match "([0-9]+)(min|h|hr|day)" cfg.autoReload.interval;
+    in
+    if m == null then
+      throw ''modules.dae.autoReload.interval: "${cfg.autoReload.interval}" is not a supported duration; use one unit, e.g. "30min", "2h" or "1day"''
+    else
+      let
+        count = builtins.fromJSON (builtins.elemAt m 0);
+        unit = builtins.elemAt m 1;
+      in
+      count
+      * (
+        if unit == "min" then
+          1
+        else if unit == "h" || unit == "hr" then
+          60
+        else
+          1440
+      );
 in
 {
   imports = [
@@ -69,6 +92,25 @@ in
       default = [ ];
       description = "Files installed into the dae config tree at activation: entries are <source, target> pairs extended with mode/owner/group as needed.";
     };
+
+    autoReload = {
+      enable = lib.mkEnableOption ''
+        a periodic `systemctl reload dae`; dae only fetches subscriptions at
+        startup and on reload, so a timer keeps the node pool following
+        refreshed subscriptions without a manual reload or rebuild
+      '';
+
+      interval = lib.mkOption {
+        type = lib.types.str;
+        default = "60min";
+        example = "2h";
+        description = ''
+          Time between reloads as a duration with a single unit: minutes
+          (`30min`), hours (`2h`) or days (`1day`); seconds are not supported.
+          The value feeds the timer's OnBootSec/OnUnitActiveSec directly.
+        '';
+      };
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -89,5 +131,27 @@ in
     system.activationScripts.installDaeConfig = lib.concatMapStringsSep "\n" (file: ''
       install -D -m ${file.mode} -o ${file.owner} -g ${file.group} ${file.source} ${file.target}
     '') cfg.installFiles;
+
+    # Periodic reload (autoReload): each run skips while dae is stopped, and
+    # dae's own reload guard keeps a run that resolves 0 nodes harmless.
+    systemd.services.dae-auto-reload = lib.mkIf cfg.autoReload.enable {
+      description = "Periodically reload dae to re-fetch subscriptions";
+      serviceConfig.Type = "oneshot";
+      script = ''
+        if ! ${pkgs.systemd}/bin/systemctl is-active --quiet dae; then
+          echo "dae is not active, skipping reload" >&2
+          exit 0
+        fi
+        exec ${pkgs.systemd}/bin/systemctl reload dae
+      '';
+    };
+
+    systemd.timers.dae-auto-reload = lib.mkIf cfg.autoReload.enable {
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnBootSec = "${toString autoReloadMinutes}min";
+        OnUnitActiveSec = "${toString autoReloadMinutes}min";
+      };
+    };
   };
 }
