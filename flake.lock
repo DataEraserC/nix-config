@@ -7233,11 +7233,11 @@
     "qq-bridge-fork": {
       "flake": false,
       "locked": {
-        "lastModified": 1791093785,
-        "narHash": "sha256-Xh2NxZRXraKE5UlxpWCk8+aXt/M5K1yQp4i12xYPO0I=",
+        "lastModified": 1791120488,
+        "narHash": "sha256-Ys38Xif+fEAskMNow6QlFWmfpbBYnqG1FoYqeMiz4zs=",
         "owner": "DataEraserC",
         "repo": "qq-bridge",
-        "rev": "cd46c2fd5e065e02bd5a3694906db7df95542fe7",
+        "rev": "aa23f0a60dea2616a1be654fa7552e99e5f572b1",
         "type": "github"
       },
       "original": {
