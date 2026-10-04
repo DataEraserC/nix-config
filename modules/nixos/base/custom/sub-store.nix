@@ -45,18 +45,24 @@ let
     hash = "sha256-N/qDGP//4RqwBNK2x+Q+AfTzBCtFPYuqmHOruO/KfVU=";
   };
   apiOrigin = "http://${cfg.host}:${toString cfg.port}";
-  # The release defaults to the hosted backend https://sub.store (one code assignment
-  # in the minified main chunk); rewrite it to the local API so the panel never talks
-  # to the official server.
+  # The release references the official backend in TWO code paths (a constant and
+  # the `|| fallback` used when the hostAPI list is empty - the one that actually
+  # runs on first visit) plus several i18n help texts. Rewrite them all, so the
+  # panel only ever talks to this local backend.
   frontendDist = pkgs.runCommand "sub-store-frontend-${frontendVersion}" { } ''
     mkdir -p "$out"
     cp -r ${frontendRelease}/. "$out"
     chmod -R u+w "$out"
-    sed -i 's|="https://sub\.store"|="${apiOrigin}"|g' "$out"/chunks/main-*.js
-    # Fail the build if the expected default was not rewritten (e.g. after a frontend
-    # version bump changes the minified pattern).
-    if ! grep -Fq '="${apiOrigin}"' "$out"/chunks/main-*.js; then
-      echo "sub-store-frontend: default backend URL patch did not apply" >&2
+    find "$out" -name '*.js' -exec sed -i 's#https://sub\.store#${apiOrigin}#g' {} +
+    # Fail the build if the official backend reference survived (e.g. after a
+    # frontend version bump changes the URL or the minified pattern) ...
+    if grep -rFq 'https://sub.store' "$out" --include='*.js'; then
+      echo "sub-store-frontend: official backend reference left over" >&2
+      exit 1
+    fi
+    # ... or if the local API was not written at all.
+    if ! grep -rFq "${apiOrigin}" "$out" --include='*.js'; then
+      echo "sub-store-frontend: local backend URL patch did not apply" >&2
       exit 1
     fi
   '';
