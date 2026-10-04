@@ -215,8 +215,9 @@ group {
         policy: min_moving_avg
     }
 
-    # proxy = 低延迟分组（默认组，行为不变）：min_moving_avg 会偏向「竞速」系节点，
-    # 交互式流量体验好；但竞速节点带宽超卖、大文件下载慢，下载类规则改走 proxy_bw。
+    # proxy = low-latency group (the default group, behavior unchanged): min_moving_avg tends to pick the
+    # "竞速" (speed-race) nodes, which feel snappy for interactive traffic; but those nodes oversell their
+    # bandwidth and are slow on large downloads, so download rules use proxy_bw instead.
     proxy {
         # No filter. Use all nodes.
 
@@ -233,8 +234,9 @@ group {
         policy: min_moving_avg
     }
 
-    # proxy_bw = 高带宽分组：过滤掉名字含「竞速」的节点（拼延迟、带宽超卖的那类）。
-    # dae 健康检查只测握手 RTT、测不了带宽，故以「排除竞速系」作为启发式；组内仍按延迟选点。
+    # proxy_bw = high-bandwidth group: filters out nodes whose name contains "竞速" (the latency-racing,
+    # bandwidth-oversold kind). dae's health check only measures handshake RTT and cannot measure bandwidth,
+    # so "exclude the 竞速 nodes" is used as a heuristic; within the group, nodes are still picked by latency.
     proxy_bw {
         filter: !name(keyword: '竞速')
         policy: min_moving_avg
@@ -467,14 +469,14 @@ routing {
     domain(regex:'.+\.docker\.com$') -> proxy
     domain(regex:'.+\.kubernetes\.io$') -> proxy
 
-    ### 下载类：大流量走高带宽分组（排除竞速系节点）或直连
+    ### Downloads: heavy traffic goes to the high-bandwidth group (speed-race nodes excluded) or direct
     # nix substituter / channels
     domain(regex:'.+\.nixos\.org$') -> proxy_bw
-    # nix 源码镜像（本次卡住的 fetch 就来自这里）
+    # nix source mirror (the fetch that got stuck earlier came from here)
     domain(suffix: numtide.com) -> proxy_bw
-    # 二进制缓存
+    # binary caches
     domain(keyword:'cachix') -> proxy_bw
-    # kernel.org：2026-10-04 实测直连 3.3MB/s（走代理仅 168KB/s，20 倍），放行直连
+    # kernel.org: measured 2026-10-04 — direct 3.3 MB/s vs 168 KB/s through the proxy (20x), so route direct
     domain(suffix: kernel.org) -> direct
 
     domain(geosite:microsoft) -> proxy
