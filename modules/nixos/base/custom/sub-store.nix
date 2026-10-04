@@ -14,10 +14,13 @@
 #
 # Web panel (modules.sub-store.frontend.enable, default on):
 #   Serves the official Sub-Store PWA (Sub-Store-Front-End release) from the same
-#   service on <frontend.port> (default http://127.0.0.1:24501/). The release's baked
-#   default backend URL (https://sub.store) is patched to http://<host>:<port>, so the
-#   panel manages this local backend out of the box; Settings > Custom Backend API can
-#   still override it. Panel and API are both loopback-only and unauthenticated.
+#   service on <frontend.port> (default http://127.0.0.1:24501/). The release's
+#   code-level default backend (https://sub.store) is rewritten at build time to
+#   derive from location.hostname at runtime, so the API is always called on the
+#   same host:24500 the panel page was opened with - independent of what cfg.host
+#   binds (idols-ai overrides host to 0.0.0.0). Settings > Custom Backend API can
+#   still override it. API and panel are unauthenticated: the module default binds
+#   loopback only, so any wider bind (e.g. 0.0.0.0) must be firewalled.
 #
 # Check Service Status
 #   systemctl status sub-store
@@ -44,27 +47,48 @@ let
     url = "https://github.com/sub-store-org/Sub-Store-Front-End/releases/download/${frontendVersion}/dist.zip";
     hash = "sha256-N/qDGP//4RqwBNK2x+Q+AfTzBCtFPYuqmHOruO/KfVU=";
   };
-  apiOrigin = "http://${cfg.host}:${toString cfg.port}";
+  # Static local origin: shown in help texts, and the fallback when the page has
+  # no hostname (file://). Deliberately NOT derived from cfg.host - on hosts
+  # bound to 0.0.0.0 that value is not connectable from a browser; the runtime
+  # code default is rewritten below to derive from location.hostname instead.
+  staticOrigin = "http://127.0.0.1:${toString cfg.port}";
   # The release references the official backend in TWO code paths (a constant and
   # the `|| fallback` used when the hostAPI list is empty - the one that actually
-  # runs on first visit) plus several i18n help texts. Rewrite them all, so the
-  # panel only ever talks to this local backend.
+  # runs on first visit) plus several i18n help texts. Rewrite them all so the
+  # panel only ever talks to this local backend, then turn every quoted code-level
+  # occurrence into `http://${location.hostname}:<port>` so the API host always
+  # matches the host the page was opened with (127.0.0.1, LAN IP, SSH tunnel, ...).
   frontendDist = pkgs.runCommand "sub-store-frontend-${frontendVersion}" { } ''
     mkdir -p "$out"
     cp -r ${frontendRelease}/. "$out"
     chmod -R u+w "$out"
-    find "$out" -name '*.js' -exec sed -i 's#https://sub\.store#${apiOrigin}#g' {} +
-    # Fail the build if the official backend reference survived (e.g. after a
-    # frontend version bump changes the URL or the minified pattern) ...
+    # 1) official URL -> local origin (code paths + help texts)
+    find "$out" -name '*.js' -exec sed -i 's#https://sub\.store#${staticOrigin}#g' {} +
     if grep -rFq 'https://sub.store' "$out" --include='*.js'; then
       echo "sub-store-frontend: official backend reference left over" >&2
       exit 1
     fi
-    # ... or if the local API was not written at all.
-    if ! grep -rFq "${apiOrigin}" "$out" --include='*.js'; then
-      echo "sub-store-frontend: local backend URL patch did not apply" >&2
+    # 2) quote-delimited occurrences are code-level defaults -> location.hostname
+    #    form. Help texts embed the origin unquoted and stay static.
+    staticBefore=$(grep -rhoF '"http://127.0.0.1:${toString cfg.port}"' "$out" --include='*.js' | wc -l || true)
+    if [ "$staticBefore" -lt 2 ]; then
+      echo "sub-store-frontend: expected >= 2 quoted code defaults, found $staticBefore" >&2
       exit 1
     fi
+    find "$out" -name '*.js' -exec sed -i 's#"http://127\.0\.0\.1:${toString cfg.port}"#`http://''${location.hostname||"127.0.0.1"}:${toString cfg.port}`#g' {} +
+    staticAfter=$(grep -rhoF '"http://127.0.0.1:${toString cfg.port}"' "$out" --include='*.js' | wc -l || true)
+    if [ "$staticAfter" -ne 0 ]; then
+      echo "sub-store-frontend: $staticAfter quoted code defaults left after dynamic patch" >&2
+      exit 1
+    fi
+    dynCount=$(grep -rhoF 'location.hostname' "$out" --include='*.js' | wc -l || true)
+    if [ "$dynCount" -ne "$staticBefore" ]; then
+      echo "sub-store-frontend: dynamic defaults $dynCount != expected $staticBefore" >&2
+      exit 1
+    fi
+    # 3) touch sw.js: a byte-different service worker makes browsers re-precache
+    #    on the next visit even though the hashed chunk filenames did not change.
+    printf '\n// nix-patch: %s location.hostname backend\n' "${frontendVersion}" >> "$out/sw.js"
   '';
 in
 {
@@ -83,9 +107,10 @@ in
       type = lib.types.str;
       default = "127.0.0.1";
       description = ''
-        Bind address of the Sub-Store backend API. The API has no
-        authentication, so keep it on loopback unless you front it with
-        something else.
+        Bind address of the backend API and of the web panel. The API has no
+        authentication, so the default stays on loopback; set "0.0.0.0" to
+        listen on all interfaces only when the host firewall restricts access
+        to trusted interfaces (idols-ai does this).
       '';
     };
 
@@ -95,8 +120,9 @@ in
         default = true;
         description = ''
           Serve the official Sub-Store web panel (static PWA) from the same
-          service on a separate loopback port (see `frontend.port`), with its
-          default backend URL patched to this local API.
+          service on a separate port (see `frontend.port`), with its default
+          backend URL patched to call the API on the host this page is opened
+          with.
         '';
       };
 
