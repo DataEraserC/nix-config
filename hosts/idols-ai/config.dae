@@ -373,6 +373,15 @@ routing {
     # so their outbound peering traffic is never re-hijacked by dae itself.
     pname(NetworkManager, systemd-resolved, dnsmasq, mihomo, verge-mihomo, netbird, zerotier-one, tailscaled, easytier-core, warp-svc, pgy, nekobox_core, sing-box, proxychains4, gg) -> must_direct
 
+    # Universal test bypass: relaunch any single-process tool with argv[0] set to "command_without_proxy" so its
+    # connection is forced direct, without copying the binary:
+    #   env -a command_without_proxy curl -o /dev/null -w '%{speed_download}\n' https://speed.cloudflare.com/__down?bytes=3000000
+    #   bash -c 'exec -a command_without_proxy "$@"' _ wget https://...
+    # dae matches pname as an exact 16-byte value (kernel equal16 + userspace string compare), so both sides
+    # truncate this 21-byte marker to "command_without_" consistently and it still matches. Only the process that
+    # opens the socket is affected; children re-exec with their own argv[0].
+    pname(command_without_proxy) -> must_direct
+
     # Put it in the front to prevent broadcast, multicast and other packets that should be sent to the LAN from being
     # forwarded by the proxy.
     # "dip" means destination IP.
