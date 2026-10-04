@@ -16,8 +16,8 @@ in
   # 遇到符号链接直接 die），null 才能让 activation 的链接在每次 dsh 启动后存活。
   homePatchDisabled = cfg.programs.dsh.patch == null;
   # 仓库 yml 即黄金内容：模型目录行与现网 provider
-  ymlDeclaresProvider = lib.hasInfix "new-api-y9000p2025" yml;
-  ymlUsesEnvReference = lib.hasInfix "apiKeyEnv: NEW_API_Y9000P2025_API_KEY" yml;
+  ymlDeclaresProvider = lib.hasInfix "new-api-y9000p2025-openai-responses" yml;
+  ymlUsesEnvReference = lib.hasInfix "apiKeyEnv: NEW_API_Y9000P2025_OPENAI_RESPONSES_API_KEY" yml;
   # 密钥只以环境变量引用存在，不允许出现裸 apiKey: 行
   ymlHasNoInlineKey = !(lib.hasInfix "apiKey:" yml);
   ymlHasModelRow = lib.hasInfix "llm-pi-ai" yml;
