@@ -371,15 +371,7 @@ routing {
     # Network managers in localhost should be direct to avoid false negative network connectivity check when binding to
     # WAN. This list also pins the local proxy/tunnel daemons (clash core verge-mihomo, EasyTier, WARP, Oray pgy, ...)
     # so their outbound peering traffic is never re-hijacked by dae itself.
-    pname(NetworkManager, systemd-resolved, dnsmasq, mihomo, verge-mihomo, netbird, zerotier-one, tailscaled, easytier-core, warp-svc, pgy, nekobox_core, sing-box, proxychains4) -> must_direct
-
-    # Test-bypass copies for direct-vs-proxy speed comparisons: dae's pname() is an EXACT 16-byte match (no `*`
-    # wildcard, no regex), and both the config parser and the kernel truncate longer names to their first 16 bytes,
-    # so each *_without_proxy copy must be listed explicitly (e.g. "curl_without_proxy" -> "curl_without_pro").
-    # Usage: cp "$(command -v curl)" /tmp/curl_without_proxy && /tmp/curl_without_proxy ...
-    # Caveat: git downloads run in a child process named git-remote-https, and nix downloads run in nix-daemon,
-    # so renaming only git/nix itself does not bypass the proxy.
-    pname(gg, curl_without_proxy, wget_without_proxy, aria2c_without_proxy, python3_without_proxy) -> must_direct
+    pname(NetworkManager, systemd-resolved, dnsmasq, mihomo, verge-mihomo, netbird, zerotier-one, tailscaled, easytier-core, warp-svc, pgy, nekobox_core, sing-box, proxychains4, gg) -> must_direct
 
     # Put it in the front to prevent broadcast, multicast and other packets that should be sent to the LAN from being
     # forwarded by the proxy.
