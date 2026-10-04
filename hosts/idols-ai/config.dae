@@ -375,21 +375,20 @@ routing {
 
     # Test markers: relaunch a single-process tool with argv[0] set to a marker so its connection is forced into a
     # chosen outbound, without copying the binary:
-    #   env -a command_must_direct curl -o /dev/null -w '%{speed_download}\n' https://speed.cloudflare.com/__down?bytes=3000000
-    #   bash -c 'exec -a command_proxy "$@"' _ wget https://...
-    # Naming convention is command_<outbound>: one marker per routing target (the three core outbounds, plus the
-    # groups keyed by subscription tag), so when a new group is added, give it a pname(command_<group>) rule here.
-    # dae matches pname as an exact 16-byte value (kernel equal16 + userspace string compare), so both sides
-    # truncate over-long markers to the first 16 bytes identically ("command_must_direct" -> "command_must_dir",
-    # "command_lajichang" -> "command_lajichan") and they still match. Only the process that opens the socket is
-    # affected; children re-exec with their own argv[0].
-    pname(command_must_direct) -> must_direct
-    pname(command_proxy) -> proxy
-    pname(command_proxy_bw) -> proxy_bw
-    pname(command_ikuuu) -> ikuuu
-    pname(command_lajichang) -> lajichang
-    pname(command_xxmad) -> xxmad
-    pname(command_mojie) -> mojie
+    #   env -a cmd_must_direct curl -o /dev/null -w '%{speed_download}\n' https://speed.cloudflare.com/__down?bytes=3000000
+    #   bash -c 'exec -a cmd_proxy "$@"' _ wget https://...
+    # Naming convention is cmd_<outbound>: one marker per routing target (the three core outbounds, plus the
+    # groups keyed by subscription tag), so when a new group is added, give it a pname(cmd_<group>) rule here.
+    # The short cmd_ prefix keeps every marker within dae's exact 16-byte pname match (kernel equal16 +
+    # userspace string compare), so nothing gets truncated: cmd_must_direct is 15 bytes, cmd_lajichang 13.
+    # Only the process that opens the socket is affected; children re-exec with their own argv[0].
+    pname(cmd_must_direct) -> must_direct
+    pname(cmd_proxy) -> proxy
+    pname(cmd_proxy_bw) -> proxy_bw
+    pname(cmd_ikuuu) -> ikuuu
+    pname(cmd_lajichang) -> lajichang
+    pname(cmd_xxmad) -> xxmad
+    pname(cmd_mojie) -> mojie
 
     # Put it in the front to prevent broadcast, multicast and other packets that should be sent to the LAN from being
     # forwarded by the proxy.
