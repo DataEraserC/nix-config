@@ -9,6 +9,55 @@ def run-nix-impure [cmd: string] {
   NIXPKGS_ALLOW_BROKEN=1 NIXPKGS_ALLOW_INSECURE=1 NIXPKGS_ALLOW_UNFREE=1 ^$"($cmd) --impure"
 }
 
+# ================= ntfy related =========================
+
+# 读取 ntfy topic:先判断环境变量 NTFY_TOPIC 是否存在且非空;
+# 否则回退到 agenix 部署的 topic 环境文件(与 notify-me.sh 等仓库脚本
+# 同一约定,NTFY_TOPIC_FILE 可覆盖路径),文件内容为 NTFY_TOPIC=<topic>。
+# 拿不到 topic 时返回空字符串,由调用方跳过推送。
+def read-ntfy-topic [] {
+    # 1. 先判断环境变量是否存在
+    if "NTFY_TOPIC" in $env {
+        let topic = ($env.NTFY_TOPIC | str trim)
+        if $topic != "" {
+            return $topic
+        }
+    }
+    # 2. 回退到 topic 环境文件
+    let topic_file = if "NTFY_TOPIC_FILE" in $env {
+        $env.NTFY_TOPIC_FILE
+    } else {
+        "/etc/agenix/ntfy-topic.env"
+    }
+    if (($topic_file | path type) != "file") {
+        return ""
+    }
+    let matched = (open --raw $topic_file | lines | where {|line| $line =~ '^\s*(export\s+)?NTFY_TOPIC=' })
+    if ($matched | is-empty) {
+        return ""
+    }
+    $matched | first | str replace -r '^\s*(export\s+)?NTFY_TOPIC=' '' | str trim
+}
+
+# Best-effort ntfy 推送:notify 模式在 notify-send 之外同步推送到 ntfy。
+# topic 缺失、ntfy 不可用或发布失败都只写 stderr,绝不影响 nixos-switch
+# 的执行结果与退出码;不在代码里硬编码 topic。
+def ntfy-publish [event: string, msg: string, --failed] {
+    try {
+        let topic = (read-ntfy-topic)
+        if $topic == "" {
+            print --stderr "ntfy-publish: NTFY_TOPIC not found (env var or topic file), skip ntfy push"
+            return
+        }
+        let host = (sys host | get hostname)
+        # 失败用 warning,成功用 robot;priority high 对齐 notify-send 的 -u critical
+        let tags = if $failed { "warning" } else { "robot" }
+        ntfy publish --title $"($host) · ($event)" --tags $tags --priority high --markdown $topic $msg | ignore
+    } catch {|error|
+        print --stderr $"ntfy-publish: ntfy push failed: ($error.msg)"
+    }
+}
+
 export def nixos-switch [
     name: string
     mode: string
@@ -87,12 +136,14 @@ export def nixos-switch [
             mv result $new_dir_name
             let msg = "NixOS boot image built successfully. sudo password is required now"
             print $msg
+            ntfy-publish "nixos boot built" $msg
             notify-send -u critical -a "nixos-rebuild" -p $"NIXOS_REBUILD_($timestamp)" $msg -w
             sudo nix-env -p /nix/var/nix/profiles/system --set $"./($new_dir_name)"
             rm $new_dir_name
         } catch {|error|
             let msg = $"NixOS boot build failed for '($name)': ($error.msg)"
             print $msg
+            ntfy-publish "nixos boot build failed" $msg --failed
             notify-send -u critical -a "nixos-rebuild" -p $"NIXOS_REBUILD_($timestamp)" $msg
             if ($new_dir_name | path exists) {
                 rm $new_dir_name
@@ -107,6 +158,7 @@ export def nixos-switch [
             mv result $new_dir_name
             let msg = "NixOS system configuration built successfully. sudo password is required now"
             print $msg
+            ntfy-publish "nixos switch built" $msg
             notify-send -u critical -a "nixos-rebuild" -p $"NIXOS_REBUILD_($timestamp)" $msg -w
             sudo nix-env -p /nix/var/nix/profiles/system --set $"./($new_dir_name)"
             sudo systemd-run -E LOCALE_ARCHIVE -E NIXOS_INSTALL_BOOTLOADER --collect --no-ask-password --pipe --quiet --service-type=exec --unit=nixos-rebuild-switch-to-configuration $"($new_dir_name)/bin/switch-to-configuration" switch
@@ -114,6 +166,7 @@ export def nixos-switch [
         } catch {|error|
             let msg = $"NixOS switch build failed for '($name)': ($error.msg)"
             print $msg
+            ntfy-publish "nixos switch build failed" $msg --failed
             notify-send -u critical -a "nixos-rebuild" -p $"NIXOS_REBUILD_($timestamp)" $msg
             if ($new_dir_name | path exists) {
                 rm $new_dir_name
