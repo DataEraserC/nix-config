@@ -77,7 +77,7 @@ rec {
   # that dae can fetch (dae has no Clash-YAML parser). This host listens on all
   # interfaces: API 24500 + web panel 24501 (both unauthenticated, so the host
   # firewall restricting access to trusted interfaces is the only gate - by
-  # design). See modules/nixos/base/custom/sub-store.nix.
+  # design). See modules/nixos/base/custom/sub-store/default.nix.
   modules.sub-store = {
     enable = true;
     host = "0.0.0.0";

@@ -21,9 +21,9 @@
 #   <backend-port>      TCP port of the Sub-Store backend API (cfg.port)
 #   <frontend-version>  release version, stamped into the sw.js cache marker
 #
-# All module values arrive as plain arguments from sub-store.nix instead of Nix
-# string interpolation, so this file stays readable bash - including the JS
-# ${...} below, which the single quotes keep literal.
+# All module values arrive as plain arguments from sub-store/default.nix instead
+# of Nix string interpolation, so this file stays readable bash - including the
+# JS ${...} below, which the single quotes keep literal.
 # ===============================================================================
 set -euo pipefail
 
