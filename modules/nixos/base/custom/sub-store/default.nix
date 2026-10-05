@@ -19,8 +19,17 @@
 #   derive from location.hostname at runtime, so the API is always called on the
 #   same host:24500 the panel page was opened with - independent of what cfg.host
 #   binds (idols-ai overrides host to 0.0.0.0). Settings > Custom Backend API can
-#   still override it. API and panel are unauthenticated: the module default binds
-#   loopback only, so any wider bind (e.g. 0.0.0.0) must be firewalled.
+#   still override it.
+#
+# Authentication (modules.sub-store.auth.enable, off by default):
+#   Sub-Store has no built-in auth, so the module can front the API and the panel
+#   with a Caddy reverse proxy enforcing Basic Auth (htpasswd lines in auth.file).
+#   Sub-Store then binds loopback-internal ports while Caddy holds the public
+#   ones. Passwordless on purpose: loopback clients (dae, the local panel) and
+#   every GET /download/* - subscription links stay direct links for any client.
+#   Password: the panel page and the remaining management API, remotely.
+#   Without auth.enable the legacy model applies: loopback-only default bind, or
+#   a wider bind guarded solely by the host firewall (see openFirewall).
 #
 # Check Service Status
 #   systemctl status sub-store
@@ -101,6 +110,23 @@ let
   produceCron = lib.concatMapStringsSep ";" (
     name: "${cronEveryMinutes autoRefreshMinutes},sub,${name}"
   ) cfg.autoRefresh.subs;
+
+  # Caddy site address for a public port. A wildcard bind must stay hostless
+  # (":24500") - "0.0.0.0:24500" would install a literal Host matcher that only
+  # requests to Host 0.0.0.0 satisfy. A concrete bind keeps its hostname.
+  siteAddr =
+    port:
+    if cfg.host == "0.0.0.0" || cfg.host == "::" then
+      ":${toString port}"
+    else
+      "${cfg.host}:${toString port}";
+
+  # Where Sub-Store itself listens: with auth enabled it is loopback-only and
+  # Caddy holds the public ports, otherwise Sub-Store binds cfg.host directly.
+  apiHost = if cfg.auth.enable then "127.0.0.1" else cfg.host;
+  apiPort = if cfg.auth.enable then cfg.auth.upstreamApiPort else cfg.port;
+  frontendHost = if cfg.auth.enable then "127.0.0.1" else cfg.host;
+  frontendPort = if cfg.auth.enable then cfg.auth.upstreamFrontendPort else cfg.frontend.port;
 in
 {
   options.modules.sub-store = {
@@ -118,10 +144,12 @@ in
       type = lib.types.str;
       default = "127.0.0.1";
       description = ''
-        Bind address of the backend API and of the web panel. The API has no
-        authentication, so the default stays on loopback; set "0.0.0.0" to
-        listen on all interfaces only when the host firewall restricts access
-        to trusted interfaces (idols-ai does this).
+        Bind address of the backend API and of the web panel, used verbatim
+        when auth.enable is off (there is no authentication then, so the default
+        stays on loopback and any wider bind must be firewalled to trusted
+        interfaces - idols-ai does this). With auth.enable, Caddy takes this
+        bind on the public ports while Sub-Store moves to loopback-internal
+        ports.
       '';
     };
 
@@ -143,6 +171,50 @@ in
         default = 24501;
         description = "TCP port of the Sub-Store web panel (frontend static server).";
       };
+    };
+
+    auth = {
+      enable = lib.mkEnableOption ''
+        Basic Auth (via a Caddy reverse proxy) in front of the API and the panel.
+        Sub-Store itself has no auth; when enabled it binds loopback-internal
+        ports (auth.upstreamApiPort / auth.upstreamFrontendPort) while Caddy
+        holds the public ports. Loopback clients and GET /download/* - i.e. dae
+        and every subscription link - stay passwordless.
+      '';
+
+      file = lib.mkOption {
+        type = lib.types.nullOr lib.types.path;
+        default = null;
+        description = ''
+          Runtime path of the htpasswd file imported by Caddy's basic_auth: one
+          or more `<user> <bcrypt hash>` lines, produced by
+          `caddy hash-password --plaintext '<password>'`. Point this at an
+          agenix secret so the hash never lands in this repository.
+        '';
+      };
+
+      upstreamApiPort = lib.mkOption {
+        type = lib.types.port;
+        default = 24510;
+        description = "Loopback port of the API while auth.enable is on; Caddy proxies `port` to it.";
+      };
+
+      upstreamFrontendPort = lib.mkOption {
+        type = lib.types.port;
+        default = 24511;
+        description = "Loopback port of the panel while auth.enable is on; Caddy proxies `frontend.port` to it.";
+      };
+    };
+
+    openFirewall = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Open `port` (and `frontend.port` when the frontend is on) in the host
+        firewall for every interface, not just `trustedInterfaces`. Requires
+        auth.enable - exposing the unauthenticated management API and panel
+        beyond trusted interfaces would be unsafe.
+      '';
     };
 
     autoRefresh = {
@@ -198,10 +270,22 @@ in
   config = lib.mkIf cfg.enable {
     # autoRefresh without names would set an empty (silently ignored)
     # SUB_STORE_PRODUCE_CRON - fail the eval instead of silently doing nothing.
-    assertions = lib.optional cfg.autoRefresh.enable {
-      assertion = cfg.autoRefresh.subs != [ ];
-      message = "modules.sub-store.autoRefresh.enable requires autoRefresh.subs to list at least one subscription name";
-    };
+    # auth without an htpasswd file would deploy an unauthenticated Caddy, and
+    # openFirewall without auth would expose that same unprotected surface to
+    # every interface - both are configuration bugs, so fail the eval on them.
+    assertions =
+      lib.optional cfg.autoRefresh.enable {
+        assertion = cfg.autoRefresh.subs != [ ];
+        message = "modules.sub-store.autoRefresh.enable requires autoRefresh.subs to list at least one subscription name";
+      }
+      ++ lib.optional cfg.auth.enable {
+        assertion = cfg.auth.file != null;
+        message = "modules.sub-store.auth.enable requires auth.file - htpasswd lines from `caddy hash-password`, ideally via an agenix secret";
+      }
+      ++ lib.optional cfg.openFirewall {
+        assertion = cfg.auth.enable;
+        message = "modules.sub-store.openFirewall requires auth.enable - without Basic Auth the management API and panel must stay limited to trusted interfaces";
+      };
 
     systemd.services.sub-store = {
       description = "Sub-Store subscription manager";
@@ -209,16 +293,16 @@ in
       after = [ "network-online.target" ];
       wants = [ "network-online.target" ];
       environment = {
-        SUB_STORE_BACKEND_API_HOST = cfg.host;
-        SUB_STORE_BACKEND_API_PORT = toString cfg.port;
+        SUB_STORE_BACKEND_API_HOST = apiHost;
+        SUB_STORE_BACKEND_API_PORT = toString apiPort;
         SUB_STORE_DATA_BASE_PATH = dataDir;
       }
       // lib.optionalAttrs cfg.frontend.enable {
         # Static panel assets; the backend starts its frontend server for them on a
         # separate port (API and panel stay independent, UI calls the API by URL).
         SUB_STORE_FRONTEND_PATH = frontendDist;
-        SUB_STORE_FRONTEND_HOST = cfg.host;
-        SUB_STORE_FRONTEND_PORT = toString cfg.frontend.port;
+        SUB_STORE_FRONTEND_HOST = frontendHost;
+        SUB_STORE_FRONTEND_PORT = toString frontendPort;
       }
       // lib.optionalAttrs cfg.autoRefresh.enable {
         SUB_STORE_PRODUCE_CRON = produceCron;
@@ -247,11 +331,68 @@ in
       };
     };
 
-    # dae fetches its subscriptions exactly once (at startup/reload), so make sure
-    # the local converter is started - and reachable - before dae does.
-    systemd.services.dae = lib.mkIf (config.services.dae.enable or false) {
+    # Basic Auth front: with auth.enable, Caddy holds the public ports on cfg.host
+    # while Sub-Store runs on loopback behind it (apiHost/frontendHost above).
+    # The API site skips the prompt for GET /download/* (subscription links stay
+    # direct links) and for loopback callers (dae, local panel); the panel site
+    # skips it for loopback only. Every other remote request needs auth.file.
+    services.caddy = lib.mkIf cfg.auth.enable {
+      enable = true;
+      enableReload = true;
+      # Port-only vhosts over plain HTTP - never touch the ACME/TLS machinery.
+      globalConfig = "auto_https disable_certs";
+      virtualHosts = {
+        ${siteAddr cfg.port} = {
+          extraConfig = ''
+            @apiAuth {
+              not {
+                path_regexp ^/download/
+              }
+              not {
+                remote_ip 127.0.0.1 ::1
+              }
+            }
+            basic_auth @apiAuth {
+              import ${cfg.auth.file}
+            }
+            reverse_proxy http://127.0.0.1:${toString cfg.auth.upstreamApiPort}
+          '';
+        };
+        ${siteAddr cfg.frontend.port} = {
+          extraConfig = ''
+            @panelAuth {
+              not {
+                remote_ip 127.0.0.1 ::1
+              }
+            }
+            basic_auth @panelAuth {
+              import ${cfg.auth.file}
+            }
+            reverse_proxy http://127.0.0.1:${toString cfg.auth.upstreamFrontendPort}
+          '';
+        };
+      };
+    };
+
+    # The proxy is part of the local chain (dae -> caddy -> sub-store), so bring
+    # it up with the same ordering guarantee as the converter itself.
+    systemd.services.caddy = lib.mkIf cfg.auth.enable {
       wants = [ "sub-store.service" ];
       after = [ "sub-store.service" ];
     };
+
+    # dae fetches its subscriptions exactly once (at startup/reload), so make sure
+    # the local converter - and, with auth.enable, the Caddy front dae now reaches
+    # it through - is started and reachable before dae does.
+    systemd.services.dae = lib.mkIf (config.services.dae.enable or false) {
+      wants = [ "sub-store.service" ] ++ lib.optional cfg.auth.enable "caddy.service";
+      after = [ "sub-store.service" ] ++ lib.optional cfg.auth.enable "caddy.service";
+    };
+
+    # openFirewall widens exposure beyond trustedInterfaces; the assertions above
+    # guarantee that can only happen with Basic Auth in front.
+    networking.firewall.allowedTCPPorts =
+      lib.optional cfg.openFirewall cfg.port
+      ++ lib.optional (cfg.openFirewall && cfg.frontend.enable) cfg.frontend.port;
   };
 }

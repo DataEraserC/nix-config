@@ -81,13 +81,21 @@ rec {
   };
 
   # Sub-Store converts Clash-format subscriptions into base64 v2ray URI lists
-  # that dae can fetch (dae has no Clash-YAML parser). This host listens on all
-  # interfaces: API 24500 + web panel 24501 (both unauthenticated, so the host
-  # firewall restricting access to trusted interfaces is the only gate - by
-  # design). See modules/nixos/base/custom/sub-store/default.nix.
+  # that dae can fetch (dae has no Clash-YAML parser). Caddy fronts API 24500 and
+  # web panel 24501 with Basic Auth (agenix secret sub-store.caddy); Sub-Store
+  # itself sits on loopback internal ports behind it. Passwordless on purpose:
+  # loopback (dae, local panel) and every GET /download/* subscription link.
+  # The host firewall still only trusts tailscale/zerotier/easytier, so
+  # openFirewall stays off - flip it on later to reach the ports from the campus
+  # LAN (asserted to require auth.enable).
+  # See modules/nixos/base/custom/sub-store/default.nix.
   modules.sub-store = {
     enable = true;
     host = "0.0.0.0";
+    auth = {
+      enable = true;
+      file = config.age.secrets."sub-store.caddy".path;
+    };
     # Re-fetch every registered upstream hourly so /download/<name>/v2ray always
     # serves fresh nodes plus a #cacheKey disk fallback for dae's cold start.
     autoRefresh = {

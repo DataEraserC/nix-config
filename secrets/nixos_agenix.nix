@@ -157,6 +157,14 @@ in
           file = "${mysecrets}/agenix/server/dae-subscription.dae.age";
         }
         // high_security;
+        # bcrypt hash line for the Caddy Basic Auth in front of Sub-Store
+        # (never the plaintext password); readable by root and the caddy group.
+        "sub-store.caddy" = mkIf config.services.caddy.enable {
+          file = "${mysecrets}/agenix/server/sub-store.caddy.age";
+          mode = "0440";
+          owner = "root";
+          group = "caddy";
+        };
         "cpolar.yml" = {
           file = "${mysecrets}/agenix/cpolar.yml.age";
         }
