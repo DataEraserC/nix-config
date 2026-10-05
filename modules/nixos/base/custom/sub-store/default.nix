@@ -17,9 +17,11 @@
 #   service on <frontend.port> (default http://127.0.0.1:24501/). The release's
 #   code-level default backend (https://sub.store) is rewritten at build time to
 #   derive from location.hostname at runtime, so the API is always called on the
-#   same host:24500 the panel page was opened with - independent of what cfg.host
-#   binds (idols-ai overrides host to 0.0.0.0). Settings > Custom Backend API can
-#   still override it.
+#   same host the panel page was opened with - independent of what cfg.host
+#   binds (idols-ai overrides host to 0.0.0.0). With auth.enable Caddy serves the
+#   panel and /api/* on frontend.port, so the call stays same-origin (no CORS
+#   preflight can meet the password prompt); otherwise it uses cfg.port as before.
+#   Settings > Custom Backend API can still override it.
 #
 # Authentication (modules.sub-store.auth.enable, off by default):
 #   Sub-Store has no built-in auth, so the module can front the API and the panel
@@ -28,6 +30,10 @@
 #   ones. Passwordless on purpose: loopback clients (dae, the local panel) and
 #   every GET /download/* - subscription links stay direct links for any client.
 #   Password: the panel page and the remaining management API, remotely.
+#   The panel site doubles as the panel's API origin: Caddy routes /api/* and
+#   /download/* on frontend.port to the backend and everything else to the
+#   static frontend, so the browser never sends a cross-origin (preflighted)
+#   request to the authenticated API - it replays the page's credentials.
 #   Without auth.enable the legacy model applies: loopback-only default bind, or
 #   a wider bind guarded solely by the host firewall (see openFirewall).
 #
@@ -65,7 +71,7 @@ let
     mkdir -p "$out"
     cp -r ${frontendRelease}/. "$out"
     chmod -R u+w "$out"
-    bash ${./sub-store-frontend-patch.sh} "$out" ${toString cfg.port} "${frontendVersion}"
+    bash ${./sub-store-frontend-patch.sh} "$out" ${toString panelApiPort} "${frontendVersion}"
   '';
 
   # Parse a single-unit duration ("30min" / "2h" / "1day") into whole minutes.
@@ -127,6 +133,12 @@ let
   apiPort = if cfg.auth.enable then cfg.auth.upstreamApiPort else cfg.port;
   frontendHost = if cfg.auth.enable then "127.0.0.1" else cfg.host;
   frontendPort = if cfg.auth.enable then cfg.auth.upstreamFrontendPort else cfg.frontend.port;
+
+  # Port the patched panel backend defaults to (the host always follows
+  # location.hostname). Under auth.enable it must be the frontend's own port:
+  # Caddy routes /api/* there too, keeping API calls same-origin so no CORS
+  # preflight runs into Basic Auth. Without auth the public API port as before.
+  panelApiPort = if cfg.auth.enable then cfg.frontend.port else cfg.port;
 in
 {
   options.modules.sub-store = {
@@ -335,7 +347,10 @@ in
     # while Sub-Store runs on loopback behind it (apiHost/frontendHost above).
     # The API site skips the prompt for GET /download/* (subscription links stay
     # direct links) and for loopback callers (dae, local panel); the panel site
-    # skips it for loopback only. Every other remote request needs auth.file.
+    # skips it for loopback and /download/* too, then splits traffic: /api/* and
+    # /download/* to the backend, everything else to the static frontend - the
+    # panel's own origin serves its API, so authenticated XHR never preflights.
+    # Every other remote request needs auth.file.
     services.caddy = lib.mkIf cfg.auth.enable {
       enable = true;
       enableReload = true;
@@ -362,12 +377,23 @@ in
           extraConfig = ''
             @panelAuth {
               not {
+                path_regexp ^/download/
+              }
+              not {
                 remote_ip 127.0.0.1 ::1
               }
             }
             basic_auth @panelAuth {
               import ${cfg.auth.file}
             }
+            # Same-origin panel backend: the JS builds its API base from
+            # location.hostname + frontend.port (panelApiPort above), so route
+            # the API here instead of making the browser cross port 24500,
+            # where its preflight would meet Basic Auth and CORS would hide it.
+            @panelApi path /api/*
+            reverse_proxy @panelApi http://127.0.0.1:${toString cfg.auth.upstreamApiPort}
+            @panelDl path /download/*
+            reverse_proxy @panelDl http://127.0.0.1:${toString cfg.auth.upstreamApiPort}
             reverse_proxy http://127.0.0.1:${toString cfg.auth.upstreamFrontendPort}
           '';
         };

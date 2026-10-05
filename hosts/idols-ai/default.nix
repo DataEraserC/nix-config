@@ -82,7 +82,8 @@ rec {
 
   # Sub-Store converts Clash-format subscriptions into base64 v2ray URI lists
   # that dae can fetch (dae has no Clash-YAML parser). Caddy fronts API 24500 and
-  # web panel 24501 with Basic Auth (agenix secret sub-store.caddy); Sub-Store
+  # web panel 24501 with Basic Auth (agenix secret sub-store.caddy), the panel
+  # calling its API on the same 24501 origin (no cross-port CORS); Sub-Store
   # itself sits on loopback internal ports behind it. Passwordless on purpose:
   # loopback (dae, local panel) and every GET /download/* subscription link.
   # The host firewall still only trusts tailscale/zerotier/easytier, so
