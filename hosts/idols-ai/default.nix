@@ -202,6 +202,9 @@ rec {
   # mimocode2api gateway, bound to 0.0.0.0:4144 (VPN interfaces only).
   modules.mimocode2api.enable = true;
 
+  # OmniRoute unified LLM gateway, bound to 0.0.0.0:20128.
+  modules.omniroute.enable = true;
+
   # new-api LLM gateway, bound to 0.0.0.0:3000.
   modules.new-api.enable = true;
 

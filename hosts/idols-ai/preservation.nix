@@ -123,6 +123,12 @@ in
         mode = "0700";
       }
 
+      # omniroute (SQLite database, generated server.env secrets, logs)
+      {
+        directory = "/var/lib/omniroute";
+        mode = "0700";
+      }
+
       # ccache
       "/var/cache/ccache"
 
