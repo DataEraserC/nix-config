@@ -37,7 +37,7 @@
   wsl = {
     enable = true;
     docker-desktop.enable = true;
-    startMenuLaunchers = true;
+    startMenuLaunchers = false;
     usbip.enable = true;
     wslConf.boot.systemd = true;
     useWindowsDriver = true;
