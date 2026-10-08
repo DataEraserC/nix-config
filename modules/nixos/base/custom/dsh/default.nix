@@ -317,6 +317,12 @@ let
     # pkgs.dsh.bundles.annotation
     nur-DataEraserC.packages.${pkgs.system}.dsh-chat-import
     nur-DataEraserC.packages.${pkgs.system}.dsh-annotation
+    # Share selected conversations as PNG images or Markdown text. Its cordis
+    # patch is a single insert row (id dsh-share) so it never overrides another
+    # bundle's rows; the browser half rides package.json dsh.client (web only,
+    # hence passthru.requiresWeb) and the server half has no runtime deps of its
+    # own — its package node_modules links straight into the kernel.
+    nur-DataEraserC.packages.${pkgs.system}.dsh-share
     # Chrome-driven browser automation (ego_* tools). runtimeDeps pins
     # google-chrome onto the dsh launcher PATH so auto-detect works even when
     # dsh starts without the user profile PATH; chromePath / EGO_LINUX_CHROME
