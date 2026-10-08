@@ -30,6 +30,10 @@
 let
   cfg = config.modules.opencode2api;
   system = pkgs.stdenv.hostPlatform.system;
+  # 1100-series ports, declared once and applied both to `settings` (which also drives
+  # the module's firewall rule) and to the command line - see extraArgs below.
+  apiPort = 1101;
+  webUiPort = 1102;
 in
 {
   imports = [ nur-DataEraserC.nixosModules.opencode2api ];
@@ -43,16 +47,29 @@ in
       enable = true;
       package = nur-DataEraserC.packages.${system}.opencode2api;
       host = "0.0.0.0";
-      port = 1101;
+      port = apiPort;
       webUi = {
         host = "0.0.0.0";
-        port = 1102;
+        port = webUiPort;
         enable = true;
         passwordFile = "/run/agenix/opencode2api-webui-password";
       };
       settings = {
         anonymous = true;
       };
+      # /var/lib/opencode2api/config.json is seeded only once (mutableConfig defaults to
+      # true): an already-seeded file keeps winning over `settings`, so a host whose file
+      # dates from the 4142/4143 era still listens there and only logs a single
+      # "keeps winning" warning on the first start after the change. The command-line
+      # flags override that file (verified against opencode2api v1.3.7: -listen and
+      # -web-listen win over config.json, and the effective values are written back), so
+      # the ports above take effect without discarding WebUI-managed state.
+      extraArgs = [
+        "-listen"
+        "0.0.0.0:${toString apiPort}"
+        "-web-listen"
+        "0.0.0.0:${toString webUiPort}"
+      ];
     };
   };
 }
