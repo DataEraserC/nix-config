@@ -94,22 +94,10 @@ rec {
     tunnels = [
       # idols-ai (10.126.126.150) - 3xxxx range
       {
-        name = "cliproxyapimanagementcenter";
-        localPort = 31105;
-        remoteHost = "10.126.126.150";
-        remotePort = 1105;
-      }
-      {
         name = "new-api";
         localPort = 31100;
         remoteHost = "10.126.126.150";
         remotePort = 1100;
-      }
-      {
-        name = "M365-Copilot2API";
-        localPort = 31104;
-        remoteHost = "10.126.126.150";
-        remotePort = 1104;
       }
       {
         name = "opencode2api";
@@ -123,6 +111,30 @@ rec {
         remoteHost = "10.126.126.150";
         remotePort = 1102;
       }
+      {
+        name = "mimocode2api";
+        localPort = 31103;
+        remoteHost = "10.126.126.150";
+        remotePort = 1103;
+      }
+      {
+        name = "M365-Copilot2API";
+        localPort = 31104;
+        remoteHost = "10.126.126.150";
+        remotePort = 1104;
+      }
+      {
+        name = "cliproxyapimanagementcenter";
+        localPort = 31105;
+        remoteHost = "10.126.126.150";
+        remotePort = 1105;
+      }
+      # {
+      #   name = "omniroute";
+      #   localPort = 31106;
+      #   remoteHost = "10.126.126.150";
+      #   remotePort = 1106;
+      # }
       {
         name = "openwebui";
         localPort = 31107;
