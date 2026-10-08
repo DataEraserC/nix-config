@@ -128,10 +128,11 @@
             }
           ];
         };
-        # Local CLIProxyAPI endpoint (OpenAI-compatible). The API key is read
-        # from the `$CLIPROXYAPI_API_KEY` env var.
+        # Local CLIProxyAPI endpoint (OpenAI-compatible): this host's own
+        # cliproxyapi on port 1105 - not the 31105 tunnel to idols-ai - gated by
+        # `modules.cliproxyapi.enable`. Key from the `$CLIPROXYAPI_API_KEY` env var.
         cliproxyapi = {
-          baseUrl = "http://localhost:8317/v1";
+          baseUrl = "http://localhost:1105/v1";
           api = "openai-completions";
           apiKey = "$CLIPROXYAPI_API_KEY";
           models = [
