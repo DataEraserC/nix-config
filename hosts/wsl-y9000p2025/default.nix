@@ -80,7 +80,7 @@ rec {
   modules.new-api.enable = true;
 
   # Open WebUI chat frontend, bound to 0.0.0.0:1107 (shared modules.open-webui).
-  modules.open-webui.enable = true;
+  modules.open-webui.enable = false;
 
   # Route CLI traffic through the local / LAN SOCKS proxies.
   modules.proxychains.enable = true;
