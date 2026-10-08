@@ -324,6 +324,12 @@ let
     # pkgs.dsh.bundles.better-sidebar stays off — the floating observe ball
     # is the fallback.
     nur-DataEraserC.packages.${pkgs.system}.dsh-ego-browser
+    # Zero-setup free-model roster: the bundle's cordis patch is a single
+    # insert row (id our-free-model), so it never overrides another bundle's
+    # rows and order here is irrelevant; the browser half rides the
+    # package.json dsh.client declaration. Egress runs through the mihomo
+    # binary from its runtimeDeps — no PATH wiring needed at this layer.
+    nur-DataEraserC.packages.${pkgs.system}.dsh-our-free-model
     pkgs.dsh.bundles.harbor
     pkgs.dsh.bundles.graph-memory
     pkgs.dsh.bundles.notification
