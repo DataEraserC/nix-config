@@ -208,6 +208,9 @@ rec {
   # new-api LLM gateway, bound to 0.0.0.0:3000.
   modules.new-api.enable = true;
 
+  # Open WebUI chat frontend, bound to 0.0.0.0:1107 (shared modules.open-webui).
+  modules.open-webui.enable = true;
+
   # alist (openlist) file listing, bound to 0.0.0.0:5244.
   modules.alist.enable = true;
 

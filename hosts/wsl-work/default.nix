@@ -80,6 +80,10 @@ rec {
   # new-api LLM gateway, bound to 0.0.0.0:3000.
   modules.new-api.enable = true;
 
+  # Open WebUI: no local instance on this host; the idols-ai instance
+  # (0.0.0.0:1107) is reached through the `openwebui` tunnel below.
+  modules.open-webui.enable = false;
+
   # Route CLI traffic through the local / LAN SOCKS proxies.
   modules.proxychains.enable = true;
 
@@ -120,9 +124,9 @@ rec {
       }
       {
         name = "openwebui";
-        localPort = 38080;
+        localPort = 31107;
         remoteHost = "10.126.126.150";
-        remotePort = 8080;
+        remotePort = 1107;
       }
       # dsh 有很强的安全保护，需要通过ssh转发，否则很多功能不生效
       # {
