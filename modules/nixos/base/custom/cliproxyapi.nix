@@ -44,6 +44,7 @@ in
       package = nur-DataEraserC.packages.${system}.cliproxyapi;
       managementCenterPackage = nur-DataEraserC.packages.${system}.cliproxyapi-management-center-bin;
       host = "0.0.0.0";
+      port = 1105;
       allowRemote = true;
       managementKeyFile = "/run/agenix/cliproxyapi-management.key";
     };

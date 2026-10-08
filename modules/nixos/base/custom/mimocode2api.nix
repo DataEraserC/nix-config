@@ -42,7 +42,7 @@ in
     services.dataEraserc.mimocode2api = {
       enable = true;
       package = nur-DataEraserC.packages.${system}.mimocode2api;
-      port = 4144;
+      port = 1103;
       openFirewall = false;
     };
   };

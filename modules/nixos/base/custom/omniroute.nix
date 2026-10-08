@@ -49,7 +49,7 @@ in
       enable = true;
       package = nur-DataEraserC.packages.${system}.omniroute;
       host = "0.0.0.0";
-      port = 20128;
+      port = 1106;
       extraEnvironment.REQUIRE_API_KEY = "true";
     };
   };

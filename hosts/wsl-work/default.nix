@@ -90,33 +90,33 @@ rec {
       # idols-ai (10.126.126.150) - 3xxxx range
       {
         name = "cliproxyapimanagementcenter";
-        localPort = 38317;
+        localPort = 31105;
         remoteHost = "10.126.126.150";
-        remotePort = 8317;
+        remotePort = 1105;
       }
       {
         name = "new-api";
-        localPort = 33000;
+        localPort = 31100;
         remoteHost = "10.126.126.150";
-        remotePort = 3000;
+        remotePort = 1100;
       }
       {
         name = "M365-Copilot2API";
-        localPort = 34141;
+        localPort = 31104;
         remoteHost = "10.126.126.150";
-        remotePort = 4141;
+        remotePort = 1104;
       }
       {
         name = "opencode2api";
-        localPort = 34142;
+        localPort = 31101;
         remoteHost = "10.126.126.150";
-        remotePort = 4142;
+        remotePort = 1101;
       }
       {
         name = "opencode2api-management-center";
-        localPort = 34143;
+        localPort = 31102;
         remoteHost = "10.126.126.150";
-        remotePort = 4143;
+        remotePort = 1102;
       }
       {
         name = "openwebui";

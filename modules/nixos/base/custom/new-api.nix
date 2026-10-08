@@ -37,7 +37,7 @@ in
     services.dataEraserc.new-api = {
       enable = true;
       package = nur-DataEraserC.packages.${system}.new-api;
-      port = 3000;
+      port = 1100;
       master = true;
       sessionSecretFile = "/run/agenix/new-api-session-secret";
       openFirewall = false;

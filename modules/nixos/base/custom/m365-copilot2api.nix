@@ -56,7 +56,7 @@ in
       enable = true;
       package = m365Copilot2api;
       listenAddress = "0.0.0.0";
-      port = 4141;
+      port = 1104;
       adminPasswordFile = "/run/agenix/m365-copilot2api-admin-password";
       masterKeyFile = "/run/agenix/m365-copilot2api-master-key";
     };
