@@ -5,9 +5,9 @@
 # This wrapper uses the DataEraserC NUR module, which provides
 # `services.dataEraserc.m365Copilot2api`.
 #
-# Binds to 127.0.0.1:4141; reach the web console at http://127.0.0.1:4141/
-# Set listenAddress = "0.0.0.0" plus openFirewall = true to expose it on the
-# network; the console is plain HTTP, so keep a TLS reverse proxy in front.
+# Binds to 0.0.0.0:1104; reach the web console at http://<host-ip>:1104/
+# (set listenAddress = "127.0.0.1" to keep it loopback-only). The console is
+# plain HTTP, so keep a TLS reverse proxy in front when exposing it.
 #
 # The adminPasswordFile secret seeds the console password on first start and
 # again whenever its content changes; a password changed in the web console

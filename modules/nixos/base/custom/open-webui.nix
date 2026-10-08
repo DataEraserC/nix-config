@@ -12,8 +12,9 @@
 # same binding.
 #
 # Binds to 0.0.0.0:1107 - the next free port of the 1100 service series.
-# wsl-work does not run its own copy; it reaches the idols-ai instance through
-# the `openwebui` port-forward tunnel (local 31107 -> remote 1107).
+# Currently disabled on every host (modules.open-webui.enable = false); wsl-work
+# runs no copy at all and reaches idols-ai through the `openwebui` port-forward
+# tunnel (local 31107 -> remote 1107), kept for a future re-enable.
 #
 # Mutable state lives in /var/lib/open-webui (the NixOS module default); the
 # legacy ~/.config/open-webui entry kept in preservation.nix only preserves

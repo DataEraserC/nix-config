@@ -5,9 +5,10 @@
 # This wrapper uses the DataEraserC NUR module, which provides
 # `services.dataEraserc.opencode2api`.
 #
-# Binds to 127.0.0.1:8080 for the API and 127.0.0.1:8081 for the WebUI.
-# Set host = "0.0.0.0" plus openFirewall = true to expose on the network;
-# the WebUI is plain HTTP, so keep a TLS reverse proxy in front.
+# Binds to 0.0.0.0:1101 for the API and 0.0.0.0:1102 for the WebUI (loopback
+# was the upstream default; the wrapper exposes both), so exposure follows the
+# host firewall posture. The WebUI is plain HTTP - keep a TLS reverse proxy in
+# front when reaching it from another machine.
 #
 # The server automatically generates a random local API key on first start
 # (stored in ${stateDir}/server.key). The WebUI bootstrap password is loaded

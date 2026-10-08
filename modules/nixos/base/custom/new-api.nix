@@ -9,7 +9,8 @@
 #   - Session secret via agenix (`/run/agenix/new-api-session-secret`)
 #   - Memory cache enabled by default
 #
-# Binds to 0.0.0.0:3000; default admin credentials are set on first login.
+# Listens on port 1100 (the 1100 service series); default admin credentials are
+# set on first login.
 #
 # Check Service Status
 #   systemctl status new-api

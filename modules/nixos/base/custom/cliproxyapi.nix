@@ -9,7 +9,7 @@
 #   - a management key managed by agenix (`/run/agenix/cliproxyapi-management.key`)
 #   - `mutableConfig = true` so panel/API edits survive restarts
 #
-# Binds to 0.0.0.0:8317; reach the panel at http://<host-ip>:8317/management.html
+# Binds to 0.0.0.0:1105; reach the panel at http://<host-ip>:1105/management.html
 # (access restricted by firewall). Every management API request needs the
 # management key, so `allowRemote` only lifts the loopback-only check that would
 # otherwise answer 403 to a browser connecting from another host.

@@ -146,8 +146,9 @@ in
 
     port = lib.mkOption {
       type = lib.types.port;
-      # new-api already binds 0.0.0.0:3000 on this host and upstream's default
-      # (3000) would collide with it, so pick a free port instead.
+      # Upstream Sub-Store listens on 3000, the port new-api used to occupy on
+      # this host, so a free high port was picked instead - dae already
+      # downloads from 127.0.0.1:24500, do not move it lightly.
       default = 24500;
       description = "TCP port of the Sub-Store backend API.";
     };

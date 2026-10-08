@@ -19,7 +19,7 @@
 # Check logs
 #   journalctl -u mimocode2api --since "2 minutes ago"
 # Probe the gateway
-#   curl http://127.0.0.1:4144/health
+#   curl http://127.0.0.1:1103/health
 {
   config,
   lib,

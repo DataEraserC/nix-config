@@ -6,7 +6,7 @@
 # This wrapper uses the DataEraserC NUR module, which provides
 # `services.dataEraserc.omniroute`.
 #
-# Binds 0.0.0.0:20128 like the sibling gateways; idols-ai keeps openFirewall
+# Binds 0.0.0.0:1106 like the sibling gateways; idols-ai keeps openFirewall
 # off (see hosts/idols-ai firewall note), so exposure follows the LAN posture
 # only. REQUIRE_API_KEY=true satisfies the upstream non-loopback API key
 # guard for the 0.0.0.0 bind (upstream Docker image does the same).

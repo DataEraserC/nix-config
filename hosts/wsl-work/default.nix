@@ -65,23 +65,24 @@ rec {
   # EasyTier decentralized P2P VPN
   modules.easytier.enable = true;
 
-  # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:8317.
+  # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:1105.
   modules.cliproxyapi.enable = false;
 
-  # M365 Copilot2API gateway, bound to 0.0.0.0:4141.
+  # M365 Copilot2API gateway, bound to 0.0.0.0:1104.
   modules.m365-copilot2api.enable = true;
 
-  # opencode2api gateway, bound to 0.0.0.0:4142 (API) and 0.0.0.0:4143 (WebUI).
+  # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
   modules.opencode2api.enable = true;
 
-  # mimocode2api gateway, bound to 0.0.0.0:4144.
+  # mimocode2api gateway, bound to 0.0.0.0:1103.
   modules.mimocode2api.enable = true;
 
-  # new-api LLM gateway, bound to 0.0.0.0:3000.
+  # new-api LLM gateway, port 1100 (upstream listens on all interfaces).
   modules.new-api.enable = true;
 
-  # Open WebUI: no local instance on this host; the idols-ai instance
-  # (0.0.0.0:1107) is reached through the `openwebui` tunnel below.
+  # Open WebUI: disabled on every host and no local instance here either;
+  # the `openwebui` tunnel below (local 31107 -> remote 1107) is kept for a
+  # future re-enable.
   modules.open-webui.enable = false;
 
   # Route CLI traffic through the local / LAN SOCKS proxies.
