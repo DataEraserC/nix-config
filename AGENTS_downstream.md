@@ -1,10 +1,12 @@
-# 下游（DataEraserC）特有规则
+# Downstream (DataEraserC) Specific Rules
 
-本文件存放 DataEraserC
-fork 特有、上游 ryan4yin/nix-config 中没有的规则，分开存放以尽量减少同步上游时的合并冲突。
+This file holds rules specific to the DataEraserC fork that do not exist upstream in
+ryan4yin/nix-config; keeping them separate minimizes merge conflicts when syncing from upstream.
 
-## 并行修改：优先使用 worktree
+## Concurrent edits: prefer worktrees
 
-多个 agent 可能同时修改本仓库。为避免并发编辑同一工作区导致提交冲突或历史异常，修改应优先在独立的 git
-worktree 中完成（例如通过 `worktree_create`
-工具）：在该 worktree 内编辑、提交，再合并回主仓库，不要直接修改主工作区。仅在确认没有并发修改时，才可直接编辑主工作区。
+Several agents may modify this repository at the same time. To avoid commit conflicts or a corrupted
+history caused by concurrent edits to one working tree, make changes in a dedicated git worktree
+(for example via the `worktree_create` tool): edit and commit inside that worktree, then merge the
+result back into the main repository, rather than touching the main working tree directly. Editing
+the main working tree directly is acceptable only when no concurrent modification is expected.
