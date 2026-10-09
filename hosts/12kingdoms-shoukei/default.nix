@@ -26,7 +26,7 @@ in
 
   networking = {
     inherit hostName;
-    inherit (myvars.network) nameservers;
+    inherit (myvars.networking) nameservers;
   };
 
   # This value determines the NixOS release from which the default

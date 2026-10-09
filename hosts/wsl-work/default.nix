@@ -15,8 +15,8 @@
 let
   hostName = "work"; # Define your hostname.
   macAddress = "random";
-  inherit (myvars.network) mainGateway mainGateway6 nameservers;
-  inherit (myvars.network.hostsAddr.${hostName}) iface ipv4 ipv6;
+  inherit (myvars.networking) mainGateway mainGateway6 nameservers;
+  inherit (myvars.networking.hostsAddr.${hostName}) iface ipv4 ipv6;
   ipv4WithMask = "${ipv4}/24";
   ipv6WithMask = "${ipv6}/64";
 
@@ -50,14 +50,14 @@ rec {
     networkmanager.wifi.macAddress = macAddress;
     networkmanager.ethernet.macAddress = macAddress;
     enableIPv6 = true; # disable ipv6
-    extraHosts = myvars.network.genericHosts;
+    extraHosts = myvars.networking.genericHosts;
   };
 
   # sshd listens on 8022 instead of the stock 22 - taken from the port
-  # registry (myvars.network.services.ssh.ports.work, data: hostsAddr.work
-  # .sshPort). The generated client config (/etc/ssh/ssh_config) reads the
-  # same value, so `ssh work` / `ssh wsl-work` dial 8022 too.
-  services.openssh.ports = [ myvars.network.services.ssh.ports.work ];
+  # registry (myvars.networking.services.ssh.ports.work). The generated
+  # client config (/etc/ssh/ssh_config) reads the same table, so `ssh work` /
+  # `ssh wsl-work` dial 8022 too.
+  services.openssh.ports = [ myvars.networking.services.ssh.ports.work ];
 
   # ntfy notifications on network up/down events(NM dispatcher, shared script)
   modules.network-event-notify = {
@@ -82,40 +82,40 @@ rec {
   modules.gost-proxy = {
     enable = true;
     instances = {
-      proxy.port = myvars.network.services.gost-proxy.ports.proxy;
+      proxy.port = myvars.networking.services.gost-proxy.ports.proxy;
       idols-ai = {
-        port = myvars.network.services.gost-proxy.ports.idols-ai;
-        chainUpstream = myvars.network.services.gost-proxy.chainUpstream;
+        port = myvars.networking.services.gost-proxy.ports.idols-ai;
+        chainUpstream = myvars.networking.services.gost-proxy.chainUpstream;
       };
     };
   };
 
   # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:1105.
   modules.cliproxyapi.enable = false;
-  modules.cliproxyapi.port = myvars.network.services.cliproxyapi.port;
+  modules.cliproxyapi.port = myvars.networking.services.cliproxyapi.port;
 
   # M365 Copilot2API gateway, bound to 0.0.0.0:1104.
   modules.m365-copilot2api.enable = true;
-  modules.m365-copilot2api.port = myvars.network.services.m365-copilot2api.port;
+  modules.m365-copilot2api.port = myvars.networking.services.m365-copilot2api.port;
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
   modules.opencode2api.enable = true;
-  modules.opencode2api.port = myvars.network.services.opencode2api.port;
-  modules.opencode2api.webUiPort = myvars.network.services.opencode2api.adminPort;
+  modules.opencode2api.port = myvars.networking.services.opencode2api.port;
+  modules.opencode2api.webUiPort = myvars.networking.services.opencode2api.adminPort;
 
   # mimocode2api gateway, bound to 0.0.0.0:1103.
   modules.mimocode2api.enable = true;
-  modules.mimocode2api.port = myvars.network.services.mimocode2api.port;
+  modules.mimocode2api.port = myvars.networking.services.mimocode2api.port;
 
   # new-api LLM gateway, port 1100 (upstream listens on all interfaces).
   modules.new-api.enable = true;
-  modules.new-api.port = myvars.network.services.new-api.port;
+  modules.new-api.port = myvars.networking.services.new-api.port;
 
   # Open WebUI: disabled on every host and no local instance here either;
-  # the `openwebui` entry in myvars.network.tunnels.work (local 31107 ->
+  # the `openwebui` entry in myvars.networking.tunnels.work (local 31107 ->
   # remote 1107) is kept for a future re-enable.
   modules.open-webui.enable = false;
-  modules.open-webui.port = myvars.network.services.open-webui.port;
+  modules.open-webui.port = myvars.networking.services.open-webui.port;
 
   # Route CLI traffic through the local / LAN SOCKS proxies.
   modules.proxychains.enable = true;
@@ -124,9 +124,9 @@ rec {
     enable = true;
     # implementation = "socat";  # default, uncomment to switch explicitly
     # The table lives in the registry: remote ports come from
-    # myvars.network.services and remote hosts from myvars.network.endpoints,
+    # myvars.networking.services and remote hosts from myvars.networking.endpoints,
     # so moving a gateway port is a one-line change there.
-    tunnels = myvars.network.tunnels.work;
+    tunnels = myvars.networking.tunnels.work;
   };
 
   # networking.useNetworkd = true;

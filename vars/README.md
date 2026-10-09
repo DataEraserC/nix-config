@@ -8,7 +8,7 @@ Common variables and configuration used across my NixOS and nix-darwin configura
 vars/
 ├── README.md
 ├── default.nix         # Main variables entry point
-└── network.nix         # Network configuration and host definitions
+└── networking.nix     # Network configuration and host definitions
 ```
 
 ## Components
@@ -22,7 +22,7 @@ Contains user information, SSH keys, and password configuration:
 - SSH authorized keys (main and backup sets)
 - Public key references for system access
 
-### 2. `network.nix`
+### 2. `networking.nix`
 
 Comprehensive network configuration including:
 

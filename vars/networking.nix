@@ -52,9 +52,6 @@ rec {
       iface = "wlp130s0";
       ipv4 = "192.168.2.150";
       ipv6 = "fe80::150"; # Link-local Address
-      # sshd on this machine listens on 8022, not the OpenSSH default 22
-      # (see services.openssh.ports in hosts/wsl-work/default.nix).
-      sshPort = 8022;
     };
     wsl-work = work;
     # akane = {
@@ -201,7 +198,7 @@ rec {
         + ''
           Host ${host}
             HostName ${val.ipv4}
-            Port ${toString (val.sshPort or 22)}
+            Port ${toString (services.ssh.ports.${host} or services.ssh.defaultPort)}
         ''
       ) "" hostsAddr
     );
@@ -441,10 +438,17 @@ rec {
       chainUpstream = "${endpoints.y9000p2025.easytier}:${toString services.gost-proxy.ports.proxy}";
     };
 
-    # --- sshd; the per-host override lives as `sshPort` in hostsAddr ---
+    # --- sshd; the per-host listen ports live here, not on hostsAddr ---
     ssh = {
       defaultPort = 22;
-      ports = lib.mapAttrs (_: v: v.sshPort or 22) hostsAddr;
+      # sshd ports that differ from defaultPort, keyed by hostsAddr key;
+      # hosts absent from this table listen on defaultPort. The work laptop
+      # runs sshd on 8022 instead of the stock 22; `wsl-work` aliases `work`
+      # (same machine), so it reuses that value instead of restating it.
+      ports = rec {
+        work = 8022;
+        wsl-work = work;
+      };
       enablePath = "services.openssh.enable";
     };
   };
