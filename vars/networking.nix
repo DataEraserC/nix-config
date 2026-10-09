@@ -365,73 +365,82 @@ rec {
   # scattered over module configs, host tunnel tables and ssh settings.
   #
   # Shape - every service is a (service x host) matrix:
-  #   enablePath    NixOS option carrying the enable flag; service-wide and
-  #                 always present, since the scope rule above requires a
-  #                 NixOS module
-  #   hosts.<machine> = { host, port, ... }
-  #                 one row per machine running the service. The numbers are
-  #                 uniform across machines today, but the row is the reserved
-  #                 spot for divergence: a single machine may later move to
-  #                 another port or bind address without touching its siblings.
+  #   hosts.<machine> = { enable, host, port, ... }
+  #                 one row per machine that runs (or deliberately does not
+  #                 run) the service. The values are uniform across machines
+  #                 today, but the row is the reserved spot for divergence: a
+  #                 single machine may later flip its switch or move to
+  #                 another port or bind address without touching siblings.
+  #     enable      THE on/off state of the service on that machine, wired
+  #                 into `modules.<name>.enable` - flipping the registry flips
+  #                 the host (there is no `enablePath` indirection anymore).
+  #                 Absence of a row = the service is not registered there.
   #     host        BIND address the service listens on - 0.0.0.0 for a wide
   #                 bind, 127.0.0.1 for loopback - never a machine name.
   #                 Consumed as `modules.<name>.host` where the module has such
   #                 an option (sub-store), so wiring reads:
   #                   modules.sub-store = {
-  #                     enable = true;
+  #                     enable = myvars.networking.services.sub-store.hosts.idols-ai.enable;
   #                     host = myvars.networking.services.sub-store.hosts.idols-ai.host;
   #                   };
   #     port        primary listen port; secondary listeners keep their own key
   #                 (adminPort for the opencode2api WebUI, s3Port for alist,
   #                 frontendPort for the sub-store panel), gost-proxy carries
   #                 a per-machine `ports` set of its listener names instead
-  #   defaultPort   `ssh` only: the stock sshd port for machines without a row
+  #   defaultPort   `ssh` only: the stock sshd port for machines without a row;
+  #                 ssh rows carry no `enable` - modules/nixos/base/ssh.nix
+  #                 turns sshd on for every NixOS machine (base-wide)
   #
   # Consumed by:
   #   - host wiring of `options.modules.<name>` in the hosts/* files: each
-  #     host reads its own `hosts.<machine>` row straight from here, next to
-  #     its `enable` line (the module port options are required, no default);
+  #     host reads its own `hosts.<machine>` row straight from here - the
+  #     enable state into `modules.<name>.enable`, the port(s) into the port
+  #     options (both are required module options, no defaults);
   #   - `tunnels.work` below, applied on wsl-work by modules.port-forwarding
   #     (every entry targets the laptop, so it reads the `idols-ai` rows);
   #   - the ssh_config fold above (`services.ssh`), one Port per Host block:
   #     that machine's row when it has one, else `defaultPort`;
-  #   - the port catalog page, which renders this attribute set and reads
-  #     `enablePath` against every nixosConfigurations.<host>.config at eval
-  #     time, so enablement stays a single source of truth in the hosts.
+  #   - the port catalog page, which renders this attribute set directly -
+  #     enable state, bind address and ports per machine - so enablement is
+  #     a single source of truth in the registry.
   # ==========================================================================
   services = {
     # --- LLM gateways (1100..1110); rows per machine that runs them ---
     new-api = {
-      enablePath = "modules.new-api.enable";
       hosts = {
         idols-ai = {
+          enable = true;
           host = "0.0.0.0";
           port = 1100;
         };
         wsl-y9000p2025 = {
+          enable = true;
           host = "0.0.0.0";
           port = 1100;
         };
         wsl-work = {
+          enable = true;
           host = "0.0.0.0";
           port = 1100;
         };
       };
     };
     opencode2api = {
-      enablePath = "modules.opencode2api.enable";
       hosts = {
         idols-ai = {
+          enable = true;
           host = "0.0.0.0";
           port = 1101;
           adminPort = 1102;
         };
         wsl-y9000p2025 = {
+          enable = true;
           host = "0.0.0.0";
           port = 1101;
           adminPort = 1102;
         };
         wsl-work = {
+          enable = true;
           host = "0.0.0.0";
           port = 1101;
           adminPort = 1102;
@@ -439,88 +448,96 @@ rec {
       };
     };
     mimocode2api = {
-      enablePath = "modules.mimocode2api.enable";
       hosts = {
         idols-ai = {
+          enable = true;
           host = "0.0.0.0";
           port = 1103;
         };
         wsl-y9000p2025 = {
+          enable = true;
           host = "0.0.0.0";
           port = 1103;
         };
         wsl-work = {
+          enable = true;
           host = "0.0.0.0";
           port = 1103;
         };
       };
     };
     m365-copilot2api = {
-      enablePath = "modules.m365-copilot2api.enable";
       hosts = {
         idols-ai = {
+          enable = true;
           host = "0.0.0.0";
           port = 1104;
         };
         wsl-y9000p2025 = {
+          enable = true;
           host = "0.0.0.0";
           port = 1104;
         };
         wsl-work = {
+          enable = true;
           host = "0.0.0.0";
           port = 1104;
         };
       };
     };
     cliproxyapi = {
-      enablePath = "modules.cliproxyapi.enable";
       hosts = {
         idols-ai = {
+          enable = false;
           host = "0.0.0.0";
           port = 1105;
         };
         wsl-y9000p2025 = {
+          enable = false;
           host = "0.0.0.0";
           port = 1105;
         };
         wsl-work = {
+          enable = false;
           host = "0.0.0.0";
           port = 1105;
         };
       };
     };
     omniroute = {
-      enablePath = "modules.omniroute.enable";
       hosts = {
         idols-ai = {
+          enable = true;
           host = "0.0.0.0";
           port = 1106;
         };
       };
     };
     open-webui = {
-      enablePath = "modules.open-webui.enable";
       hosts = {
         idols-ai = {
+          enable = false;
           host = "0.0.0.0";
           port = 1107;
         };
         wsl-y9000p2025 = {
+          enable = false;
           host = "0.0.0.0";
           port = 1107;
         };
         wsl-work = {
+          enable = false;
           host = "0.0.0.0";
           port = 1107;
         };
       };
     };
     alist = {
-      enablePath = "modules.alist.enable";
       hosts = {
         # the optional S3-mapping listener (settings.s3, off by default)
         # rides on s3Port
         idols-ai = {
+          enable = true;
           host = "0.0.0.0";
           port = 5244;
           s3Port = 5246;
@@ -529,14 +546,15 @@ rec {
     };
 
     # --- subscription manager, fronted by Caddy (base/custom/sub-store) ---
-    # Its `host` option is the one registry bind field consumed directly (see
-    # the shape notes above). idols-ai wires only `host`; port / frontendPort
-    # document what that machine deploys for the catalog - the module
-    # defaults apply, and dae pins the backend on 127.0.0.1:24500.
+    # The one service whose bind address a module option consumes directly
+    # (`modules.sub-store.host`, see the shape notes above); its enable is
+    # wired from the row the same way. port / frontendPort document what
+    # idols-ai deploys for the catalog - the module defaults apply, and dae
+    # pins the backend on 127.0.0.1:24500.
     sub-store = {
-      enablePath = "modules.sub-store.enable";
       hosts = {
         idols-ai = {
+          enable = true;
           host = "0.0.0.0";
           port = 24500;
           frontendPort = 24501;
@@ -548,15 +566,16 @@ rec {
     # The same instance names are used on several hosts, so each row lists
     # the instances that machine declares; ports, not enablement, live here.
     gost-proxy = rec {
-      enablePath = "modules.gost-proxy.enable";
       hosts = {
         idols-ai = {
+          enable = true;
           host = "0.0.0.0";
           ports = {
             proxy = 1080; # direct listener; also wsl-work's chained hop
           };
         };
         wsl-work = {
+          enable = true;
           host = "0.0.0.0";
           ports = {
             proxy = 1080; # direct listener, same number as idols-ai today
@@ -571,7 +590,9 @@ rec {
 
     # --- sshd; the per-host listen ports live here, not on hostsAddr ---
     ssh = {
-      enablePath = "services.openssh.enable";
+      # no `enable` on purpose: modules/nixos/base/ssh.nix turns sshd on for
+      # every NixOS machine (base-wide), so the rows below carry host/port
+      # only
       # stock sshd port for every hostsAddr machine without its own row below
       defaultPort = 22;
       # keyed by hostsAddr key (that is how the ssh_config fold looks rows up):
