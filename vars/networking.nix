@@ -52,6 +52,9 @@ rec {
       iface = "wlp130s0";
       ipv4 = "192.168.2.150";
       ipv6 = "fe80::150"; # Link-local Address
+      # sshd on this machine listens on 8022, not the OpenSSH default 22
+      # (see services.openssh.ports in hosts/wsl-work/default.nix).
+      sshPort = 8022;
     };
     wsl-work = work;
     # akane = {
@@ -198,7 +201,7 @@ rec {
         + ''
           Host ${host}
             HostName ${val.ipv4}
-            Port 22
+            Port ${toString (val.sshPort or 22)}
         ''
       ) "" hostsAddr
     );

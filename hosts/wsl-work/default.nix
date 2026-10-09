@@ -53,6 +53,11 @@ rec {
     extraHosts = myvars.networking.genericHosts;
   };
 
+  # sshd listens on 8022 instead of the stock 22. The generated client config
+  # (/etc/ssh/ssh_config) follows hostsAddr.work.sshPort in vars/networking.nix,
+  # so `ssh work` / `ssh wsl-work` dial 8022 too.
+  services.openssh.ports = [ 8022 ];
+
   # ntfy notifications on network up/down events(NM dispatcher, shared script)
   modules.network-event-notify = {
     enable = true;
