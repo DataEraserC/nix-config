@@ -80,7 +80,7 @@ rec {
   # The host firewall is disabled here, so both ports are reachable wherever
   # this host is (easytier mesh, WSL localhost forwarding from Windows).
   modules.gost-proxy = {
-    enable = true;
+    enable = myvars.networking.services.gost-proxy.hosts.wsl-work.enable;
     instances = {
       proxy.port = myvars.networking.services.gost-proxy.hosts.wsl-work.ports.proxy;
       idols-ai = {
@@ -91,30 +91,30 @@ rec {
   };
 
   # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:1105.
-  modules.cliproxyapi.enable = false;
+  modules.cliproxyapi.enable = myvars.networking.services.cliproxyapi.hosts.wsl-work.enable;
   modules.cliproxyapi.port = myvars.networking.services.cliproxyapi.hosts.wsl-work.port;
 
   # M365 Copilot2API gateway, bound to 0.0.0.0:1104.
-  modules.m365-copilot2api.enable = true;
+  modules.m365-copilot2api.enable = myvars.networking.services.m365-copilot2api.hosts.wsl-work.enable;
   modules.m365-copilot2api.port = myvars.networking.services.m365-copilot2api.hosts.wsl-work.port;
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
-  modules.opencode2api.enable = true;
+  modules.opencode2api.enable = myvars.networking.services.opencode2api.hosts.wsl-work.enable;
   modules.opencode2api.port = myvars.networking.services.opencode2api.hosts.wsl-work.port;
   modules.opencode2api.webUiPort = myvars.networking.services.opencode2api.hosts.wsl-work.adminPort;
 
   # mimocode2api gateway, bound to 0.0.0.0:1103.
-  modules.mimocode2api.enable = true;
+  modules.mimocode2api.enable = myvars.networking.services.mimocode2api.hosts.wsl-work.enable;
   modules.mimocode2api.port = myvars.networking.services.mimocode2api.hosts.wsl-work.port;
 
   # new-api LLM gateway, port 1100 (upstream listens on all interfaces).
-  modules.new-api.enable = true;
+  modules.new-api.enable = myvars.networking.services.new-api.hosts.wsl-work.enable;
   modules.new-api.port = myvars.networking.services.new-api.hosts.wsl-work.port;
 
   # Open WebUI: disabled on every host and no local instance here either;
   # the `openwebui` entry in myvars.networking.tunnels.work (local 31107 ->
   # remote 1107) is kept for a future re-enable.
-  modules.open-webui.enable = false;
+  modules.open-webui.enable = myvars.networking.services.open-webui.hosts.wsl-work.enable;
   modules.open-webui.port = myvars.networking.services.open-webui.hosts.wsl-work.port;
 
   # Route CLI traffic through the local / LAN SOCKS proxies.
