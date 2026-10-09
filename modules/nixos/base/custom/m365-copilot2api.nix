@@ -18,6 +18,12 @@
 # the already-stored tokens unreadable, so the accounts have to be authorized
 # again.
 #
+# forceIpv4 pins outbound connections to IPv4. Intermittent IPv6 failures on the
+# Microsoft endpoints surface as WS_READ_TIMEOUT transport errors, which put
+# every account into cooldown and make the 2api gateway answer 503 "all accounts
+# cooling down" until a restart clears the in-memory cooldowns (CopilotChat stays
+# healthy because it does not share that state); see upstream issue #79.
+#
 # Check Service Status
 #   systemctl status m365-copilot2api
 # Check logs
@@ -59,6 +65,7 @@ in
       port = 1104;
       adminPasswordFile = "/run/agenix/m365-copilot2api-admin-password";
       masterKeyFile = "/run/agenix/m365-copilot2api-master-key";
+      forceIpv4 = true;
     };
   };
 }
