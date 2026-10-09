@@ -7,9 +7,9 @@
 #
 # Uniform wrapper shared by every host, same pattern as new-api.nix: hosts only
 # toggle `modules.open-webui.enable` and set `modules.open-webui.port` (taken
-# from the port registry, myvars.networking.services.open-webui.port), while the
-# remaining service settings (package, bind address) live here so the hosts
-# stay byte-identical. The port is only read under `enable`, so a host that
+# from the port registry, myvars.networking.services.open-webui.hosts.<machine>.port),
+# while the remaining service settings (package, bind address) live here so the
+# hosts stay byte-identical. The port is only read under `enable`, so a host that
 # does not run the unit never forces it.
 #
 # Binds to 0.0.0.0:1107 by default - the next free port of the 1100 service series.
@@ -39,7 +39,7 @@ in
     enable = lib.mkEnableOption "Open WebUI chat frontend for the local LLM gateways";
     port = lib.mkOption {
       type = lib.types.port;
-      description = "Port open-webui listens on; the host that uses this module must set it (port registry network.services.open-webui.port).";
+      description = "Port open-webui listens on; the host that uses this module must set it (port registry myvars.networking.services.open-webui.hosts.<machine>.port).";
     };
   };
 

@@ -23,10 +23,10 @@
   # login password, causing "Unlock Login Keyring" prompt desyncs.
   # Keep everything in "login" and leave the `default` pointer unset (or
   # pointing at "login").
-  # Only outside the KDE profile: kde-wayland declares no seahorse setting at
-  # all, so on KDE hosts this mkIf drops the definition and the option falls
-  # back to its own default (off) - there is no second definition to clash
-  # with, here or in kde-wayland/values/official-config.nix.
+  # Only outside the KDE profile: kde-wayland/values/official-config.nix keeps
+  # seahorse off with a plain `programs.seahorse.enable = false`, and on KDE
+  # hosts this mkIf drops the `true` above entirely, so the two definitions
+  # never meet - the KDE profile's `false` stays the sole definition there.
   programs.seahorse.enable = lib.mkIf (!config.modules.desktop.kde-wayland.enable) true;
   # The OpenSSH agent remembers private keys for you
   # so that you don’t have to type in passphrases every time you make an SSH connection.

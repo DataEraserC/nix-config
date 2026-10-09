@@ -57,7 +57,7 @@ in
     enable = lib.mkEnableOption "M365 Copilot2API gateway";
     port = lib.mkOption {
       type = lib.types.port;
-      description = "Port m365-copilot2api listens on; the host that uses this module must set it (port registry network.services.m365-copilot2api.port).";
+      description = "Port m365-copilot2api listens on; the host that uses this module must set it (port registry myvars.networking.services.m365-copilot2api.hosts.<machine>.port).";
     };
   };
 

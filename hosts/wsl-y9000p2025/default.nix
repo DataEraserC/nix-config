@@ -66,28 +66,30 @@ rec {
 
   # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:1105.
   modules.cliproxyapi.enable = false;
-  modules.cliproxyapi.port = myvars.networking.services.cliproxyapi.port;
+  modules.cliproxyapi.port = myvars.networking.services.cliproxyapi.hosts.wsl-y9000p2025.port;
 
   # M365 Copilot2API gateway, bound to 0.0.0.0:1104.
   modules.m365-copilot2api.enable = true;
-  modules.m365-copilot2api.port = myvars.networking.services.m365-copilot2api.port;
+  modules.m365-copilot2api.port =
+    myvars.networking.services.m365-copilot2api.hosts.wsl-y9000p2025.port;
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
   modules.opencode2api.enable = true;
-  modules.opencode2api.port = myvars.networking.services.opencode2api.port;
-  modules.opencode2api.webUiPort = myvars.networking.services.opencode2api.adminPort;
+  modules.opencode2api.port = myvars.networking.services.opencode2api.hosts.wsl-y9000p2025.port;
+  modules.opencode2api.webUiPort =
+    myvars.networking.services.opencode2api.hosts.wsl-y9000p2025.adminPort;
 
   # mimocode2api gateway, bound to 0.0.0.0:1103 (VPN interfaces only).
   modules.mimocode2api.enable = true;
-  modules.mimocode2api.port = myvars.networking.services.mimocode2api.port;
+  modules.mimocode2api.port = myvars.networking.services.mimocode2api.hosts.wsl-y9000p2025.port;
 
   # new-api LLM gateway, port 1100 (upstream listens on all interfaces).
   modules.new-api.enable = true;
-  modules.new-api.port = myvars.networking.services.new-api.port;
+  modules.new-api.port = myvars.networking.services.new-api.hosts.wsl-y9000p2025.port;
 
   # Open WebUI chat frontend, 0.0.0.0:1107 (shared modules.open-webui) - disabled.
   modules.open-webui.enable = false;
-  modules.open-webui.port = myvars.networking.services.open-webui.port;
+  modules.open-webui.port = myvars.networking.services.open-webui.hosts.wsl-y9000p2025.port;
 
   # Route CLI traffic through the local / LAN SOCKS proxies.
   modules.proxychains.enable = true;

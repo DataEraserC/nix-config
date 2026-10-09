@@ -38,7 +38,7 @@ in
     enable = lib.mkEnableOption "mimocode2api gateway";
     port = lib.mkOption {
       type = lib.types.port;
-      description = "Port mimocode2api listens on; the host that uses this module must set it (port registry network.services.mimocode2api.port).";
+      description = "Port mimocode2api listens on; the host that uses this module must set it (port registry myvars.networking.services.mimocode2api.hosts.<machine>.port).";
     };
   };
 

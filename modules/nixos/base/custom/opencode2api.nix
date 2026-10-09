@@ -38,11 +38,11 @@ in
     enable = lib.mkEnableOption "opencode2api gateway";
     port = lib.mkOption {
       type = lib.types.port;
-      description = "Port opencode2api listens on; the host that uses this module must set it (port registry network.services.opencode2api.port).";
+      description = "Port opencode2api listens on; the host that uses this module must set it (port registry myvars.networking.services.opencode2api.hosts.<machine>.port).";
     };
     webUiPort = lib.mkOption {
       type = lib.types.port;
-      description = "WebUI listen port; the host that uses this module must set it (port registry network.services.opencode2api.adminPort).";
+      description = "WebUI listen port; the host that uses this module must set it (port registry myvars.networking.services.opencode2api.hosts.<machine>.adminPort).";
     };
   };
 
