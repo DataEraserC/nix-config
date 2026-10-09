@@ -54,9 +54,9 @@ rec {
   };
 
   # sshd listens on 8022 instead of the stock 22 - taken from the port
-  # registry (myvars.networking.services.ssh.ports.work, data: hostsAddr.work
-  # .sshPort). The generated client config (/etc/ssh/ssh_config) reads the
-  # same value, so `ssh work` / `ssh wsl-work` dial 8022 too.
+  # registry (myvars.networking.services.ssh.ports.work). The generated
+  # client config (/etc/ssh/ssh_config) reads the same table, so `ssh work` /
+  # `ssh wsl-work` dial 8022 too.
   services.openssh.ports = [ myvars.networking.services.ssh.ports.work ];
 
   # ntfy notifications on network up/down events(NM dispatcher, shared script)
