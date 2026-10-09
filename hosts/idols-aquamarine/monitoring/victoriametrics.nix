@@ -68,7 +68,7 @@ in
             metrics_path = "/metrics";
             static_configs = [
               {
-                targets = [ "${myvars.network.hostsAddr.suzi.ipv4}:9153" ];
+                targets = [ "${myvars.networking.hostsAddr.suzi.ipv4}:9153" ];
                 labels.type = "app";
                 labels.app = "dnsmasq";
                 labels.host = "suzi";
@@ -102,7 +102,7 @@ in
           params.ups = [ "homelab" ];
           static_configs = [
             {
-              targets = [ "${myvars.network.hostsAddr.kubevirt-shushou.ipv4}:9199" ];
+              targets = [ "${myvars.networking.hostsAddr.kubevirt-shushou.ipv4}:9199" ];
               labels.type = "app";
               labels.app = "nut";
               labels.host = "kubevirt-shushou";
@@ -176,27 +176,31 @@ in
         }
       ]
       # --- Hosts --- #
-      ++ (lib.attrsets.foldlAttrs (
-        acc: hostname: addr:
-        acc
-        ++ [
-          {
-            job_name = "node-exporter-${hostname}";
-            scrape_interval = "30s";
-            metrics_path = "/metrics";
-            static_configs = [
-              {
-                # All my NixOS hosts.
-                targets = [ "${addr.ipv4}:9100" ];
-                labels.type = "node";
-                labels.host = hostname;
-                labels.env = "homelab";
-                labels.cluster = "homelab";
-              }
-            ];
-          }
-        ]
-      ) [ ] (lib.attrsets.filterAttrs (n: _: !(builtins.elem n offlineHosts)) myvars.network.hostsAddr));
+      ++ (lib.attrsets.foldlAttrs
+        (
+          acc: hostname: addr:
+          acc
+          ++ [
+            {
+              job_name = "node-exporter-${hostname}";
+              scrape_interval = "30s";
+              metrics_path = "/metrics";
+              static_configs = [
+                {
+                  # All my NixOS hosts.
+                  targets = [ "${addr.ipv4}:9100" ];
+                  labels.type = "node";
+                  labels.host = hostname;
+                  labels.env = "homelab";
+                  labels.cluster = "homelab";
+                }
+              ];
+            }
+          ]
+        )
+        [ ]
+        (lib.attrsets.filterAttrs (n: _: !(builtins.elem n offlineHosts)) myvars.networking.hostsAddr)
+      );
     };
   };
 }

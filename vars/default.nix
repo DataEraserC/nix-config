@@ -3,7 +3,7 @@
   username = "nixos";
   userfullname = "DataEraserC";
   useremail = "102341238+DataEraserC@users.noreply.github.com";
-  network = import ./network.nix { inherit lib; };
+  networking = import ./networking.nix { inherit lib; };
   # Generated using: mkpasswd -m yescrypt --rounds=11
   # Password: long, strong random string (full charset)
   # Rotation policy: changed annually

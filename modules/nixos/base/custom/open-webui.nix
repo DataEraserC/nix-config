@@ -7,7 +7,7 @@
 #
 # Uniform wrapper shared by every host, same pattern as new-api.nix: hosts only
 # toggle `modules.open-webui.enable` and set `modules.open-webui.port` (taken
-# from the port registry, myvars.network.services.open-webui.port), while the
+# from the port registry, myvars.networking.services.open-webui.port), while the
 # remaining service settings (package, bind address) live here so the hosts
 # stay byte-identical. The port is only read under `enable`, so a host that
 # does not run the unit never forces it.

@@ -11,8 +11,8 @@
 let
   hostName = "kana"; # Define your hostname.
 
-  inherit (myvars.network) proxyGateway proxyGateway6 nameservers;
-  inherit (myvars.network.hostsAddr.${hostName}) iface ipv4;
+  inherit (myvars.networking) proxyGateway proxyGateway6 nameservers;
+  inherit (myvars.networking.hostsAddr.${hostName}) iface ipv4;
   ipv4WithMask = "${ipv4}/24";
 in
 {
