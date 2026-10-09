@@ -15,8 +15,8 @@
 let
   hostName = "work"; # Define your hostname.
   macAddress = "random";
-  inherit (myvars.networking) mainGateway mainGateway6 nameservers;
-  inherit (myvars.networking.hostsAddr.${hostName}) iface ipv4 ipv6;
+  inherit (myvars.network) mainGateway mainGateway6 nameservers;
+  inherit (myvars.network.hostsAddr.${hostName}) iface ipv4 ipv6;
   ipv4WithMask = "${ipv4}/24";
   ipv6WithMask = "${ipv6}/64";
 
@@ -50,13 +50,14 @@ rec {
     networkmanager.wifi.macAddress = macAddress;
     networkmanager.ethernet.macAddress = macAddress;
     enableIPv6 = true; # disable ipv6
-    extraHosts = myvars.networking.genericHosts;
+    extraHosts = myvars.network.genericHosts;
   };
 
-  # sshd listens on 8022 instead of the stock 22. The generated client config
-  # (/etc/ssh/ssh_config) follows hostsAddr.work.sshPort in vars/networking.nix,
-  # so `ssh work` / `ssh wsl-work` dial 8022 too.
-  services.openssh.ports = [ 8022 ];
+  # sshd listens on 8022 instead of the stock 22 - taken from the port
+  # registry (myvars.network.services.ssh.ports.work, data: hostsAddr.work
+  # .sshPort). The generated client config (/etc/ssh/ssh_config) reads the
+  # same value, so `ssh work` / `ssh wsl-work` dial 8022 too.
+  services.openssh.ports = [ myvars.network.services.ssh.ports.work ];
 
   # ntfy notifications on network up/down events(NM dispatcher, shared script)
   modules.network-event-notify = {
@@ -81,33 +82,40 @@ rec {
   modules.gost-proxy = {
     enable = true;
     instances = {
-      proxy.port = 1080;
+      proxy.port = myvars.network.services.gost-proxy.ports.proxy;
       idols-ai = {
-        port = 31080;
-        chainUpstream = "10.126.126.150:1080";
+        port = myvars.network.services.gost-proxy.ports.idols-ai;
+        chainUpstream = myvars.network.services.gost-proxy.chainUpstream;
       };
     };
   };
 
   # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:1105.
   modules.cliproxyapi.enable = false;
+  modules.cliproxyapi.port = myvars.network.services.cliproxyapi.port;
 
   # M365 Copilot2API gateway, bound to 0.0.0.0:1104.
   modules.m365-copilot2api.enable = true;
+  modules.m365-copilot2api.port = myvars.network.services.m365-copilot2api.port;
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
   modules.opencode2api.enable = true;
+  modules.opencode2api.port = myvars.network.services.opencode2api.port;
+  modules.opencode2api.webUiPort = myvars.network.services.opencode2api.adminPort;
 
   # mimocode2api gateway, bound to 0.0.0.0:1103.
   modules.mimocode2api.enable = true;
+  modules.mimocode2api.port = myvars.network.services.mimocode2api.port;
 
   # new-api LLM gateway, port 1100 (upstream listens on all interfaces).
   modules.new-api.enable = true;
+  modules.new-api.port = myvars.network.services.new-api.port;
 
   # Open WebUI: disabled on every host and no local instance here either;
-  # the `openwebui` tunnel below (local 31107 -> remote 1107) is kept for a
-  # future re-enable.
+  # the `openwebui` entry in myvars.network.tunnels.work (local 31107 ->
+  # remote 1107) is kept for a future re-enable.
   modules.open-webui.enable = false;
+  modules.open-webui.port = myvars.network.services.open-webui.port;
 
   # Route CLI traffic through the local / LAN SOCKS proxies.
   modules.proxychains.enable = true;
@@ -115,107 +123,10 @@ rec {
   modules.port-forwarding = {
     enable = true;
     # implementation = "socat";  # default, uncomment to switch explicitly
-    tunnels = [
-      # idols-ai (10.126.126.150) - 3xxxx range
-      {
-        name = "new-api";
-        localPort = 31100;
-        remoteHost = "10.126.126.150";
-        remotePort = 1100;
-      }
-      {
-        name = "opencode2api";
-        localPort = 31101;
-        remoteHost = "10.126.126.150";
-        remotePort = 1101;
-      }
-      {
-        name = "opencode2api-management-center";
-        localPort = 31102;
-        remoteHost = "10.126.126.150";
-        remotePort = 1102;
-      }
-      {
-        name = "mimocode2api";
-        localPort = 31103;
-        remoteHost = "10.126.126.150";
-        remotePort = 1103;
-      }
-      {
-        name = "M365-Copilot2API";
-        localPort = 31104;
-        remoteHost = "10.126.126.150";
-        remotePort = 1104;
-      }
-      {
-        name = "cliproxyapimanagementcenter";
-        localPort = 31105;
-        remoteHost = "10.126.126.150";
-        remotePort = 1105;
-      }
-      # {
-      #   name = "omniroute";
-      #   localPort = 31106;
-      #   remoteHost = "10.126.126.150";
-      #   remotePort = 1106;
-      # }
-      {
-        name = "openwebui";
-        localPort = 31107;
-        remoteHost = "10.126.126.150";
-        remotePort = 1107;
-      }
-      # dsh 有很强的安全保护，需要通过ssh转发，否则很多功能不生效
-      # {
-      #   name = "dsh";
-      #   localPort = 33080;
-      #   remoteHost = "10.126.126.150";
-      #   remotePort = 3080;
-      # }
-      {
-        name = "rdp";
-        localPort = 33389;
-        remoteHost = "10.126.126.150";
-        remotePort = 3389;
-      }
-      {
-        name = "ssh";
-        localPort = 30022;
-        remoteHost = "10.126.126.150";
-        remotePort = 22;
-      }
-      {
-        name = "opencode";
-        localPort = 34096;
-        remoteHost = "10.126.126.150";
-        remotePort = 4096;
-      }
-      {
-        name = "y9000p2025-proxy";
-        localPort = 37890;
-        remoteHost = "10.126.126.150";
-        remotePort = 7897;
-      }
-      # apatch-infiniti (10.126.126.154) - 4xxxx range
-      {
-        name = "adb";
-        localPort = 45555;
-        remoteHost = "10.126.126.154";
-        remotePort = 5555;
-      }
-      {
-        name = "infiniti-proxy";
-        localPort = 42080;
-        remoteHost = "10.126.126.154";
-        remotePort = 2080;
-      }
-      {
-        name = "termux-ssh";
-        localPort = 40022;
-        remoteHost = "10.126.126.154";
-        remotePort = 8022;
-      }
-    ];
+    # The table lives in the registry: remote ports come from
+    # myvars.network.services and remote hosts from myvars.network.endpoints,
+    # so moving a gateway port is a one-line change there.
+    tunnels = myvars.network.tunnels.work;
   };
 
   # networking.useNetworkd = true;

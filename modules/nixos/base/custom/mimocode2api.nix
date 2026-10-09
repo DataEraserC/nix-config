@@ -36,13 +36,17 @@ in
 
   options.modules.mimocode2api = {
     enable = lib.mkEnableOption "mimocode2api gateway";
+    port = lib.mkOption {
+      type = lib.types.port;
+      description = "Port mimocode2api listens on; the host that uses this module must set it (port registry network.services.mimocode2api.port).";
+    };
   };
 
   config = lib.mkIf cfg.enable {
     services.dataEraserc.mimocode2api = {
       enable = true;
       package = nur-DataEraserC.packages.${system}.mimocode2api;
-      port = 1103;
+      port = cfg.port;
       openFirewall = false;
     };
   };

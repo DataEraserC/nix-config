@@ -32,13 +32,17 @@ in
 
   options.modules.new-api = {
     enable = lib.mkEnableOption "new-api LLM gateway";
+    port = lib.mkOption {
+      type = lib.types.port;
+      description = "Port new-api listens on; the host that uses this module must set it (port registry network.services.new-api).";
+    };
   };
 
   config = lib.mkIf cfg.enable {
     services.dataEraserc.new-api = {
       enable = true;
       package = nur-DataEraserC.packages.${system}.new-api;
-      port = 1100;
+      port = cfg.port;
       master = true;
       sessionSecretFile = "/run/agenix/new-api-session-secret";
       openFirewall = false;

@@ -15,8 +15,8 @@
 let
   hostName = "y9000p2025"; # Define your hostname.
   macAddress = "random";
-  inherit (myvars.networking) mainGateway mainGateway6 nameservers;
-  inherit (myvars.networking.hostsAddr.${hostName}) iface ipv4 ipv6;
+  inherit (myvars.network) mainGateway mainGateway6 nameservers;
+  inherit (myvars.network.hostsAddr.${hostName}) iface ipv4 ipv6;
   ipv4WithMask = "${ipv4}/24";
   ipv6WithMask = "${ipv6}/64";
 
@@ -49,7 +49,7 @@ rec {
     networkmanager.wifi.macAddress = macAddress;
     networkmanager.ethernet.macAddress = macAddress;
     enableIPv6 = true; # disable ipv6
-    extraHosts = myvars.networking.genericHosts;
+    extraHosts = myvars.network.genericHosts;
   };
 
   # ntfy notifications on network up/down events(NM dispatcher, shared script)
@@ -66,21 +66,28 @@ rec {
 
   # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:1105.
   modules.cliproxyapi.enable = false;
+  modules.cliproxyapi.port = myvars.network.services.cliproxyapi.port;
 
   # M365 Copilot2API gateway, bound to 0.0.0.0:1104.
   modules.m365-copilot2api.enable = true;
+  modules.m365-copilot2api.port = myvars.network.services.m365-copilot2api.port;
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
   modules.opencode2api.enable = true;
+  modules.opencode2api.port = myvars.network.services.opencode2api.port;
+  modules.opencode2api.webUiPort = myvars.network.services.opencode2api.adminPort;
 
   # mimocode2api gateway, bound to 0.0.0.0:1103 (VPN interfaces only).
   modules.mimocode2api.enable = true;
+  modules.mimocode2api.port = myvars.network.services.mimocode2api.port;
 
   # new-api LLM gateway, port 1100 (upstream listens on all interfaces).
   modules.new-api.enable = true;
+  modules.new-api.port = myvars.network.services.new-api.port;
 
   # Open WebUI chat frontend, 0.0.0.0:1107 (shared modules.open-webui) - disabled.
   modules.open-webui.enable = false;
+  modules.open-webui.port = myvars.network.services.open-webui.port;
 
   # Route CLI traffic through the local / LAN SOCKS proxies.
   modules.proxychains.enable = true;

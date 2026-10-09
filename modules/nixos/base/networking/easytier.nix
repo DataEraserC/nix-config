@@ -36,7 +36,7 @@
 let
   cfg = config.modules.easytier;
   hostName = config.networking.hostName;
-  et = myvars.networking.easytier;
+  et = myvars.network.easytier;
 in
 {
   options.modules.easytier = {
