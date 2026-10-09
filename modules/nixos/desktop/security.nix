@@ -23,7 +23,10 @@
   # login password, causing "Unlock Login Keyring" prompt desyncs.
   # Keep everything in "login" and leave the `default` pointer unset (or
   # pointing at "login").
-  programs.seahorse.enable = true;
+  # Not on the KDE profile: it declares seahorse off as its default
+  # (kde-wayland/values/official-config.nix), and this plain `true` would both
+  # override that default and clash with it in a conflicting-definition error.
+  programs.seahorse.enable = lib.mkIf (!config.modules.desktop.kde-wayland.enable) true;
   # The OpenSSH agent remembers private keys for you
   # so that you don’t have to type in passphrases every time you make an SSH connection.
   # Use `ssh-add` to add a key to the agent.

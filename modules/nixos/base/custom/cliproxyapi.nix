@@ -36,6 +36,10 @@ in
 
   options.modules.cliproxyapi = {
     enable = lib.mkEnableOption "CLIProxyAPI proxy with an offline management panel";
+    port = lib.mkOption {
+      type = lib.types.port;
+      description = "Port cliproxyapi listens on; the host that uses this module must set it (port registry network.services.cliproxyapi.port).";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -44,7 +48,7 @@ in
       package = nur-DataEraserC.packages.${system}.cliproxyapi;
       managementCenterPackage = nur-DataEraserC.packages.${system}.cliproxyapi-management-center-bin;
       host = "0.0.0.0";
-      port = 1105;
+      port = cfg.port;
       allowRemote = true;
       managementKeyFile = "/run/agenix/cliproxyapi-management.key";
     };

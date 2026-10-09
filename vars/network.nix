@@ -52,6 +52,9 @@ rec {
       iface = "wlp130s0";
       ipv4 = "192.168.2.150";
       ipv6 = "fe80::150"; # Link-local Address
+      # sshd on this machine listens on 8022, not the OpenSSH default 22
+      # (see services.openssh.ports in hosts/wsl-work/default.nix).
+      sshPort = 8022;
     };
     wsl-work = work;
     # akane = {
@@ -198,7 +201,7 @@ rec {
         + ''
           Host ${host}
             HostName ${val.ipv4}
-            Port 22
+            Port ${toString (val.sshPort or 22)}
         ''
       ) "" hostsAddr
     );
@@ -250,7 +253,7 @@ rec {
   #     that have one, and optionally extend `networkOrder` to position it;
   #   - new naming scheme: pick another `class` token for the device.
   # ==========================================================================
-  overlayDevices = {
+  devices = {
     # --- remote android devices, driven through the Termux CLI ---
     mondrian = {
       class = "android_cli";
@@ -333,7 +336,7 @@ rec {
     };
   };
 
-  # Key of this machine inside `overlayDevices`: its group is rendered last
+  # Key of this machine inside `devices`: its group is rendered last
   # in `genericHosts` and it is excluded from the derived `peers` view.
   selfDevice = "y9000p2025";
 
@@ -349,18 +352,234 @@ rec {
   # /etc/hosts entries that belong to no overlay device, rendered first.
   staticHosts = [ "155.248.179.129 oracle_ubuntu_1.mayuri.org" ];
 
+  # ==========================================================================
+  # services - the port registry.
+  #
+  # Scope (agreed): only what is (a) managed by a NixOS module of this flake
+  # and (b) reachable from OUTSIDE its host - services listening on the
+  # overlay / LAN / 0.0.0.0 - gets an entry here, plus the virtual network
+  # registrations further down in this file (`devices`, `endpoints`,
+  # `easytier.instances`). Not registered for now: loopback-only listeners (the
+  # dsh GUI on 127.0.0.1:9900, proxychains' local client ports) and services
+  # no NixOS module drives (adb, the LAN proxies, opencode, rdp, termux sshd)
+  # - those keep literal ports where they are used, e.g. in `tunnels.work`.
+  #
+  # The port of such a service is declared once, instead of as a literal
+  # scattered over module configs, host tunnel tables and ssh settings.
+  # Consumed by:
+  #   - host wiring of `options.modules.<name>.port` in the hosts/* files
+  #     (the module options are required, no default; each host sets them
+  #     next to its enable line straight from here, and can still override
+  #     the listener per machine);
+  #   - `tunnels.work` below, applied on wsl-work by modules.port-forwarding;
+  #   - the port catalog page, which renders this attribute set and reads
+  #     `enablePath` against every nixosConfigurations.<host>.config at eval
+  #     time, so enablement stays a single source of truth in the hosts.
+  #
+  #   host       key into `devices` / `hostsAddr` where the service lives
+  #   port       primary listen port; secondary listeners keep their own key
+  #              (adminPort for the opencode2api WebUI, s3Port for alist)
+  #   enablePath NixOS option carrying the enable flag - always present here,
+  #              since the scope rule above requires a NixOS module
+  # ==========================================================================
+  services = {
+    # --- LLM gateways, all on the y9000p2025 laptop (easytier 10.126.126.150)
+    new-api = {
+      host = "y9000p2025";
+      port = 1100;
+      enablePath = "modules.new-api.enable";
+    };
+    opencode2api = {
+      host = "y9000p2025";
+      port = 1101;
+      adminPort = 1102;
+      enablePath = "modules.opencode2api.enable";
+    };
+    mimocode2api = {
+      host = "y9000p2025";
+      port = 1103;
+      enablePath = "modules.mimocode2api.enable";
+    };
+    m365-copilot2api = {
+      host = "y9000p2025";
+      port = 1104;
+      enablePath = "modules.m365-copilot2api.enable";
+    };
+    cliproxyapi = {
+      host = "y9000p2025";
+      port = 1105;
+      enablePath = "modules.cliproxyapi.enable";
+    };
+    omniroute = {
+      host = "y9000p2025";
+      port = 1106;
+      enablePath = "modules.omniroute.enable";
+    };
+    open-webui = {
+      host = "y9000p2025";
+      port = 1107;
+      enablePath = "modules.open-webui.enable";
+    };
+    alist = {
+      host = "y9000p2025";
+      port = 5244;
+      s3Port = 5246; # optional S3-mapping listener (settings.s3, off by default)
+      enablePath = "modules.alist.enable";
+    };
+
+    # --- authenticated SOCKS5 proxy (modules/nixos/base/custom/gost-proxy.nix)
+    # The same instance names are used on several hosts, so ports, not
+    # enablement, live here; each host declares its own instance list.
+    gost-proxy = {
+      enablePath = "modules.gost-proxy.enable";
+      ports = {
+        proxy = 1080; # direct listener, on idols-ai and on wsl-work
+        idols-ai = 31080; # wsl-work only: chains through idols-ai's proxy
+      };
+      # upstream of the `idols-ai` instance, derived instead of restated so
+      # the two ports can never drift apart
+      chainUpstream = "${endpoints.y9000p2025.easytier}:${toString services.gost-proxy.ports.proxy}";
+    };
+
+    # --- sshd; the per-host override lives as `sshPort` in hostsAddr ---
+    ssh = {
+      defaultPort = 22;
+      ports = lib.mapAttrs (_: v: v.sshPort or 22) hostsAddr;
+      enablePath = "services.openssh.enable";
+    };
+  };
+
+  # endpoints.<device>.<network> - the overlay ip of every device on every
+  # network it joined, `devices` flattened for consumers that only need an
+  # address (tunnel targets, chainUpstream, ...).
+  endpoints = lib.mapAttrs (_: dev: lib.mapAttrs (_: addr: addr.ip) dev.addrs) devices;
+
+  # ==========================================================================
+  # tunnels.work - the port-forward table applied on `work` (wsl-work) by
+  # modules.port-forwarding. Remote hosts come from `endpoints` and remote
+  # ports from `services`, so moving a gateway port stays a one-line edit in
+  # the registry; local ports are `work`'s own addressing (3xxxx = forwarded
+  # from the laptop, 4xxxx = from infiniti) and belong to this table.
+  # ==========================================================================
+  tunnels.work = [
+    # idols-ai / y9000p2025 (10.126.126.150) - 3xxxx range
+    {
+      name = "new-api";
+      localPort = 31100;
+      remoteHost = endpoints.y9000p2025.easytier;
+      remotePort = services.new-api.port;
+    }
+    {
+      name = "opencode2api";
+      localPort = 31101;
+      remoteHost = endpoints.y9000p2025.easytier;
+      remotePort = services.opencode2api.port;
+    }
+    {
+      name = "opencode2api-management-center";
+      localPort = 31102;
+      remoteHost = endpoints.y9000p2025.easytier;
+      remotePort = services.opencode2api.adminPort;
+    }
+    {
+      name = "mimocode2api";
+      localPort = 31103;
+      remoteHost = endpoints.y9000p2025.easytier;
+      remotePort = services.mimocode2api.port;
+    }
+    {
+      name = "M365-Copilot2API";
+      localPort = 31104;
+      remoteHost = endpoints.y9000p2025.easytier;
+      remotePort = services.m365-copilot2api.port;
+    }
+    {
+      name = "cliproxyapimanagementcenter";
+      localPort = 31105;
+      remoteHost = endpoints.y9000p2025.easytier;
+      remotePort = services.cliproxyapi.port;
+    }
+    # {
+    #   name = "omniroute";
+    #   localPort = 31106;
+    #   remoteHost = endpoints.y9000p2025.easytier;
+    #   remotePort = services.omniroute.port;
+    # }
+    {
+      name = "openwebui";
+      localPort = 31107;
+      remoteHost = endpoints.y9000p2025.easytier;
+      remotePort = services.open-webui.port;
+    }
+    # dsh needs the ssh forward to work at all (its security checks reject
+    # plain TCP), so the tunnel must speak ssh - kept for a future re-enable:
+    # {
+    #   name = "dsh";
+    #   localPort = 33080;
+    #   remoteHost = endpoints.y9000p2025.easytier;
+    #   remotePort = 3080;
+    # }
+    # rdp / opencode / the LAN proxy on the laptop are not driven by a NixOS
+    # module, so they stay unregistered (registry scope) and carry literals.
+    {
+      name = "rdp";
+      localPort = 33389;
+      remoteHost = endpoints.y9000p2025.easytier;
+      remotePort = 3389;
+    }
+    {
+      name = "ssh";
+      localPort = 30022;
+      remoteHost = endpoints.y9000p2025.easytier;
+      remotePort = services.ssh.defaultPort;
+    }
+    {
+      name = "opencode";
+      localPort = 34096;
+      remoteHost = endpoints.y9000p2025.easytier;
+      remotePort = 4096;
+    }
+    {
+      name = "y9000p2025-proxy";
+      localPort = 37890;
+      remoteHost = endpoints.y9000p2025.easytier;
+      remotePort = 7897;
+    }
+    # apatch-infiniti (10.126.126.154) - 4xxxx range; adb, the device's SOCKS
+    # proxy and the Termux sshd run outside this flake, so their ports are
+    # literals until a NixOS module owns them.
+    {
+      name = "adb";
+      localPort = 45555;
+      remoteHost = endpoints.infiniti.easytier;
+      remotePort = 5555;
+    }
+    {
+      name = "infiniti-proxy";
+      localPort = 42080;
+      remoteHost = endpoints.infiniti.easytier;
+      remotePort = 2080;
+    }
+    {
+      name = "termux-ssh";
+      localPort = 40022;
+      remoteHost = endpoints.infiniti.easytier;
+      remotePort = 8022;
+    }
+  ];
+
   # Endpoints of the other devices on the overlay networks, keyed by device
   # name, so hosts can reference them symbolically (e.g. auto-shutdown's
-  # channel probes) instead of hardcoding IPs. Derived from `overlayDevices`
+  # channel probes) instead of hardcoding IPs. Derived from `devices`
   # above: device → { network = ip; }.
   peers = lib.mapAttrs (_: dev: lib.mapAttrs (_: addr: addr.ip) dev.addrs) (
-    removeAttrs overlayDevices [ selfDevice ]
+    removeAttrs devices [ selfDevice ]
   );
 
   # EasyTier - decentralized P2P VPN overlay network. Network credentials are
   # stored as agenix secrets (easytier.env) and injected via environmentFiles
   # in the easytier module; the addresses themselves are not duplicated here:
-  # `instances` is derived from `overlayDevices`, keyed by the hostName each
+  # `instances` is derived from `devices`, keyed by the hostName each
   # device declares, because easytier.nix looks up `instances.${hostName}`
   # for the running host. Devices without easytier or without a hostName
   # (e.g. the android side) are skipped.
@@ -371,11 +590,11 @@ rec {
         name = dev.hostName;
         value = "${dev.addrs.easytier.ip}/${toString dev.addrs.easytier.prefixLength}";
       }
-    ) (lib.attrValues overlayDevices)
+    ) (lib.attrValues devices)
   );
 
   # /etc/hosts entries for the overlay endpoints: the devices × networks
-  # cross product of `overlayDevices`, one group per device - static entries
+  # cross product of `devices`, one group per device - static entries
   # first, remote devices alphabetically, this machine's group last. Groups
   # are separated by a blank line and the payload ends with a newline.
   genericHosts =
@@ -393,8 +612,8 @@ rec {
         lib.concatStringsSep "\n" (
           map (net: "${dev.addrs.${net}.ip} ${device}_${dev.class}_${net}.mayuri.org") (netNames dev)
         );
-      remoteGroups = lib.mapAttrsToList deviceGroup (removeAttrs overlayDevices [ selfDevice ]);
-      groups = staticHosts ++ remoteGroups ++ [ (deviceGroup selfDevice overlayDevices.${selfDevice}) ];
+      remoteGroups = lib.mapAttrsToList deviceGroup (removeAttrs devices [ selfDevice ]);
+      groups = staticHosts ++ remoteGroups ++ [ (deviceGroup selfDevice devices.${selfDevice}) ];
     in
     lib.concatStringsSep "\n\n" groups + "\n";
 }

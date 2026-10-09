@@ -42,6 +42,10 @@ in
 
   options.modules.omniroute = {
     enable = lib.mkEnableOption "OmniRoute unified LLM gateway";
+    port = lib.mkOption {
+      type = lib.types.port;
+      description = "Port omniroute listens on; the host that uses this module must set it (port registry network.services.omniroute.port).";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -49,7 +53,7 @@ in
       enable = true;
       package = nur-DataEraserC.packages.${system}.omniroute;
       host = "0.0.0.0";
-      port = 1106;
+      port = cfg.port;
       extraEnvironment.REQUIRE_API_KEY = "true";
     };
   };

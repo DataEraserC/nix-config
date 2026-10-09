@@ -1,19 +1,19 @@
-# Eval test for the overlay address registry in vars/networking.nix: the
+# Eval test for the overlay address registry in vars/network.nix: the
 # (devices × networks) matrix behind `networking.extraHosts`, `peers` and
 # `easytier.instances` on idols-ai / wsl-work / wsl-y9000p2025.
 { lib, ... }:
 let
-  networking = import ../../../../vars/networking.nix { inherit lib; };
+  network = import ../../../../vars/network.nix { inherit lib; };
 in
 {
   # Full /etc/hosts payload: pins every rendered line, so growing the matrix
   # (new device, new network) can never silently drop or move old entries.
-  genericHosts = networking.genericHosts;
+  genericHosts = network.genericHosts;
   # Backward-compatible device → { network = ip } view used by the
   # auto-shutdown channel probes in hosts/idols-ai.
-  peers = networking.peers;
+  peers = network.peers;
   # Structured address (ip + prefixLength + iface) of this machine.
-  selfDevice = networking.overlayDevices.y9000p2025;
+  selfDevice = network.devices.y9000p2025;
   # Derived hostName → CIDR view consumed by modules/.../easytier.nix.
-  easytierInstances = networking.easytier.instances;
+  easytierInstances = network.easytier.instances;
 }

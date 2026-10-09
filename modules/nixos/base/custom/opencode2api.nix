@@ -36,6 +36,14 @@ in
 
   options.modules.opencode2api = {
     enable = lib.mkEnableOption "opencode2api gateway";
+    port = lib.mkOption {
+      type = lib.types.port;
+      description = "Port opencode2api listens on; the host that uses this module must set it (port registry network.services.opencode2api.port).";
+    };
+    webUiPort = lib.mkOption {
+      type = lib.types.port;
+      description = "WebUI listen port; the host that uses this module must set it (port registry network.services.opencode2api.adminPort).";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -43,10 +51,10 @@ in
       enable = true;
       package = nur-DataEraserC.packages.${system}.opencode2api;
       host = "0.0.0.0";
-      port = 1101;
+      port = cfg.port;
       webUi = {
         host = "0.0.0.0";
-        port = 1102;
+        port = cfg.webUiPort;
         enable = true;
         passwordFile = "/run/agenix/opencode2api-webui-password";
       };

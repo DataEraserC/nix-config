@@ -55,6 +55,10 @@ in
 
   options.modules.m365-copilot2api = {
     enable = lib.mkEnableOption "M365 Copilot2API gateway";
+    port = lib.mkOption {
+      type = lib.types.port;
+      description = "Port m365-copilot2api listens on; the host that uses this module must set it (port registry network.services.m365-copilot2api.port).";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -62,7 +66,7 @@ in
       enable = true;
       package = m365Copilot2api;
       listenAddress = "0.0.0.0";
-      port = 1104;
+      port = cfg.port;
       adminPasswordFile = "/run/agenix/m365-copilot2api-admin-password";
       masterKeyFile = "/run/agenix/m365-copilot2api-master-key";
       forceIpv4 = true;

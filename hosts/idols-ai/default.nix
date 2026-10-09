@@ -18,8 +18,8 @@ let
   hostName = "ai"; # Define your hostname.
 
   macAddress = "02:d7:de:84:1e:e9";
-  inherit (myvars.networking) mainGateway mainGateway6 nameservers;
-  inherit (myvars.networking.hostsAddr.${hostName}) iface ipv4 ipv6;
+  inherit (myvars.network) mainGateway mainGateway6 nameservers;
+  inherit (myvars.network.hostsAddr.${hostName}) iface ipv4 ipv6;
   ipv4WithMask = "${ipv4}/24";
   ipv6WithMask = "${ipv6}/64";
 
@@ -199,32 +199,42 @@ rec {
   # host's loopback (dsh GUI on 127.0.0.1:9900) through it.
   modules.gost-proxy = {
     enable = true;
-    instances.proxy.port = 1080;
+    instances.proxy.port = myvars.network.services.gost-proxy.ports.proxy;
   };
 
   # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:1105.
   modules.cliproxyapi.enable = false;
+  modules.cliproxyapi.port = myvars.network.services.cliproxyapi.port;
 
   # M365 Copilot2API gateway, bound to 0.0.0.0:1104.
   modules.m365-copilot2api.enable = true;
+  modules.m365-copilot2api.port = myvars.network.services.m365-copilot2api.port;
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
   modules.opencode2api.enable = true;
+  modules.opencode2api.port = myvars.network.services.opencode2api.port;
+  modules.opencode2api.webUiPort = myvars.network.services.opencode2api.adminPort;
 
   # mimocode2api gateway, bound to 0.0.0.0:1103 (VPN interfaces only).
   modules.mimocode2api.enable = true;
+  modules.mimocode2api.port = myvars.network.services.mimocode2api.port;
 
   # OmniRoute unified LLM gateway, bound to 0.0.0.0:1106.
   modules.omniroute.enable = true;
+  modules.omniroute.port = myvars.network.services.omniroute.port;
 
   # new-api LLM gateway, port 1100 (upstream listens on all interfaces).
   modules.new-api.enable = true;
+  modules.new-api.port = myvars.network.services.new-api.port;
 
   # Open WebUI chat frontend, 0.0.0.0:1107 (shared modules.open-webui) - disabled.
   modules.open-webui.enable = false;
+  modules.open-webui.port = myvars.network.services.open-webui.port;
 
   # alist (openlist) file listing, bound to 0.0.0.0:5244.
   modules.alist.enable = true;
+  modules.alist.port = myvars.network.services.alist.port;
+  modules.alist.s3Port = myvars.network.services.alist.s3Port;
 
   # Route CLI traffic through the local / LAN SOCKS proxies.
   modules.proxychains.enable = true;
@@ -244,7 +254,7 @@ rec {
   # offline-assessment is "do I still have any channel to connect in through",
   # so every overlay channel gets its own probe and `mode = "any"` keeps the
   # machine on while even one channel answers. All endpoints come from
-  # myvars.networking.peers (easytier/zerotier/tailscale).
+  # myvars.network.peers (easytier/zerotier/tailscale).
   # For temporary live tweaks without a rebuild use
   # `sudo auto-shutdown {disable|enable|grace|reset}`(changes reset on reboot).
   # See modules/nixos/base/custom/auto-shutdown/default.nix.
@@ -253,19 +263,19 @@ rec {
     mode = "any";
     conditions = [
       # easytier: the primary and most stable channel -> probe both peers
-      (pingCondition "easytier infiniti" myvars.networking.peers.infiniti.easytier)
-      (pingCondition "easytier wsl-work" myvars.networking.peers.work.easytier)
+      (pingCondition "easytier infiniti" myvars.network.peers.infiniti.easytier)
+      (pingCondition "easytier wsl-work" myvars.network.peers.work.easytier)
       # tailscale: the android peer answers `tailscale ping` but not ICMP,
       # so probe at the tailscale layer(exit 0 on pong, non-zero on timeout)
       {
         name = "tailscale infiniti";
         command = pkgs.writeShellScript "auto-shutdown-tailscale-infiniti" ''
-          exec ${pkgs.tailscale}/bin/tailscale ping -c 1 ${myvars.networking.peers.infiniti.tailscale}
+          exec ${pkgs.tailscale}/bin/tailscale ping -c 1 ${myvars.network.peers.infiniti.tailscale}
         '';
       }
       # zerotier: ICMP probe of the android endpoint(passes while that device
       # is online on the zerotier network; zerotier-cli cannot map IP->node)
-      (pingCondition "zerotier infiniti" myvars.networking.peers.infiniti.zerotier)
+      (pingCondition "zerotier infiniti" myvars.network.peers.infiniti.zerotier)
     ];
     gracePeriod = "30min";
     checkInterval = "10min";
@@ -284,7 +294,7 @@ rec {
     networkmanager.enable = true;
     networkmanager.wifi.macAddress = macAddress;
     networkmanager.ethernet.macAddress = macAddress;
-    extraHosts = myvars.networking.genericHosts;
+    extraHosts = myvars.network.genericHosts;
   };
 
   # conflict with feature: containerd-snapshotter

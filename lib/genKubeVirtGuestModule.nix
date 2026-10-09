@@ -1,12 +1,12 @@
 {
   pkgs,
   hostName,
-  networking,
+  network,
   ...
 }:
 let
-  inherit (networking) proxyGateway proxyGateway6 nameservers;
-  inherit (networking.hostsAddr.${hostName}) iface ipv4;
+  inherit (network) proxyGateway proxyGateway6 nameservers;
+  inherit (network.hostsAddr.${hostName}) iface ipv4;
   ipv4WithMask = "${ipv4}/24";
 in
 {

@@ -29,7 +29,17 @@ in
 {
   imports = [ nur-Moraxyc.nixosModules.alist ];
 
-  options.modules.alist.enable = lib.mkEnableOption "alist (openlist) file listing service";
+  options.modules.alist = {
+    enable = lib.mkEnableOption "alist (openlist) file listing service";
+    port = lib.mkOption {
+      type = lib.types.port;
+      description = "Port alist listens on; the host that uses this module must set it (port registry network.services.alist.port).";
+    };
+    s3Port = lib.mkOption {
+      type = lib.types.port;
+      description = "alist settings.s3 listen port; the host that uses this module must set it (port registry network.services.alist.s3Port).";
+    };
+  };
 
   # NOTE: bare config attributes cannot coexist with an explicit `config` key,
   # so the unconditional account lives inside `config` alongside the mkIf'ed
@@ -79,7 +89,7 @@ in
         };
         scheme = {
           address = "0.0.0.0";
-          http_port = 5244;
+          http_port = cfg.port;
           https_port = -1;
           force_https = false;
           cert_file = "";
@@ -148,7 +158,7 @@ in
         };
         s3 = {
           enable = false;
-          port = 5246;
+          port = cfg.s3Port;
           ssl = false;
         };
         ftp = {
