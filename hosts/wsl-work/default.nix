@@ -65,6 +65,25 @@ rec {
   # EasyTier decentralized P2P VPN
   modules.easytier.enable = true;
 
+  # Authenticated SOCKS5 proxies (shared modules/nixos/base/custom/gost-proxy.nix):
+  # - 1080: direct proxy for reaching intranet/overlay resources via this host;
+  # - 31080: chained through idols-ai's 1080 (easytier 10.126.126.150), so a
+  #   client of 31080 resolves destinations ON idols-ai - notably its loopback
+  #   127.0.0.1:9900 where the dsh GUI listens. Same agenix credentials
+  #   (gost-proxy.auth) on both hosts, so one client config fits both ports.
+  # The host firewall is disabled here, so both ports are reachable wherever
+  # this host is (easytier mesh, WSL localhost forwarding from Windows).
+  modules.gost-proxy = {
+    enable = true;
+    instances = {
+      proxy.port = 1080;
+      idols-ai = {
+        port = 31080;
+        chainUpstream = "10.126.126.150:1080";
+      };
+    };
+  };
+
   # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:1105.
   modules.cliproxyapi.enable = false;
 
