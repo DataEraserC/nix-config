@@ -38,7 +38,7 @@ in
     enable = lib.mkEnableOption "CLIProxyAPI proxy with an offline management panel";
     port = lib.mkOption {
       type = lib.types.port;
-      description = "Port cliproxyapi listens on; the host that uses this module must set it (port registry network.services.cliproxyapi.port).";
+      description = "Port cliproxyapi listens on; the host that uses this module must set it (port registry myvars.networking.services.cliproxyapi.hosts.<machine>.port).";
     };
   };
 

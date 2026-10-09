@@ -33,11 +33,11 @@ in
     enable = lib.mkEnableOption "alist (openlist) file listing service";
     port = lib.mkOption {
       type = lib.types.port;
-      description = "Port alist listens on; the host that uses this module must set it (port registry network.services.alist.port).";
+      description = "Port alist listens on; the host that uses this module must set it (port registry myvars.networking.services.alist.hosts.<machine>.port).";
     };
     s3Port = lib.mkOption {
       type = lib.types.port;
-      description = "alist settings.s3 listen port; the host that uses this module must set it (port registry network.services.alist.s3Port).";
+      description = "alist settings.s3 listen port; the host that uses this module must set it (port registry myvars.networking.services.alist.hosts.<machine>.s3Port).";
     };
   };
 

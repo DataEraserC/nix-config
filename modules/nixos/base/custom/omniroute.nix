@@ -44,7 +44,7 @@ in
     enable = lib.mkEnableOption "OmniRoute unified LLM gateway";
     port = lib.mkOption {
       type = lib.types.port;
-      description = "Port omniroute listens on; the host that uses this module must set it (port registry network.services.omniroute.port).";
+      description = "Port omniroute listens on; the host that uses this module must set it (port registry myvars.networking.services.omniroute.hosts.<machine>.port).";
     };
   };
 

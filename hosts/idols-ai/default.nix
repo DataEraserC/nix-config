@@ -92,7 +92,7 @@ rec {
   # See modules/nixos/base/custom/sub-store/default.nix.
   modules.sub-store = {
     enable = true;
-    host = "0.0.0.0";
+    host = myvars.networking.services.sub-store.hosts.idols-ai.host;
     auth = {
       enable = true;
       file = config.age.secrets."sub-store.caddy".path;
@@ -199,42 +199,42 @@ rec {
   # host's loopback (dsh GUI on 127.0.0.1:9900) through it.
   modules.gost-proxy = {
     enable = true;
-    instances.proxy.port = myvars.networking.services.gost-proxy.ports.proxy;
+    instances.proxy.port = myvars.networking.services.gost-proxy.hosts.idols-ai.ports.proxy;
   };
 
   # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:1105.
   modules.cliproxyapi.enable = false;
-  modules.cliproxyapi.port = myvars.networking.services.cliproxyapi.port;
+  modules.cliproxyapi.port = myvars.networking.services.cliproxyapi.hosts.idols-ai.port;
 
   # M365 Copilot2API gateway, bound to 0.0.0.0:1104.
   modules.m365-copilot2api.enable = true;
-  modules.m365-copilot2api.port = myvars.networking.services.m365-copilot2api.port;
+  modules.m365-copilot2api.port = myvars.networking.services.m365-copilot2api.hosts.idols-ai.port;
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
   modules.opencode2api.enable = true;
-  modules.opencode2api.port = myvars.networking.services.opencode2api.port;
-  modules.opencode2api.webUiPort = myvars.networking.services.opencode2api.adminPort;
+  modules.opencode2api.port = myvars.networking.services.opencode2api.hosts.idols-ai.port;
+  modules.opencode2api.webUiPort = myvars.networking.services.opencode2api.hosts.idols-ai.adminPort;
 
   # mimocode2api gateway, bound to 0.0.0.0:1103 (VPN interfaces only).
   modules.mimocode2api.enable = true;
-  modules.mimocode2api.port = myvars.networking.services.mimocode2api.port;
+  modules.mimocode2api.port = myvars.networking.services.mimocode2api.hosts.idols-ai.port;
 
   # OmniRoute unified LLM gateway, bound to 0.0.0.0:1106.
   modules.omniroute.enable = true;
-  modules.omniroute.port = myvars.networking.services.omniroute.port;
+  modules.omniroute.port = myvars.networking.services.omniroute.hosts.idols-ai.port;
 
   # new-api LLM gateway, port 1100 (upstream listens on all interfaces).
   modules.new-api.enable = true;
-  modules.new-api.port = myvars.networking.services.new-api.port;
+  modules.new-api.port = myvars.networking.services.new-api.hosts.idols-ai.port;
 
   # Open WebUI chat frontend, 0.0.0.0:1107 (shared modules.open-webui) - disabled.
   modules.open-webui.enable = false;
-  modules.open-webui.port = myvars.networking.services.open-webui.port;
+  modules.open-webui.port = myvars.networking.services.open-webui.hosts.idols-ai.port;
 
   # alist (openlist) file listing, bound to 0.0.0.0:5244.
   modules.alist.enable = true;
-  modules.alist.port = myvars.networking.services.alist.port;
-  modules.alist.s3Port = myvars.networking.services.alist.s3Port;
+  modules.alist.port = myvars.networking.services.alist.hosts.idols-ai.port;
+  modules.alist.s3Port = myvars.networking.services.alist.hosts.idols-ai.s3Port;
 
   # Route CLI traffic through the local / LAN SOCKS proxies.
   modules.proxychains.enable = true;

@@ -54,10 +54,10 @@ rec {
   };
 
   # sshd listens on 8022 instead of the stock 22 - taken from the port
-  # registry (myvars.networking.services.ssh.ports.work). The generated
-  # client config (/etc/ssh/ssh_config) reads the same table, so `ssh work` /
+  # registry (myvars.networking.services.ssh.hosts.wsl-work). The generated
+  # client config (/etc/ssh/ssh_config) reads the same rows, so `ssh work` /
   # `ssh wsl-work` dial 8022 too.
-  services.openssh.ports = [ myvars.networking.services.ssh.ports.work ];
+  services.openssh.ports = [ myvars.networking.services.ssh.hosts.wsl-work.port ];
 
   # ntfy notifications on network up/down events(NM dispatcher, shared script)
   modules.network-event-notify = {
@@ -82,9 +82,9 @@ rec {
   modules.gost-proxy = {
     enable = true;
     instances = {
-      proxy.port = myvars.networking.services.gost-proxy.ports.proxy;
+      proxy.port = myvars.networking.services.gost-proxy.hosts.wsl-work.ports.proxy;
       idols-ai = {
-        port = myvars.networking.services.gost-proxy.ports.idols-ai;
+        port = myvars.networking.services.gost-proxy.hosts.wsl-work.ports.idols-ai;
         chainUpstream = myvars.networking.services.gost-proxy.chainUpstream;
       };
     };
@@ -92,30 +92,30 @@ rec {
 
   # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:1105.
   modules.cliproxyapi.enable = false;
-  modules.cliproxyapi.port = myvars.networking.services.cliproxyapi.port;
+  modules.cliproxyapi.port = myvars.networking.services.cliproxyapi.hosts.wsl-work.port;
 
   # M365 Copilot2API gateway, bound to 0.0.0.0:1104.
   modules.m365-copilot2api.enable = true;
-  modules.m365-copilot2api.port = myvars.networking.services.m365-copilot2api.port;
+  modules.m365-copilot2api.port = myvars.networking.services.m365-copilot2api.hosts.wsl-work.port;
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
   modules.opencode2api.enable = true;
-  modules.opencode2api.port = myvars.networking.services.opencode2api.port;
-  modules.opencode2api.webUiPort = myvars.networking.services.opencode2api.adminPort;
+  modules.opencode2api.port = myvars.networking.services.opencode2api.hosts.wsl-work.port;
+  modules.opencode2api.webUiPort = myvars.networking.services.opencode2api.hosts.wsl-work.adminPort;
 
   # mimocode2api gateway, bound to 0.0.0.0:1103.
   modules.mimocode2api.enable = true;
-  modules.mimocode2api.port = myvars.networking.services.mimocode2api.port;
+  modules.mimocode2api.port = myvars.networking.services.mimocode2api.hosts.wsl-work.port;
 
   # new-api LLM gateway, port 1100 (upstream listens on all interfaces).
   modules.new-api.enable = true;
-  modules.new-api.port = myvars.networking.services.new-api.port;
+  modules.new-api.port = myvars.networking.services.new-api.hosts.wsl-work.port;
 
   # Open WebUI: disabled on every host and no local instance here either;
   # the `openwebui` entry in myvars.networking.tunnels.work (local 31107 ->
   # remote 1107) is kept for a future re-enable.
   modules.open-webui.enable = false;
-  modules.open-webui.port = myvars.networking.services.open-webui.port;
+  modules.open-webui.port = myvars.networking.services.open-webui.hosts.wsl-work.port;
 
   # Route CLI traffic through the local / LAN SOCKS proxies.
   modules.proxychains.enable = true;

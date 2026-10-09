@@ -198,7 +198,7 @@ rec {
         + ''
           Host ${host}
             HostName ${val.ipv4}
-            Port ${toString (services.ssh.ports.${host} or services.ssh.defaultPort)}
+            Port ${toString (services.ssh.hosts.${host}.port or services.ssh.defaultPort)}
         ''
       ) "" hostsAddr
     );
@@ -350,7 +350,7 @@ rec {
   staticHosts = [ "155.248.179.129 oracle_ubuntu_1.mayuri.org" ];
 
   # ==========================================================================
-  # services - the port registry.
+  # services - the port registry, keyed by (service_name x host).
   #
   # Scope (agreed): only what is (a) managed by a NixOS module of this flake
   # and (b) reachable from OUTSIDE its host - services listening on the
@@ -363,93 +363,237 @@ rec {
   #
   # The port of such a service is declared once, instead of as a literal
   # scattered over module configs, host tunnel tables and ssh settings.
+  #
+  # Shape - every service is a (service x host) matrix:
+  #   enablePath    NixOS option carrying the enable flag; service-wide and
+  #                 always present, since the scope rule above requires a
+  #                 NixOS module
+  #   hosts.<machine> = { host, port, ... }
+  #                 one row per machine running the service. The numbers are
+  #                 uniform across machines today, but the row is the reserved
+  #                 spot for divergence: a single machine may later move to
+  #                 another port or bind address without touching its siblings.
+  #     host        BIND address the service listens on - 0.0.0.0 for a wide
+  #                 bind, 127.0.0.1 for loopback - never a machine name.
+  #                 Consumed as `modules.<name>.host` where the module has such
+  #                 an option (sub-store), so wiring reads:
+  #                   modules.sub-store = {
+  #                     enable = true;
+  #                     host = myvars.networking.services.sub-store.hosts.idols-ai.host;
+  #                   };
+  #     port        primary listen port; secondary listeners keep their own key
+  #                 (adminPort for the opencode2api WebUI, s3Port for alist,
+  #                 frontendPort for the sub-store panel), gost-proxy carries
+  #                 a per-machine `ports` set of its listener names instead
+  #   defaultPort   `ssh` only: the stock sshd port for machines without a row
+  #
   # Consumed by:
-  #   - host wiring of `options.modules.<name>.port` in the hosts/* files
-  #     (the module options are required, no default; each host sets them
-  #     next to its enable line straight from here, and can still override
-  #     the listener per machine);
-  #   - `tunnels.work` below, applied on wsl-work by modules.port-forwarding;
+  #   - host wiring of `options.modules.<name>` in the hosts/* files: each
+  #     host reads its own `hosts.<machine>` row straight from here, next to
+  #     its `enable` line (the module port options are required, no default);
+  #   - `tunnels.work` below, applied on wsl-work by modules.port-forwarding
+  #     (every entry targets the laptop, so it reads the `idols-ai` rows);
+  #   - the ssh_config fold above (`services.ssh`), one Port per Host block:
+  #     that machine's row when it has one, else `defaultPort`;
   #   - the port catalog page, which renders this attribute set and reads
   #     `enablePath` against every nixosConfigurations.<host>.config at eval
   #     time, so enablement stays a single source of truth in the hosts.
-  #
-  #   host       key into `devices` / `hostsAddr` where the service lives
-  #   port       primary listen port; secondary listeners keep their own key
-  #              (adminPort for the opencode2api WebUI, s3Port for alist)
-  #   enablePath NixOS option carrying the enable flag - always present here,
-  #              since the scope rule above requires a NixOS module
   # ==========================================================================
   services = {
-    # --- LLM gateways, all on the y9000p2025 laptop (easytier 10.126.126.150)
+    # --- LLM gateways (1100..1110); rows per machine that runs them ---
     new-api = {
-      host = "y9000p2025";
-      port = 1100;
       enablePath = "modules.new-api.enable";
+      hosts = {
+        idols-ai = {
+          host = "0.0.0.0";
+          port = 1100;
+        };
+        wsl-y9000p2025 = {
+          host = "0.0.0.0";
+          port = 1100;
+        };
+        wsl-work = {
+          host = "0.0.0.0";
+          port = 1100;
+        };
+      };
     };
     opencode2api = {
-      host = "y9000p2025";
-      port = 1101;
-      adminPort = 1102;
       enablePath = "modules.opencode2api.enable";
+      hosts = {
+        idols-ai = {
+          host = "0.0.0.0";
+          port = 1101;
+          adminPort = 1102;
+        };
+        wsl-y9000p2025 = {
+          host = "0.0.0.0";
+          port = 1101;
+          adminPort = 1102;
+        };
+        wsl-work = {
+          host = "0.0.0.0";
+          port = 1101;
+          adminPort = 1102;
+        };
+      };
     };
     mimocode2api = {
-      host = "y9000p2025";
-      port = 1103;
       enablePath = "modules.mimocode2api.enable";
+      hosts = {
+        idols-ai = {
+          host = "0.0.0.0";
+          port = 1103;
+        };
+        wsl-y9000p2025 = {
+          host = "0.0.0.0";
+          port = 1103;
+        };
+        wsl-work = {
+          host = "0.0.0.0";
+          port = 1103;
+        };
+      };
     };
     m365-copilot2api = {
-      host = "y9000p2025";
-      port = 1104;
       enablePath = "modules.m365-copilot2api.enable";
+      hosts = {
+        idols-ai = {
+          host = "0.0.0.0";
+          port = 1104;
+        };
+        wsl-y9000p2025 = {
+          host = "0.0.0.0";
+          port = 1104;
+        };
+        wsl-work = {
+          host = "0.0.0.0";
+          port = 1104;
+        };
+      };
     };
     cliproxyapi = {
-      host = "y9000p2025";
-      port = 1105;
       enablePath = "modules.cliproxyapi.enable";
+      hosts = {
+        idols-ai = {
+          host = "0.0.0.0";
+          port = 1105;
+        };
+        wsl-y9000p2025 = {
+          host = "0.0.0.0";
+          port = 1105;
+        };
+        wsl-work = {
+          host = "0.0.0.0";
+          port = 1105;
+        };
+      };
     };
     omniroute = {
-      host = "y9000p2025";
-      port = 1106;
       enablePath = "modules.omniroute.enable";
+      hosts = {
+        idols-ai = {
+          host = "0.0.0.0";
+          port = 1106;
+        };
+      };
     };
     open-webui = {
-      host = "y9000p2025";
-      port = 1107;
       enablePath = "modules.open-webui.enable";
+      hosts = {
+        idols-ai = {
+          host = "0.0.0.0";
+          port = 1107;
+        };
+        wsl-y9000p2025 = {
+          host = "0.0.0.0";
+          port = 1107;
+        };
+        wsl-work = {
+          host = "0.0.0.0";
+          port = 1107;
+        };
+      };
     };
     alist = {
-      host = "y9000p2025";
-      port = 5244;
-      s3Port = 5246; # optional S3-mapping listener (settings.s3, off by default)
       enablePath = "modules.alist.enable";
+      hosts = {
+        # the optional S3-mapping listener (settings.s3, off by default)
+        # rides on s3Port
+        idols-ai = {
+          host = "0.0.0.0";
+          port = 5244;
+          s3Port = 5246;
+        };
+      };
+    };
+
+    # --- subscription manager, fronted by Caddy (base/custom/sub-store) ---
+    # Its `host` option is the one registry bind field consumed directly (see
+    # the shape notes above). idols-ai wires only `host`; port / frontendPort
+    # document what that machine deploys for the catalog - the module
+    # defaults apply, and dae pins the backend on 127.0.0.1:24500.
+    sub-store = {
+      enablePath = "modules.sub-store.enable";
+      hosts = {
+        idols-ai = {
+          host = "0.0.0.0";
+          port = 24500;
+          frontendPort = 24501;
+        };
+      };
     };
 
     # --- authenticated SOCKS5 proxy (modules/nixos/base/custom/gost-proxy.nix)
-    # The same instance names are used on several hosts, so ports, not
-    # enablement, live here; each host declares its own instance list.
-    gost-proxy = {
+    # The same instance names are used on several hosts, so each row lists
+    # the instances that machine declares; ports, not enablement, live here.
+    gost-proxy = rec {
       enablePath = "modules.gost-proxy.enable";
-      ports = {
-        proxy = 1080; # direct listener, on idols-ai and on wsl-work
-        idols-ai = 31080; # wsl-work only: chains through idols-ai's proxy
+      hosts = {
+        idols-ai = {
+          host = "0.0.0.0";
+          ports = {
+            proxy = 1080; # direct listener; also wsl-work's chained hop
+          };
+        };
+        wsl-work = {
+          host = "0.0.0.0";
+          ports = {
+            proxy = 1080; # direct listener, same number as idols-ai today
+            idols-ai = 31080; # wsl-work only: chains through idols-ai's proxy
+          };
+        };
       };
       # upstream of the `idols-ai` instance, derived instead of restated so
       # the two ports can never drift apart
-      chainUpstream = "${endpoints.y9000p2025.easytier}:${toString services.gost-proxy.ports.proxy}";
+      chainUpstream = "${endpoints.y9000p2025.easytier}:${toString hosts.idols-ai.ports.proxy}";
     };
 
     # --- sshd; the per-host listen ports live here, not on hostsAddr ---
     ssh = {
+      enablePath = "services.openssh.enable";
+      # stock sshd port for every hostsAddr machine without its own row below
       defaultPort = 22;
-      # sshd ports that differ from defaultPort, keyed by hostsAddr key;
-      # hosts absent from this table listen on defaultPort. The work laptop
-      # runs sshd on 8022 instead of the stock 22; `wsl-work` aliases `work`
-      # (same machine), so it reuses that value instead of restating it.
-      ports = rec {
-        work = 8022;
+      # keyed by hostsAddr key (that is how the ssh_config fold looks rows up):
+      # the work laptop runs sshd on 8022 instead of the stock 22, and
+      # `wsl-work` aliases `work` (same machine), so it reuses that row instead
+      # of restating it; `idols-ai` / `wsl-y9000p2025` pin this laptop's stock
+      # 22 explicitly, the remaining keys (VMs, SBCs) inherit defaultPort.
+      hosts = rec {
+        idols-ai = {
+          host = "0.0.0.0";
+          port = 22;
+        };
+        wsl-y9000p2025 = {
+          host = "0.0.0.0";
+          port = 22;
+        };
+        work = {
+          host = "0.0.0.0";
+          port = 8022;
+        };
         wsl-work = work;
       };
-      enablePath = "services.openssh.enable";
     };
   };
 
@@ -471,49 +615,49 @@ rec {
       name = "new-api";
       localPort = 31100;
       remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = services.new-api.port;
+      remotePort = services.new-api.hosts.idols-ai.port;
     }
     {
       name = "opencode2api";
       localPort = 31101;
       remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = services.opencode2api.port;
+      remotePort = services.opencode2api.hosts.idols-ai.port;
     }
     {
       name = "opencode2api-management-center";
       localPort = 31102;
       remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = services.opencode2api.adminPort;
+      remotePort = services.opencode2api.hosts.idols-ai.adminPort;
     }
     {
       name = "mimocode2api";
       localPort = 31103;
       remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = services.mimocode2api.port;
+      remotePort = services.mimocode2api.hosts.idols-ai.port;
     }
     {
       name = "M365-Copilot2API";
       localPort = 31104;
       remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = services.m365-copilot2api.port;
+      remotePort = services.m365-copilot2api.hosts.idols-ai.port;
     }
     {
       name = "cliproxyapimanagementcenter";
       localPort = 31105;
       remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = services.cliproxyapi.port;
+      remotePort = services.cliproxyapi.hosts.idols-ai.port;
     }
     # {
     #   name = "omniroute";
     #   localPort = 31106;
     #   remoteHost = endpoints.y9000p2025.easytier;
-    #   remotePort = services.omniroute.port;
+    #   remotePort = services.omniroute.hosts.idols-ai.port;
     # }
     {
       name = "openwebui";
       localPort = 31107;
       remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = services.open-webui.port;
+      remotePort = services.open-webui.hosts.idols-ai.port;
     }
     # dsh needs the ssh forward to work at all (its security checks reject
     # plain TCP), so the tunnel must speak ssh - kept for a future re-enable:
@@ -535,7 +679,7 @@ rec {
       name = "ssh";
       localPort = 30022;
       remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = services.ssh.defaultPort;
+      remotePort = services.ssh.hosts.idols-ai.port;
     }
     {
       name = "opencode";

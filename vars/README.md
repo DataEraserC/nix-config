@@ -34,10 +34,12 @@ Comprehensive network configuration including:
 - **`devices` / `endpoints`**: virtual-network (easytier) registrations per device; `endpoints` is
   derived from `devices` and gives the plain IP per network, e.g.
   `endpoints.y9000p2025.easytier = "10.126.126.150"`
-- **`services`**: the port registry - one entry per outward-facing service with its listen port(s)
-  and the `enablePath` of the NixOS option that turns it on
+- **`services`**: the port registry - a (service x host) matrix: `hosts.<machine>` rows hold the
+  bind address (`host`, `0.0.0.0` / `127.0.0.1` - never a machine name), the listen port(s) and the
+  service-wide `enablePath` of the NixOS option that turns it on, so any one machine can diverge
+  without touching its siblings
 - **`tunnels.work`**: the `modules.port-forwarding` table for `wsl-work`, with every
-  `remotePort`/`remoteHost` taken from `services` and `endpoints`
+  `remotePort`/`remoteHost` taken from `services` (the `idols-ai` rows) and `endpoints`
 
 ### Port registry scope
 
@@ -49,9 +51,12 @@ LAN proxies, opencode, rdp, termux sshd) - those keep literal ports where they a
 
 Consumers:
 
-- host wiring of `options.modules.<name>.port` (the module options are required, with no default;
-  each host sets them next to its `enable` line straight from the registry)
-- `tunnels.work` remote ports/hosts
+- host wiring of `options.modules.<name>` (the module options are required, with no default; each
+  host reads its own `hosts.<machine>` row straight from the registry, next to its `enable` line.
+  The row's `host` is the bind address consumed directly by `modules.sub-store.host`)
+- `tunnels.work` remote ports/hosts (every entry targets the laptop, so the `idols-ai` rows)
+- the ssh_config fold (one `Port` per `Host` block: that machine's `ssh.hosts.<key>` row when it has
+  one, else `ssh.defaultPort`)
 - the port-catalog page, which also reads `enablePath` for enablement
 
 ## Host Categories

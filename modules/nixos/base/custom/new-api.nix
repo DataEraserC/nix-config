@@ -34,7 +34,7 @@ in
     enable = lib.mkEnableOption "new-api LLM gateway";
     port = lib.mkOption {
       type = lib.types.port;
-      description = "Port new-api listens on; the host that uses this module must set it (port registry network.services.new-api).";
+      description = "Port new-api listens on; the host that uses this module must set it (port registry myvars.networking.services.new-api.hosts.<machine>).";
     };
   };
 
