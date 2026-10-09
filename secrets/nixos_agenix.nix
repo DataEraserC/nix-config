@@ -195,6 +195,12 @@ in
           file = "${mysecrets}/agenix/easytier.env.age";
         }
         // high_security;
+        # gost SOCKS5 proxy credentials, one line of "<username> <password>"
+        # (space separated); read by the gost auther and chain connector of
+        # modules.gost-proxy (both the listener and the chained forwarder).
+        "gost-proxy.auth" = mkIf config.modules.gost-proxy.enable (
+          { file = "${mysecrets}/agenix/gost-proxy.auth.age"; } // high_security
+        );
         "ecc-ca.key" = {
           file = "${mysecrets}/agenix/ecc-ca.key.age";
         }
