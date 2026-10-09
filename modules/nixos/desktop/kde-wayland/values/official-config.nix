@@ -14,5 +14,8 @@
   # Optionally enable xserver
   services.xserver.enable = true;
 
-  programs.seahorse.enable = false;
+  # seahorse defaults to off on the KDE profile — expressed as mkDefault so a
+  # host can still opt in with a normal-priority definition; a bare `false`
+  # would both conflict with security.nix's `true` and stay un-overridable.
+  programs.seahorse.enable = lib.mkDefault false;
 }
