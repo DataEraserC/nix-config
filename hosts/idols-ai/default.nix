@@ -190,6 +190,18 @@ rec {
   # EasyTier decentralized P2P VPN
   modules.easytier.enable = true;
 
+  # Authenticated SOCKS5 proxy (shared modules/nixos/base/custom/gost-proxy.nix).
+  # Listens on 1080 for every interface, but the firewall only trusts the
+  # overlay interfaces (easytier/tailscale/zerotier) and openFirewall stays off,
+  # so the campus LAN cannot connect - SOCKS5 credentials are clear text there.
+  # Credentials come from the agenix secret gost-proxy.auth. This instance is
+  # also the chained upstream of wsl-work:31080, whose clients reach this
+  # host's loopback (dsh GUI on 127.0.0.1:9900) through it.
+  modules.gost-proxy = {
+    enable = true;
+    instances.proxy.port = 1080;
+  };
+
   # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:1105.
   modules.cliproxyapi.enable = false;
 
