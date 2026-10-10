@@ -83,6 +83,9 @@
     # nixGL.packages.${pkgs.system}.nixGLIntel
     # nixGL.packages.${pkgs.system}.nixVulkanNvidia
     # nixGL.packages.${pkgs.system}.nixVulkanIntel
+  ]
+  ++ [ 
+    pkgs.nvtopPackages.full
   ];
   # disable cudasupport before this issue get fixed:
   # https://github.com/NixOS/nixpkgs/issues/338315
@@ -94,7 +97,6 @@
     package = pkgs.btop-cuda;
     perfmon = true;
   };
-  environment.systemPackages = [ pkgs.nvtopPackages.full ];
   services.prometheus.exporters.nvidia-gpu.enable = true;
 
   services.sunshine.settings = {

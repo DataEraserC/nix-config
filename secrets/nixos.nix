@@ -5,13 +5,12 @@
   config,
   pkgs,
   agenix,
-  mysecrets,
   myvars,
   ...
-}:
+}@args:
 with lib;
 let
-  mysecrets = "${mysecrets}/agenix";
+  mysecrets = "${args.mysecrets}/agenix";
   cfg = config.modules.secrets;
 
   enabledServerSecrets =
@@ -152,8 +151,6 @@ in
         # work git identity, symlinked to ~/work/.gitconfig by home-manager
         "work-gitconfig" = {
           file = "${mysecrets}/desktop/work-gitconfig.age";
-        }
-        // user_readable;
         }
         // user_readable;
         "alias-for-work.bash" = {

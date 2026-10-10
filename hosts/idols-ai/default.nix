@@ -155,7 +155,9 @@ rec {
   services.smartd.enable = true;
 
   # QEMU/KVM(HostCpuOnly) for local VMs.
-  environment.systemPackages = [ pkgs.qemu_kvm ];
+  environment.systemPackages = [ pkgs.qemu_kvm ]
+  # NTFS3G for windows disk
+  ++ [ pkgs.ntfs3g ];
 
   # Re-evaluate after the Insta360 Link firmware or the kernel's uvcvideo changes.
   powerManagement.resumeCommands = ''
@@ -172,16 +174,7 @@ rec {
   boot.blacklistedKernelModules = [
     "ntfs3"
   ];
-  environment.systemPackages = [
-    pkgs.ntfs3g
-    # antigravity-cli (`agy`): installed for dsh/modlens, NOT as a standalone
-    # agent CLI like opencode/kimi-code. modlens's `antigravity-cli` vision
-    # provider spawns `agy` as a subprocess from PATH, so it must be on the
-    # system profile. State (OAuth login, config, logs) lives in ~/.gemini,
-    # which preservation.nix keeps across boots.
-    pkgs.antigravity-cli
-  ];
-
+  
   # ntfy notifications on network up/down events(NM dispatcher, shared script)
   modules.network-event-notify = {
     enable = true;

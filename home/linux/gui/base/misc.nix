@@ -77,9 +77,6 @@
     # nur-DataEraserC.packages.${pkgs.system}.llqqnt
     # nur-DataEraserC.packages.${pkgs.system}.bqqnt
 
-    #-- feishu
-    feishu
-
     #-- c001apk-flutter
     # nur-DataEraserC.packages.${pkgs.system}.c001apk-flutter
 

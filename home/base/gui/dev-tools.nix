@@ -1,6 +1,7 @@
 {
   pkgs,
   lib,
+  dbx,
   ...
 }:
 {
@@ -16,7 +17,8 @@
     ] 
     ++ [
       # dbeaver-bin # database manager
-      dbx.packages.${pkgs.stdenv.hostPlatform.system}.dbx-desktop
+      # NOTE: dbx-desktop can not be build currently
+      # dbx.packages.${pkgs.stdenv.hostPlatform.system}.dbx-desktop
       # TODO: maybe we can move tui network tools to a better place
       traceroute # trace route
       go-graft # proxy agent in terminal

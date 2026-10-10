@@ -4,61 +4,60 @@
   ...
 }:
 let
-    extra-substituters = [
-      "https://cache.numtide.com"
-      "https://catppuccin.cachix.org"
-      # "https://nix-gaming.cachix.org"
-      "https://nixpkgs-wayland.cachix.org"
-      "https://install.determinate.systems"
+  extra-substituters = [
+    "https://cache.numtide.com"
+    "https://catppuccin.cachix.org"
+    # "https://nix-gaming.cachix.org"
+    "https://nixpkgs-wayland.cachix.org"
+    "https://install.determinate.systems"
 
-      # Add by Mayuri
-      "https://ezkea.cachix.org"
-      "https://dataeraserc.cachix.org"
-      "https://program-learning.cachix.org"
-      "https://nykma.cachix.org"
+    # Add by Mayuri
+    "https://ezkea.cachix.org"
+    "https://dataeraserc.cachix.org"
+    "https://program-learning.cachix.org"
+    "https://nykma.cachix.org"
 
-      # comfyui-nix cache
-      "https://comfyui.cachix.org"
+    # comfyui-nix cache
+    "https://comfyui.cachix.org"
 
-      # "https://cache.garnix.io"
+    # "https://cache.garnix.io"
 
-      "https://anyrun.cachix.org"
+    "https://anyrun.cachix.org"
 
-      "https://snowy-cache.cachix.org"
+    "https://snowy-cache.cachix.org"
 
-      # deepseek-harness-nix cache
-      "https://deepseek-harness-nix.cachix.org"
+    # deepseek-harness-nix cache
+    "https://deepseek-harness-nix.cachix.org"
 
-      # "https://cache.saumon.network/proxmox-nixos"
-    ];
-    extra-trusted-public-keys = [
-      "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
-      "catppuccin.cachix.org-1:noG/4HkbhJb+lUAdKrph6LaozJvAeEEZj4N732IysmU="
-      # "nix-gaming.cachix.org-1:nbjlureqMbRAxR1gJ/f3hxemL9svXaZF/Ees8vCUUs4="
-      "nixpkgs-wayland.cachix.org-1:3lwxaILxMRkVhehr5StQprHdEo4IrE8sRho9R9HOLYA="
-      "cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM="
+    # "https://cache.saumon.network/proxmox-nixos"
+  ];
+  extra-trusted-public-keys = [
+    "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+    "catppuccin.cachix.org-1:noG/4HkbhJb+lUAdKrph6LaozJvAeEEZj4N732IysmU="
+    # "nix-gaming.cachix.org-1:nbjlureqMbRAxR1gJ/f3hxemL9svXaZF/Ees8vCUUs4="
+    "nixpkgs-wayland.cachix.org-1:3lwxaILxMRkVhehr5StQprHdEo4IrE8sRho9R9HOLYA="
+    "cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM="
 
-      "ezkea.cachix.org-1:ioBmUbJTZIKsHmWWXPe1FSFbeVe+afhfgqgTSNd34eI="
-      "dataeraserc.cachix.org-1:t0lYPod3nkn0ijiOzjwT57MmBDeJnxVurvV8ZdPpIHo="
-      "program-learning.cachix.org-1:Pfl2r+J5L9wJqpDnop6iQbrR3/Ts4AUyotu89INRlSU="
-      "nykma.cachix.org-1:z04hZH9YnR1B2lpLperwiazdkaT5yczgOPa1p/NHqK4="
+    "ezkea.cachix.org-1:ioBmUbJTZIKsHmWWXPe1FSFbeVe+afhfgqgTSNd34eI="
+    "dataeraserc.cachix.org-1:t0lYPod3nkn0ijiOzjwT57MmBDeJnxVurvV8ZdPpIHo="
+    "program-learning.cachix.org-1:Pfl2r+J5L9wJqpDnop6iQbrR3/Ts4AUyotu89INRlSU="
+    "nykma.cachix.org-1:z04hZH9YnR1B2lpLperwiazdkaT5yczgOPa1p/NHqK4="
 
-      # comfyui-nix cache
-      "comfyui.cachix.org-1:33mf9VzoIjzVbp0zwj+fT51HG0y31ZTK3nzYZAX0rec="
+    # comfyui-nix cache
+    "comfyui.cachix.org-1:33mf9VzoIjzVbp0zwj+fT51HG0y31ZTK3nzYZAX0rec="
 
-      "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
+    "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
 
-      "anyrun.cachix.org-1:pqBobmOjI7nKlsUMV25u9QHa9btJK65/C8vnO3p346s="
+    "anyrun.cachix.org-1:pqBobmOjI7nKlsUMV25u9QHa9btJK65/C8vnO3p346s="
 
-      "snowy-cache.cachix.org-1:okWl5IF/yzdZ+p/eRhDFvcanQo/y0ta80dvfdGgy28U="
+    "snowy-cache.cachix.org-1:okWl5IF/yzdZ+p/eRhDFvcanQo/y0ta80dvfdGgy28U="
 
-      # deepseek-harness-nix cache
-      "deepseek-harness-nix.cachix.org-1:5NrkwLN9veNMhiINtU5ZeV4isXFhFsOwn6Ms7J1M+TA="
+    # deepseek-harness-nix cache
+    "deepseek-harness-nix.cachix.org-1:5NrkwLN9veNMhiINtU5ZeV4isXFhFsOwn6Ms7J1M+TA="
 
-      # "proxmox-nixos:D9RYSWpQQC/msZUWphOY2I5RLH5Dd6yQcaHIuug7dWM="
-    ];
-  };
-  in
+    # "proxmox-nixos:D9RYSWpQQC/msZUWphOY2I5RLH5Dd6yQcaHIuug7dWM="
+  ];
+in
 {
   nix.settings = {
     # enable flakes globally
