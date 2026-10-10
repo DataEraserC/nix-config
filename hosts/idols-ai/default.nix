@@ -155,7 +155,9 @@ rec {
   services.smartd.enable = true;
 
   # QEMU/KVM(HostCpuOnly) for local VMs.
-  environment.systemPackages = [ pkgs.qemu_kvm ]
+  environment.systemPackages = [
+    pkgs.qemu_kvm
+  ]
   # NTFS3G for windows disk
   ++ [ pkgs.ntfs3g ];
 
@@ -165,7 +167,7 @@ rec {
     ${pkgs.coreutils}/bin/sleep 1
     ${pkgs.usbutils}/bin/usbreset 2e1a:4c01 || true
   '';
-  
+
   # NTFS mounts use ntfs-3g (userspace FUSE) instead of the kernel ntfs3 driver.
   # The blacklist stops udisks/GNOME automounts and `mount -t ntfs` from picking
   # ntfs3, so they fall back to the mount.ntfs-3g helper; static mounts use
@@ -174,7 +176,7 @@ rec {
   boot.blacklistedKernelModules = [
     "ntfs3"
   ];
-  
+
   # ntfy notifications on network up/down events(NM dispatcher, shared script)
   modules.network-event-notify = {
     enable = true;
@@ -253,6 +255,12 @@ rec {
   modules.alist.enable = myvars.networking.services.alist.hosts.idols-ai.enable;
   modules.alist.port = myvars.networking.services.alist.hosts.idols-ai.port;
   modules.alist.s3Port = myvars.networking.services.alist.hosts.idols-ai.s3Port;
+
+  # Clash Verge Rev GUI client (shared modules/nixos/base/custom/clash-verge.nix,
+  # nixpkgs programs.clash-verge with the package from nixpkgs-master). Service
+  # mode runs the mihomo core as a root systemd unit; autoStart and TUN stay off
+  # (dae owns transparent proxying here, so no second TUN stack).
+  modules.clash-verge.enable = true;
 
   # Route CLI traffic through the local / LAN SOCKS proxies.
   modules.proxychains.enable = true;
