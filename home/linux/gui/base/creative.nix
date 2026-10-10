@@ -1,5 +1,4 @@
 {
-  lib,
   pkgs,
   pkgs-stable,
   pkgs-master,
@@ -20,63 +19,20 @@ let
       wrapProgram $out/bin/bambu-studio --set GDK_DPI_SCALE 0.8
     '';
   };
+  my_packages = with pkgs; [
+    gimp
+    # nur-DataEraserC.packages.${pkgs.system}.wechat_dev_tools_bin
+  ];
 in
 {
-  home.packages =
-    with pkgs-stable;
-    [
-      # creative
-      gimp # image editing, I prefer using figma in browser instead of this one
-      # inkscape # vector graphics
-      # krita # digital painting
-      # musescore # music notation
-      # pkgs-master.orca-slicer # 3d printer slicer app
-      # bambu-studio # bambu 3d printer slicer app
-      # pkgs-blender.blender # 3d modeling
-      # reaper # audio production
-      # sonic-pi # music programming
-
-      # 2d game design
-      # aseprite # Animated sprite editor & pixel art tool
-
-      # this app consumes a lot of storage, so do not install it currently
-      # kicad     # 3d printing, electrical engineering
-
-      # Astronomy
-      # stellarium # See what you can see with your eyes, binoculars or a small telescope.
-      # celestia # Real-time 3D simulation of space, travel throughout the solar system.
-
-      # office
-      libreoffice-qt-still
-      hunspell # spell check for libreoffice
-      hunspellDicts.en_US # USA English
-      hyphenDicts.en_GB # British English
-    ]
-    ++ (lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [
-      # ldtk # A modern, versatile 2D level editor
-
-      # fpga
-      # python313Packages.apycula # gowin fpga
-      # yosys # fpga synthesis
-      # nextpnr # fpga place and route
-      # openfpgaloader # fpga programming
-      # nur-ryan4yin.packages.${pkgs.stdenv.hostPlatform.system}.gowin-eda-edu-ide # app: `gowin-env` => `gw_ide` / `gw_pack` / ...
-
-      # Mayuri
-
-      # wechat dev tool
-      # nur-DataEraserC.packages.${pkgs.system}.wechat_dev_tools_appimage
-      nur-DataEraserC.packages.${pkgs.system}.wechat_dev_tools_bin
-
-      # Adobe software appimage
-      # nur-DataEraserC.packages.${pkgs.system}.Adobe_Photoshop_CS6_appimage
-      # nur-DataEraserC.packages.${pkgs.system}.Adobe_Illustrator_CS6_appimage
-
-      # kicad # 3d printing, electrical engineering
-      # ngspice # electrical engineering
-      # digital # A digital logic designer and circuit simulator.
-      # logisim-evolution # Digital logic designer and simulator
-    ]);
+  home.packages = with pkgs-stable; [
+    # creative
+    # krita # digital painting
+    # musescore # music notation
+    # pkgs-master.orca-slicer # 3d printer slicer app
+    # bambu-studio # bambu 3d printer slicer app
+    # pkgs-blender.blender # 3d modeling
+  ] ++ my_packages;
 
   programs = {
     # live streaming

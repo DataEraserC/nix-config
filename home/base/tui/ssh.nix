@@ -1,5 +1,7 @@
 {
   config,
+  lib,
+  pkgs,
   mysecrets,
   lib,
   ...
@@ -33,7 +35,7 @@
 
     settings = {
       "github.com" = {
-        # avoid clash fake-IP6 hang, see modules/nixos/desktop/networking/clash-verge.nix
+        # WA-028: pinned to IPv4 until the mihomo v6 fake-ip pool is proven here
         AddressFamily = "inet";
         HostName = "ssh.github.com";
         Port = 443;
@@ -43,24 +45,27 @@
 
       "192.168.*" = {
         ForwardAgent = true;
+        # decrypted secret: AI agents must not read it
         IdentityFile = "/etc/agenix/ssh-key-romantic";
         IdentitiesOnly = true;
       };
     };
   };
 
-  # TODO: better way to do this?
-  # https://github.com/nix-community/home-manager/issues/322#issuecomment-3655046795
-  home.activation.fixSshConfigPermissions = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    run mkdir -p "$HOME/.ssh"
-    run chmod 700 "$HOME/.ssh"
-
-    if [ -L "$HOME/.ssh/config" ]; then
-      src="$(readlink -f "$HOME/.ssh/config")"
-      if [ -f "$src" ]; then
-        run rm -f "$HOME/.ssh/config"
-        run install -m600 "$src" "$HOME/.ssh/config"
-      fi
-    fi
-  '';
+  # Keep ~/.ssh/config a real, user-owned file rather than a /nix/store symlink.
+  #
+  # OpenSSH accepts a config owned by root or the invoking user, but
+  # bubblewrap-based sandboxes (`--unshare-user`) expose root-owned store files
+  # as `nobody`, which trips the check (`Bad owner or permissions`).  Disabling
+  # the home.file entry keeps Home Manager's linker out of the way; `install`
+  # writes a fresh 0600 copy on each activation.
+  #
+  # Linux only: macOS' Seatbelt sandbox keeps store ownership intact, so the
+  # normal symlink is fine there.
+  home.file.".ssh/config".enable = lib.mkIf pkgs.stdenv.hostPlatform.isLinux false;
+  home.activation.sshConfigRegularFile = lib.mkIf pkgs.stdenv.hostPlatform.isLinux (
+    lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+      run install -D -m 600 ${config.home.file.".ssh/config".source} "$HOME/.ssh/config"
+    ''
+  );
 }

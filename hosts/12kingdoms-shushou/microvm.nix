@@ -1,0 +1,63 @@
+{
+  microvm,
+  myvars,
+  mylib,
+  agenix,
+  mysecrets,
+  inputs,
+  ...
+}:
+{
+  # Run the k3s-test VMs as MicroVMs instead of KubeVirt domains.
+  imports = [ microvm.nixosModules.host ];
+
+  microvm.vms.k3s-test-1-master-3 = {
+    autostart = true;
+    restartIfChanged = true;
+    specialArgs = {
+      inherit
+        inputs
+        myvars
+        mylib
+        agenix
+        mysecrets
+        ;
+    };
+    config.imports = [ ../k8s/k3s-test-1-master-3 ];
+  };
+
+  microvm.vms.k3s-test-1-worker-3 = {
+    autostart = true;
+    restartIfChanged = true;
+    specialArgs = {
+      inherit
+        inputs
+        myvars
+        mylib
+        agenix
+        mysecrets
+        ;
+    };
+    config.imports = [ ../k8s/k3s-test-1-worker-3 ];
+  };
+
+  # Attach the guest's tap to the VM bridge, the same way the physical NIC is
+  # attached. The name is vm<last IP octet> from lib/genMicrovmGuestModule.nix:
+  # 192.168.5.116 -> vm116, 192.168.5.113 -> vm113.
+  systemd.network.networks."20-vm116" = {
+    matchConfig.Name = [ "vm116" ];
+    networkConfig = {
+      LinkLocalAddressing = "no";
+      Bridge = "br0";
+    };
+    linkConfig.RequiredForOnline = "no";
+  };
+  systemd.network.networks."20-vm113" = {
+    matchConfig.Name = [ "vm113" ];
+    networkConfig = {
+      LinkLocalAddressing = "no";
+      Bridge = "br0";
+    };
+    linkConfig.RequiredForOnline = "no";
+  };
+}

@@ -18,8 +18,6 @@
 #        1. right click on the running app's icon in Dock, select "Options" -> "Show in Finder" and delete it
 #    4. hold down the Option key, a `x` button will appear on the icon, click it to remove the icon
 #
-# TODO Fell free to modify this file to fit your needs.
-#
 ##########################################################################
 let
   # Homebrew Mirror
@@ -154,7 +152,6 @@ in
 
       # AI agents
       "codex-app" # codex desktop app
-      "claude" # claude desktop app
 
       # container & vm
       "utm" # vm
@@ -163,7 +160,6 @@ in
       "joplin" # note taking app
 
       "tailscale-app" # tailscale macos app (with gui)
-      # "netbirdio/tap/netbird-ui" # netbird gui app
 
       # IM & audio & remote desktop & meeting
       "telegram"

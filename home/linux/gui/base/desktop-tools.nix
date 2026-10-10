@@ -12,6 +12,14 @@
     "MOZ_WEBRENDER" = "1";
     # enable native Wayland support for most Electron apps
     "ELECTRON_OZONE_PLATFORM_HINT" = "auto";
+    # Make Qt apps follow the system light/dark live. Noctalia's theme mode
+    # writes org.gnome.desktop.interface color-scheme, and this platform theme
+    # (shipped by qtbase) reads it over the XDG desktop portal.
+    # Do not switch to `gtk3`: it would align Qt's font with `gtk-font-name`
+    # (Noto Sans 11), but GTK3 has no dynamic dark/light signal, so Qt apps like
+    # Telegram would be stuck on the light palette. Qt's default font stays
+    # "Sans Serif" 9; only a font-providing theme can change that size.
+    "QT_QPA_PLATFORMTHEME" = "xdgdesktopportal";
     # misc
     "_JAVA_AWT_WM_NONREPARENTING" = "1";
     "QT_WAYLAND_DISABLE_WINDOWDECORATION" = "1";
@@ -21,60 +29,21 @@
   };
 
   home.packages = with pkgs; [
-    xhost # to fix sudo graphical application
-    wev # debug which key is pressed
-    libinput # debug input subsystem
-    cliphist # Wayland clipboard manager
-    waybar # the status bar
-    waypaper # GUI wallpaper setter for Wayland-based window managers
-    mpvpaper # A video wallpaper program for wlroots based wayland compositors.
-    # swayidle # the idle timeout
-    # hypridle # the idle timeout
-    sway-audio-idle-inhibit # audio idle inhibit
-    swaylock # locking the screen
-    # hyprlock # locking the screen
-    wlogout # logout menu
-    wshowkeys # Show which key is triggered
-
-    hdrop # a tool to switch windows status (foreground/background)
-
-    grim # taking screenshots
-    grimblast # taking screenshots
-    slurp # selecting a region to screenshot
-
-    swaybg # the wallpaper
     wl-clipboard # copying and pasting
-    hyprpicker # color picker
     brightnessctl
-    # audio
-    alsa-utils # provides amixer/alsamixer/...
-    kew # terminal music player
-    # vimpc # A curses mpd client with vi-like key bindings.
-    mpd # for playing system sounds
-    mpc # command-line mpd client
-    ncmpcpp # a mpd client with a UI
-    networkmanagerapplet # provide GUI app: nm-connection-editor
-    # screenshot/screencast
-    flameshot
-    hyprshot # screen shot
+    # screen recording
     wf-recorder # screen recording
 
-    virt-viewer # vnc connect to VM, used by kubevirt
-
-    meld # GUI diff/merge tool for git and files
+    virt-manager # manage the libvirt VMs
+    virt-viewer # vnc/spice console for the libvirt VMs
   ];
 
-  # screen locker
-  programs.swaylock.enable = true;
-  catppuccin.swaylock.enable = false;
-
-  # Logout Menu
+  # Emergency session-menu fallback; the normal flow uses Noctalia's session panel.
   programs.wlogout.enable = true;
 
   # auto mount usb drives
   services = {
     udiskie.enable = true;
-    # syncthing.enable = true;
   };
 
   # Scripts

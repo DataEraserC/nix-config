@@ -8,8 +8,7 @@ This directory contains macOS-specific Home Manager configurations for Darwin sy
 
 - **default.nix**: Entry point that imports all Darwin configurations
 - **shell.nix**: Shell configurations and environment settings
-- **rime-squirrel.nix**: [Rime Squirrel](https://github.com/rime/squirrel) input method
-  configuration
+- **terminal.nix**: Sets a 15px font size across Ghostty and Kitty
 
 ### Network Configuration
 

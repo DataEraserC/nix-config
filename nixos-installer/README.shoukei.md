@@ -5,7 +5,7 @@
 > and documentation for reference only.**
 
 This flake prepares a Nix environment for setting my desktop
-[/hosts/12kingdoms-shoukei](/hosts/12kingdoms-shoukei)(in main flake) up on a new machine.
+[../hosts/12kingdoms-shoukei](../hosts/12kingdoms-shoukei) (in the main flake) up on a new machine.
 
 ## Steps to Deploying
 
@@ -122,7 +122,7 @@ lsblk
 # show cryptsetup's compiled in defaults
 cryptsetup --help
 
-# NOTE: `cat shoukei.md | grep luks > format.sh` to generate this script
+# NOTE: `cat README.shoukei.md | grep luks > format.sh` to generate this script
 # encrypt the root partition with luks2 and argon2id, will prompt for a passphrase, which will be used to unlock the partition.
 cryptsetup luksFormat --type luks2 --cipher aes-xts-plain64 --hash sha512 --iter-time 5000 --key-size 256 --pbkdf argon2id --use-random --verify-passphrase /dev/nvme0n1p6
 
@@ -142,7 +142,7 @@ Formatting the root partition:
 # If btrfs is not included in the liveos, run this before formatting
 nix-shell -p btrfs-progs
 
-# NOTE: `cat shoukei.md | egrep "create-btrfs"  > create-btrfs.sh` to generate this script
+# NOTE: `cat README.shoukei.md | egrep "create-btrfs"  > create-btrfs.sh` to generate this script
 # format the root partition with btrfs and label it
 # set sectorsize to match the CPU page size
 mkfs.btrfs --sectorsize 16384 -L crypted-nixos /dev/mapper/crypted-nixos  # create-btrfs
@@ -155,7 +155,7 @@ btrfs subvolume create /mnt/@persistent  # create-btrfs
 btrfs subvolume create /mnt/@snapshots  # create-btrfs
 umount /mnt  # create-btrfs
 
-# NOTE: `cat shoukei.md | grep mount-1 > create-btrfs.sh` to generate this script
+# NOTE: `cat README.shoukei.md | grep mount-1 > create-btrfs.sh` to generate this script
 # Remount the root partition with the subvolumes you just created
 #
 # Enable zstd compression to:
@@ -217,7 +217,7 @@ Filename                                Type            Size            Used    
 /mnt/swap/swapfile                      file            16777200        0               -2
 ```
 
-### 3. Generating the NixOS Configuration and Installing NixOS
+### 4. Generating the NixOS Configuration and Installing NixOS
 
 Clone this repository:
 
@@ -236,7 +236,7 @@ Then, generate the NixOS configuration:
 nixos-generate-config --root /mnt
 
 # we need to update our filesystem configs in old hardware-configuration.nix according to the generated one.
-cp /etc/nixos/hardware-configuration.nix ./nix-config/hosts/12kingdoms_shoukei/hardware-configuration-new.nix
+cp /etc/nixos/hardware-configuration.nix ./nix-config/hosts/12kingdoms-shoukei/hardware-configuration-new.nix
 vim ./nix-config
 ```
 
@@ -249,7 +249,8 @@ cd ~/nix-config/nixos-installer/
 rm -rf /mnt/etc
 
 # install nixos
-# NOTE: the root password you set here will be discarded when reboot
+# NOTE: --no-root-password leaves root locked; log in as ryan with the password from
+# vars/default.nix
 nixos-install --root /mnt --flake .#shoukei --no-root-password --show-trace --verbose # install-1
 
 # if you want to use a cache mirror, run this command instead
@@ -258,7 +259,7 @@ nixos-install --root /mnt --flake .#shoukei --no-root-password --show-trace --ve
 
 # enter into the installed system, check password & users
 # `su ryan` => `sudo -i` => enter ryan's password => successfully login
-# if login failed, check the password you set in install-1, and try again
+# if login failed, check ryan's initial password in vars/default.nix, and try again
 nixos-enter
 
 
@@ -268,21 +269,25 @@ nixos-enter
 # otherwise the / will be cleared and data will lost
 ## NOTE: preservation just create links from / to /persistent
 ##       We need to copy files into /persistent manually!!!
+mkdir -p /persistent/etc
 mv /etc/machine-id /persistent/etc/
 mv /etc/ssh /persistent/etc/
 
+# leave the chroot; the remaining steps run from the live environment, where /mnt is the target
+exit
+
 # delete the generated configuration after editing
 rm -f /mnt/etc/nixos
-rm ~/nix-config/hosts/idols_ai/hardware-configuration-new.nix
+rm ~/nix-config/hosts/12kingdoms-shoukei/hardware-configuration-new.nix
 
-# NOTE: `cat shoukei.md | grep git-1 > git-1.sh` to generate this script
+# NOTE: `cat README.shoukei.md | grep git-1 > git-1.sh` to generate this script
 # commit the changes after installing nixos successfully
 git config --global user.email "ryan4yin@linux.com"   # git-1
 git config --global user.name "Ryan Yin"              # git-1
 git commit -am "feat: update hardware-configuration"
 
 # copy our configuration to the installed file system
-cp -r ../nix-config /mnt/etc/nixos
+cp -r ~/nix-config /mnt/etc/nixos
 
 # sync the disk, unmount the partitions, and close the encrypted device
 sync
@@ -319,10 +324,10 @@ sudo chown -R ryan:ryan ~/nix-config
 cd ~/nix-config
 
 # deploy the configuration via Justfile
-just s-hypr
+just niri
 ```
 
 Finally, to enable secure boot, follow the instructions in
 [lanzaboote - Quick Start](https://github.com/nix-community/lanzaboote/blob/master/docs/QUICK_START.md)
 and
-[nix-config/ai/secure-boot.nix](https://github.com/ryan4yin/nix-config/blob/main/hosts/idols_ai/secureboot.nix)
+[hosts/idols-ai/secureboot.nix](https://github.com/ryan4yin/nix-config/blob/main/hosts/idols-ai/secureboot.nix)

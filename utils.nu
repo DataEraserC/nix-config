@@ -256,25 +256,6 @@ export def darwin-switch [
 }
 
 export def darwin-rollback [] {
-    ./result/sw/bin/darwin-rebuild --rollback
-}
-
-# ==================== Virtual Machines related =====================
-
-# Build and upload a VM image
-export def upload-vm [
-    name: string
-    verbosity: string
-] {
-    print $"upload-vm '($name)' with '($verbosity)' verbosity..."
-    print (repeat-str "=" 50)
-    let target = $".#($name)"
-    if "debug" == $verbosity {
-        nom build $target --show-trace --verbose
-    } else {
-        nix build $target
-    }
-
-    let remote = $"root@192.168.5.178:/data/caddy/fileserver/vms/kubevirt-($name).qcow2"
-    rsync -avz --progress --copy-links --checksum result/nixos-image-*.qcow2 $remote
+    # darwin-rebuild refuses switch/activate/rollback/check unless it runs as root.
+    sudo -E ./result/sw/bin/darwin-rebuild --rollback
 }

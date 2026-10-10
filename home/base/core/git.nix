@@ -23,10 +23,6 @@
     lfs.enable = true;
 
     signing.format = "openpgp";
-    # signing = {
-    #   key = "xxx";
-    #   signByDefault = true;
-    # };
 
     includes = [
       {
@@ -55,9 +51,6 @@
         "ssh://git@github.com/DataEraserC" = {
           insteadOf = "https://github.com/DataEraserC";
         };
-        # "ssh://git@bitbucket.com/ryan4yin" = {
-        #   insteadOf = "https://bitbucket.com/ryan4yin";
-        # };
       };
       safe.directory = [
         "/run/media/nixos/windows/"
@@ -101,14 +94,9 @@
       diff-so-fancy = true;
       line-numbers = true;
       true-color = "always";
-      # features => named groups of settings, used to keep related settings organized
-      # features = "";
     };
   };
 
   # Git terminal UI (written in go).
   programs.lazygit.enable = true;
-
-  # Yet another Git TUI (written in rust).
-  programs.gitui.enable = false;
 }

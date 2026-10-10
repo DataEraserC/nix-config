@@ -1,4 +1,12 @@
-{ pkgs, llm-agents, ... }:
+{
+  pkgs,
+  llm-agents,
+  nur-ryan4yin,
+  ...
+}:
+let
+  agentPackages = llm-agents.packages.${pkgs.stdenv.hostPlatform.system};
+in
 {
   # https://github.com/Mic92/nix-ld
   #
@@ -33,7 +41,6 @@
       pnpm
 
       #-- python
-      conda
       uv # python project package manager
       (python313.withPackages (
         ps: with ps; [
@@ -45,7 +52,6 @@
 
           # model downloaders
           huggingface-hub
-          modelscope
         ]
       ))
 
@@ -62,7 +68,6 @@
       # cloud-native
       kubectl
       istioctl
-      kubevirt # virtctl
       kubernetes-helm
       fluxcd
       terraform
@@ -80,16 +85,13 @@
       conda
     ]
     # AI Agent Tools
-    ++ (with llm-agents.packages.${pkgs.stdenv.hostPlatform.system}; [
+    ++ [
       # Agents
-      codex
-      cursor-cli
-      claude-code
-      # opencode
-      pkgs.opencode
-      kimi-code
-
-      # Utilities
-      rtk # CLI proxy that reduces LLM token consumption
-    ]);
+      agentPackages.codex
+      agentPackages.opencode2
+      agentPackages.pi
+      # dsh from nur-packages: llm-agents.nix's dsh cannot boot on nixpkgs node
+      # (node-addon-require-builtin probe), this one shims it.
+      nur-ryan4yin.packages.${pkgs.stdenv.hostPlatform.system}.dsh
+    ];
 }

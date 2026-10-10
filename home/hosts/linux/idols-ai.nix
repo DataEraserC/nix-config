@@ -15,6 +15,8 @@ in
     ./jetbrains.nix
   ];
 
+  modules.desktop.vinput.enable = true;
+
   programs.ssh.settings."github.com".identityFile =
     "${config.home.homeDirectory}/.ssh/idols-ai_id_ed25519";
 
@@ -47,6 +49,9 @@ in
   xdg.configFile."monitors.xml" = lib.mkIf cfgGnomeWayland.enable {
     source = mkSymlink config "hosts/idols-ai/monitors.xml";
   };
+
+  # Keep Noctalia's network widgets on the physical uplink, not the Mihomo TUN.
+  xdg.configFile."noctalia/host-ai.toml".source = ./idols-ai/noctalia.toml;
 
   # The desktop speakers are already loud, so use the broadcast-standard -23 dB.
   services.easyeffects.extraPresets."loudness-normalization".output."autogain#0".target = -23.0;

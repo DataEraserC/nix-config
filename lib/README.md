@@ -1,39 +1,36 @@
 # Library
 
-This directory contains helper functions used by `flake.nix` to reduce code duplication and make it
-easier to add new machines.
+This directory contains helper functions used by `outputs/default.nix` (and the installer flake) to
+reduce code duplication and make it easier to add new machines.
 
 ## Current Functions
 
 ### Core System Generators
 
-1. **`attrs.nix`** - Attribute set manipulation utilities
-2. **`macosSystem.nix`** - macOS configuration generator for
+1. **`macosSystem.nix`** - macOS configuration generator for
    [nix-darwin](https://github.com/LnL7/nix-darwin)
-3. **`nixosSystem.nix`** - NixOS configuration generator
-4. **`colmenaSystem.nix`** - Remote deployment configuration for
-   [colmena](https://github.com/zhaofengli/colmena)
+2. **`nixosSystem.nix`** - NixOS configuration generator
+3. **`colmenaSystem.nix`** - Remote deployment configuration for
+   [colmena](https://github.com/nix-community/colmena)
 
 ### Specialized Module Generators
 
-5. **`genK3sAgentModule.nix`** - K3s agent node configuration generator
-6. **`genK3sServerModule.nix`** - K3s server node configuration generator
-7. **`genKubeVirtGuestModule.nix`** - KubeVirt guest VM configuration generator
-8. **`genKubeVirtHostModule.nix`** - KubeVirt host configuration generator
+4. **`genK3sServerModule.nix`** - K3s server node configuration generator
+5. **`genK3sAgentModule.nix`** - K3s agent/worker node configuration generator
+6. **`genVmHostModule.nix`** - physical VM host (bridge + libvirt) configuration generator
+7. **`genMicrovmGuestModule.nix`** - NixOS microVM guest configuration generator
+8. **`genLibvirtDomainXml.nix`** - libvirt domain XML generator (imported directly by host configs)
 
 ### Entry Point
 
-9. **`default.nix`** - Main entry point that imports all functions and exports them as a single
-   attribute set
+9. **`default.nix`** - Main entry point that imports the generators and exports them as a single
+   attribute set, plus the `relativeToRoot` and `scanPaths` helpers
 
 ## Usage
 
-These functions are designed to:
-
-- Generate consistent configurations across different architectures
-- Provide type-safe configuration for complex systems
-- Enable easy scaling of the infrastructure
-- Support both local development and production deployments
+The generators import the shared host modules, so a new machine supplies its own values and
+system-specific attributes. `colmenaSystem` covers remote deployment, and `genLibvirtDomainXml`
+renders the domain XML for one guest.
 
 ## Architecture Support
 

@@ -55,14 +55,6 @@ in
   # Disable catppuccin cursors to avoid conflict with sam-toki-mouse-cursors
   catppuccin.cursors.enable = false;
 
-  # set dpi for 4k monitor
-  xresources.properties = {
-    # dpi for Xorg's font
-    "Xft.dpi" = 96;
-    # or set a generic dpi
-    "*.dpi" = 96;
-  };
-
   # gtk's theme settings, generate files:
   #   1. ~/.gtkrc-2.0
   #   2. ~/.config/gtk-3.0/settings.ini

@@ -11,6 +11,7 @@
 }:
 with lib;
 let
+  mysecrets = "${mysecrets}/agenix";
   cfg = config.modules.secrets;
 
   enabledServerSecrets =
@@ -78,7 +79,7 @@ in
       # secrets that are used by all nixos hosts
       age.secrets = {
         "nix-access-tokens" = {
-          file = "${mysecrets}/nix-access-tokens.age";
+          file = "${mysecrets}/server/nix-access-tokens.age";
         }
         # access-token needs to be readable by the user running the `nix` command
         // user_readable;
@@ -97,25 +98,19 @@ in
     (mkIf cfg.desktop.enable {
       age.secrets = {
         # ---------------------------------------------
-        # no one can read/write this file, even root.
+        # No discretionary access; privileged root can still bypass file modes.
         # ---------------------------------------------
 
         # .age means the decrypted file is still encrypted by age(via a passphrase)
         "nix-gpg-subkeys.priv.age" = {
-          file = "${mysecrets}/nix-gpg-subkeys-2024-01-27.priv.age.age";
+          file = "${mysecrets}/desktop/nix-gpg-subkeys-2024-01-27.priv.age.age";
         }
         // noaccess;
 
         # Used only by NixOS Modules
 
-        # referenced in /etc/fstab to mount davfs volume
-        "davfs-secrets" = {
-          file = "${mysecrets}/davfs-secrets.age";
-        }
-        // high_security;
-
         "rclone.conf" = {
-          file = "${mysecrets}/rclone.conf.age";
+          file = "${mysecrets}/desktop/rclone.conf.age";
         }
         // high_security;
 
@@ -124,7 +119,7 @@ in
         # ---------------------------------------------
 
         "ssh-key-romantic" = {
-          file = "${mysecrets}/ssh-key-romantic.age";
+          file = "${mysecrets}/desktop/ssh-key-romantic.age";
         }
         // user_readable;
 
@@ -153,6 +148,14 @@ in
           file = "${mysecrets}/alias-for-work.nushell.age";
         }
         // user_readable;
+
+        # work git identity, symlinked to ~/work/.gitconfig by home-manager
+        "work-gitconfig" = {
+          file = "${mysecrets}/desktop/work-gitconfig.age";
+        }
+        // user_readable;
+        }
+        // user_readable;
         "alias-for-work.bash" = {
           file = "${mysecrets}/alias-for-work.bash.age";
         }
@@ -170,14 +173,88 @@ in
           file = "${mysecrets}/server/dae-subscription.dae.age";
         }
         // high_security;
+        # bcrypt hash line for the Caddy Basic Auth in front of Sub-Store
+        # (never the plaintext password); readable by root and the caddy group.
+        "sub-store.caddy" = mkIf config.services.caddy.enable {
+          file = "${mysecrets}/server/sub-store.caddy.age";
+          mode = "0440";
+          owner = "root";
+          group = "caddy";
+        };
         "cpolar.yml" = {
           file = "${mysecrets}/cpolar.yml.age";
         }
         // (MkPermAttr "cpolar" "0700");
+        # cpolar login credentials, only readable by the cpolar user (and root).
+        "cpolar-status.env" = {
+          file = "${mysecrets}/cpolar-status.env.age";
+          mode = "0700";
+          owner = "cpolar";
+          group = "cpolar";
+        };
+        # host-readable ntfy topic, replaces the ntfy_topic in alias-for-work.bash.
+        "ntfy-topic.env" = {
+          file = "${mysecrets}/ntfy-topic.env.age";
+          mode = "0644";
+          owner = myvars.username;
+          group = myvars.username;
+        };
         "alist-jwt" = {
           file = "${mysecrets}/alist-jwt.age";
         }
         // (MkPermAttr "alist" "0700");
+        "frp_aliyun2025.toml" = {
+          file = "${mysecrets}/frp_aliyun2025.toml.age";
+        }
+        // high_security;
+        "easytier-env" = {
+          file = "${mysecrets}/easytier.env.age";
+        }
+        // high_security;
+        # gost SOCKS5 proxy credentials, one line of "<username> <password>"
+        # (space separated); read by the gost auther and chain connector of
+        # modules.gost-proxy (both the listener and the chained forwarder).
+        "gost-proxy.auth" = mkIf config.modules.gost-proxy.enable (
+          { file = "${mysecrets}/gost-proxy.auth.age"; } // high_security
+        );
+        "ecc-ca.key" = {
+          file = "${mysecrets}/ecc-ca.key.age";
+        }
+        // high_security;
+        "ecc-server.key" = {
+          file = "${mysecrets}/ecc-server.key.age";
+        }
+        // high_security;
+        "cliproxyapi-management.key" = {
+          file = "${mysecrets}/cliproxyapi-management.key.age";
+          mode = "0600";
+          owner = "cliproxyapi";
+          group = "cliproxyapi";
+        };
+        "m365-copilot2api-admin-password" = {
+          file = "${mysecrets}/m365-copilot2api-admin-password.age";
+          mode = "0600";
+          owner = "m365-copilot2api";
+          group = "m365-copilot2api";
+        };
+        "m365-copilot2api-master-key" = {
+          file = "${mysecrets}/m365-copilot2api-master-key.age";
+          mode = "0600";
+          owner = "m365-copilot2api";
+          group = "m365-copilot2api";
+        };
+        "opencode2api-webui-password" = {
+          file = "${mysecrets}/opencode2api-webui-password.age";
+          mode = "0600";
+          owner = "opencode2api";
+          group = "opencode2api";
+        };
+        "new-api-session-secret" = {
+          file = "${mysecrets}/new-api-session-secret.age";
+          mode = "0600";
+          owner = "new-api";
+          group = "new-api";
+        };
       };
 
       # place secrets in /etc/
@@ -227,6 +304,32 @@ in
           source = config.age.secrets."alias-for-work.nushell".path;
           mode = "0644"; # both the original file and the symlink should be readable and executable by the user
         };
+        "agenix/alias-for-work.bash" = {
+          source = config.age.secrets."alias-for-work.bash".path;
+          mode = "0644"; # both the original file and the symlink should be readable and executable by the user
+        };
+        "agenix/cpolar-status.env" = {
+          source = config.age.secrets."cpolar-status.env".path;
+          mode = "0700";
+          user = "cpolar";
+          group = "cpolar";
+        };
+        "agenix/ntfy-topic.env" = {
+          source = config.age.secrets."ntfy-topic.env".path;
+          mode = "0644";
+          user = myvars.username;
+          group = myvars.username;
+        };
+
+        # Used by a home-manager module, so it must be readable by the user.
+        # Setting `mode` makes environment.etc copy the file instead of
+        # symlinking the runtime secret, so the owner must be set as well —
+        # otherwise it becomes a world-readable, root-owned copy of the secret.
+        "agenix/work-gitconfig" = {
+          source = config.age.secrets."work-gitconfig".path;
+          mode = "0400";
+          user = myvars.username;
+        };
       };
     })
 
@@ -250,6 +353,14 @@ in
           file = "${mysecrets}/server/sftpgo.env.age";
           mode = "0400";
           owner = "sftpgo";
+        };
+
+        # RustFS root credentials as a systemd EnvironmentFile consumed by
+        # services.rustfs: RUSTFS_ACCESS_KEY / RUSTFS_SECRET_KEY.
+        "rustfs.env" = {
+          file = "${mysecrets}/server/rustfs.env.age";
+          mode = "0400";
+          owner = "root";
         };
       };
     })
@@ -276,11 +387,6 @@ in
 
     (mkIf cfg.server.kubernetes.enable {
       age.secrets = {
-        "k3s-prod-1-token" = {
-          file = "${mysecrets}/server/k3s-prod-1-token.age";
-        }
-        // high_security;
-
         "k3s-test-1-token" = {
           file = "${mysecrets}/server/k3s-test-1-token.age";
         }
@@ -300,16 +406,69 @@ in
           mode = "0400";
           owner = "postgres";
         };
+        "cpolar.yml" = {
+          file = "${mysecrets}/cpolar.yml.age";
+        }
+        // (MkPermAttr "cpolar" "0700");
+        "alist-jwt" = {
+          file = "${mysecrets}/alist-jwt.age";
+        }
+        // (MkPermAttr "alist" "0700");
+
+        # Cloudflare API token (Zone -> DNS -> Edit on `writefor.fun`) consumed
+        # by security.acme (lego) as its environment file for the ACME DNS-01
+        # challenge on publicly-trusted sites. lego runs as root here.
+        "cloudflare-dns-api-token" = {
+          file = "${mysecrets}/server/cloudflare-dns-api-token.env.age";
+          mode = "0400";
+          owner = "root";
+        };
+      };
+    })
+
+    (mkIf cfg.desktop.enable {
+      # Desktops use their own restic repository password, NOT the homelab's:
+      # the backup server holds the homelab one, so a shared password would let
+      # that server decrypt desktop data.
+      age.secrets."restic-password" = {
+        file = "${mysecrets}/desktop/restic-password-desktop.age";
+        mode = "0400";
+        owner = "root";
+      };
+      # credentials for the restic REST server that receives this backup
+      age.secrets."restic-rest-credentials" = {
+        file = "${mysecrets}/desktop/restic-rest-credentials.age";
+        mode = "0400";
+        owner = "root";
+      };
+    })
+
+    (mkIf cfg.server.storage.enable {
+      # the homelab's restic repository password, shared by the homelab hosts
+      # (this host holds it, so it can copy/verify homelab repositories)
+      age.secrets."restic-password" = {
+        file = "${mysecrets}/server/restic-password-homelab.age";
+        mode = "0400";
+        owner = "root";
+      };
+      # htpasswd for the restic REST server this host runs; the service runs as
+      # the unprivileged `restic` user, which must be able to read it
+      age.secrets."restic-rest-htpasswd" = {
+        file = "${mysecrets}/server/restic-rest-htpasswd.age";
+        mode = "0400";
+        owner = "restic";
       };
     })
 
     (mkIf cfg.server.storage.enable {
       age.secrets = {
         "hdd-luks-crypt-key" = {
-          file = "${mysecrets}/hdd-luks-crypt-key.age";
+          file = "${mysecrets}/server/hdd-luks-crypt-key.age";
           mode = "0400";
           owner = "root";
         };
+        # restic repository password (used by modules.restic-backup). Gated
+        # separately below so desktops get it without enabling a server group.
       };
 
       # place secrets in /etc/

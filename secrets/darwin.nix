@@ -44,12 +44,12 @@
     in
     {
       # ---------------------------------------------
-      # no one can read/write this file, even root.
+      # No discretionary access; privileged root can still bypass file modes.
       # ---------------------------------------------
 
       # .age means the decrypted file is still encrypted by age(via a passphrase)
       "nix-gpg-subkeys.priv.age" = {
-        file = "${mysecrets}/nix-gpg-subkeys-2024-01-27.priv.age.age";
+        file = "${mysecrets}/desktop/nix-gpg-subkeys-2024-01-27.priv.age.age";
       }
       // noaccess;
 
@@ -58,12 +58,12 @@
       # ---------------------------------------------
 
       "rclone.conf" = {
-        file = "${mysecrets}/rclone.conf.age";
+        file = "${mysecrets}/desktop/rclone.conf.age";
       }
       // high_security;
 
       "nix-access-tokens" = {
-        file = "${mysecrets}/nix-access-tokens.age";
+        file = "${mysecrets}/server/nix-access-tokens.age";
       }
       # access-token needs to be readable by the user running the `nix` command
       // user_readable;
@@ -73,13 +73,13 @@
       # ---------------------------------------------
 
       "ssh-key-romantic" = {
-        file = "${mysecrets}/ssh-key-romantic.age";
+        file = "${mysecrets}/desktop/ssh-key-romantic.age";
       }
       // user_readable;
 
-      # alias-for-work
-      "alias-for-work.nushell" = {
-        file = "${mysecrets}/alias-for-work.nushell.age";
+      # work git identity, symlinked to ~/work/.gitconfig by home-manager
+      "work-gitconfig" = {
+        file = "${mysecrets}/desktop/work-gitconfig.age";
       }
       // user_readable;
     };
@@ -102,19 +102,28 @@
     # The following secrets are used by home-manager modules
     # But nix-darwin doesn't support environment.etc.<name>.mode
     # So we need to change its mode manually
-    "agenix/alias-for-work.nushell" = {
-      source = config.age.secrets."alias-for-work.nushell".path;
+    "agenix/work-gitconfig" = {
+      source = config.age.secrets."work-gitconfig".path;
     };
   };
 
-  # both the original file and the symlink should be readable and executable by the user
-  #
-  # activationScripts are executed every time you run `nixos-rebuild` / `darwin-rebuild` or boot your system
+  # nix-darwin ignores environment.etc.<name>.mode/owner, and a blanket chown
+  # makes the root-only secrets readable by the login user. Re-apply each
+  # secret's declared policy instead.
   system.activationScripts.postActivation.text = ''
-    ${pkgs.nushell}/bin/nu -c '
-      if (ls /etc/agenix/ | length) > 0 {
-        sudo chown ${myvars.username} /etc/agenix/*
-      }
-    '
+    if [ -d /etc/agenix ]; then
+      ${pkgs.coreutils}/bin/chown ${myvars.username} \
+        /etc/agenix/ssh-key-romantic \
+        /etc/agenix/work-gitconfig
+      ${pkgs.coreutils}/bin/chmod 0500 \
+        /etc/agenix/ssh-key-romantic \
+        /etc/agenix/work-gitconfig
+
+      ${pkgs.coreutils}/bin/chown root /etc/agenix/rclone.conf
+      ${pkgs.coreutils}/bin/chmod 0500 /etc/agenix/rclone.conf
+
+      ${pkgs.coreutils}/bin/chown root /etc/agenix/ryan4yin-gpg-subkeys.priv.age
+      ${pkgs.coreutils}/bin/chmod 0000 /etc/agenix/ryan4yin-gpg-subkeys.priv.age
+    fi
   '';
 }

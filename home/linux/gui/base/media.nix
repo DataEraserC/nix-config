@@ -1,28 +1,32 @@
 {
   pkgs,
-  pkgs-latest,
-  pkgs-x64,
+  lib,
   ...
 }:
 # media - control and enjoy audio/video
 {
-  home.packages = with pkgs; [
-    # audio control
-    pavucontrol
-    playerctl
-    pulsemixer
-    imv # simple image viewer
-    vlc # Cross-platform media player and streaming server
+  home.packages =
+    with pkgs;
+    [
+      # audio control
+      pavucontrol
+      playerctl
+      pulsemixer
+      imv # simple image viewer
 
-    # video/audio tools
-    libva-utils
-    vdpauinfo
-    vulkan-tools
-    mesa-demos
-    nvitop
+      # music
+      go-musicfox # TUI NetEase Cloud Music client; plays through mpv (configured below)
+
+      # video/audio tools
+      libva-utils
+      vdpauinfo
+      vulkan-tools
+      mesa-demos
+      nvitop
+    ]
     # Zoom: Settings > Share Screen > Advanced > Screen Capture Mode on Wayland > PipeWire Mode.
-    (pkgs-x64.zoom-us)
-  ];
+    # zoom-us ships only an x86_64 Linux client, so the aarch64 host skips it.
+    ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [ pkgs.zoom-us ];
 
   programs.mpv = {
     enable = true;

@@ -2,10 +2,14 @@
 rec {
   mainGateway = "192.168.0.1"; # main router
   mainGateway6 = "fe80::5"; # main router's link-local address
+  # The trusted home LAN; the shared host firewall trusts this by source.
+  lanCidr = "192.168.5.0/24";
   # use suzi as the default gateway
   # it's a subrouter with a transparent proxy
   proxyGateway = "192.168.0.178";
   proxyGateway6 = "fe80::8";
+  # node identity must not ride the WAN /64: the ISP retires it, Cilium never refreshes it.
+  clusterULA6 = "fd05:5::";
   nameservers = [
     # IPv4
     "119.29.29.29" # DNSPod https://www.dnspod.cn/Products/publicdns
@@ -16,8 +20,28 @@ rec {
     "2400:3200::1" # Alidns
     "2606:4700:4700::1111" # Cloudflare
   ];
-  prefixLength = 24;
 
+  # Dedicated VIP block for the k3s clusters, outside the router's DHCP pool
+  # (.2-.99). One /29 per cluster, handed to kube-vip: the first usable address
+  # is the control-plane API VIP, the rest are LoadBalancer service VIPs.
+  k8sVip = {
+    cidr = "192.168.5.192/27";
+    clusters = {
+      k3s-test-1 = {
+        cidr = "192.168.5.192/29";
+        apiVip = "192.168.5.193";
+      };
+      # Reserved for future clusters:
+      #   .200/29  apiVip .201
+      #   .208/29  apiVip .209
+      #   .216/29  apiVip .217
+    };
+  };
+
+  # Static LAN addresses, sorted by IPv4 ascending -- keep it sorted when adding
+  # a host so the next free address is obvious. `homeOnly = true` marks an
+  # address that only exists at home (the laptop's home Wi-Fi static); ssh and
+  # monitoring skip those entries.
   hostsAddr = rec {
     # ============================================
     # Homelab's Physical Machines (KubeVirt Nodes)
@@ -60,7 +84,7 @@ rec {
     #   ipv4 = "192.168.64.2";
     # };
     aquamarine = {
-      # VM
+      # VM (retired)
       iface = "enp2s0";
       ipv4 = "192.168.5.101";
     };
@@ -95,91 +119,79 @@ rec {
       ipv4 = "192.168.5.107";
     };
     shoukei = {
-      # Apple M2 + NixOS
-      # Used only when at home
-      iface = "wlan0";
+      # Laptop: pinned on the home Wi-Fi only, by `just shoukei-home-wifi`; off
+      # the home network it uses DHCP.
+      iface = "wld0";
       ipv4 = "192.168.5.108";
-      ipv6 = "fe80::11"; # Link-local Address
+      homeOnly = true;
     };
-    rakushun = {
-      # Orange Pi 5 - ARM
-      # RJ45 port 1 - enP4p65s0
-      # RJ45 port 2 - enP3p49s0
-      iface = "enP4p65s0";
-      ipv4 = "192.168.5.179";
+    k3s-test-1-worker-1 = {
+      # VM
+      iface = "enp2s0";
+      ipv4 = "192.168.5.111";
+    };
+    k3s-test-1-worker-2 = {
+      # VM
+      iface = "enp2s0";
+      ipv4 = "192.168.5.112";
+    };
+    k3s-test-1-worker-3 = {
+      # VM
+      iface = "enp2s0";
+      ipv4 = "192.168.5.113";
+    };
+    k3s-test-1-master-1 = {
+      # VM
+      iface = "enp2s0";
+      ipv4 = "192.168.5.114";
+    };
+    k3s-test-1-master-2 = {
+      # VM
+      iface = "enp2s0";
+      ipv4 = "192.168.5.115";
+    };
+    k3s-test-1-master-3 = {
+      # VM
+      iface = "enp2s0";
+      ipv4 = "192.168.5.116";
+    };
+    mitsuha = {
+      iface = "enp2s0"; # fake iface, it's not used by the host
+      ipv4 = "192.168.5.177";
     };
     suzi = {
       iface = "enp2s0"; # fake iface, it's not used by the host
       ipv4 = "192.168.5.178";
       ipv6 = "fe80::8"; # Link-local Address, can be used as default gateway
     };
-    mitsuha = {
-      iface = "enp2s0"; # fake iface, it's not used by the host
-      ipv4 = "192.168.5.177";
+    rakushun = {
+      # Orange Pi 5 - ARM, now running Armbian (not NixOS)
+      # RJ45 port 1 - enP4p65s0
+      # RJ45 port 2 - enP3p49s0
+      iface = "enP4p65s0";
+      ipv4 = "192.168.5.179";
     };
-
-    # ============================================
-    # Kubernetes Clusters
-    # ============================================
-    k3s-prod-1-master-1 = {
-      # VM
-      iface = "enp2s0";
-      ipv4 = "192.168.5.108";
+    shoryu = {
+      # Homelab's physical machine (VM host)
+      iface = "eno1";
+      ipv4 = "192.168.5.181";
     };
-    k3s-prod-1-master-2 = {
-      # VM
-      iface = "enp2s0";
-      ipv4 = "192.168.5.109";
+    shushou = {
+      # Homelab's physical machine (VM host)
+      iface = "eno1";
+      ipv4 = "192.168.5.182";
     };
-    k3s-prod-1-master-3 = {
-      # VM
-      iface = "enp2s0";
-      ipv4 = "192.168.5.110";
+    youko = {
+      # Homelab's physical machine (VM host)
+      iface = "eno1";
+      ipv4 = "192.168.5.183";
     };
-    k3s-prod-1-worker-1 = {
-      # VM
-      iface = "enp2s0";
-      ipv4 = "192.168.5.111";
-    };
-    k3s-prod-1-worker-2 = {
-      # VM
-      iface = "enp2s0";
-      ipv4 = "192.168.5.112";
-    };
-    k3s-prod-1-worker-3 = {
-      # VM
-      iface = "enp2s0";
-      ipv4 = "192.168.5.113";
-    };
-
-    k3s-test-1-master-1 = {
-      # KubeVirt VM
-      iface = "enp2s0";
-      ipv4 = "192.168.5.114";
-    };
-    k3s-test-1-master-2 = {
-      # KubeVirt VM
-      iface = "enp2s0";
-      ipv4 = "192.168.5.115";
-    };
-    k3s-test-1-master-3 = {
-      # KubeVirt VM
-      iface = "enp2s0";
-      ipv4 = "192.168.5.116";
-    };
+    # akane = {
+    #   # VM (running in macOS's UTM App), using DHCP instead of static ip.
+    #   iface = "enp0s1";
+    #   ipv4 = "192.168.64.2";
+    # };
   };
-
-  hostsInterface = lib.attrsets.mapAttrs (key: val: {
-    interfaces."${val.iface}" = {
-      useDHCP = false;
-      ipv4.addresses = [
-        {
-          inherit prefixLength;
-          address = val.ipv4;
-        }
-      ];
-    };
-  }) hostsAddr;
 
   ssh = {
     # define the host alias for remote builders
@@ -191,15 +203,20 @@ rec {
     #   IdentityFile — the location of your SSH key authentication file for the account.
     # Format in details:
     #   https://www.ssh.com/academy/ssh/config
+    # `homeOnly` entries get no alias: their address is not reachable off the
+    # home LAN, so an alias would break e.g. `ssh shoukei` over Tailscale.
     extraConfig = (
       lib.attrsets.foldlAttrs (
         acc: host: val:
-        acc
-        + ''
-          Host ${host}
-            HostName ${val.ipv4}
-            Port ${toString (services.ssh.hosts.${host}.port or services.ssh.defaultPort)}
-        ''
+        if val.homeOnly or false then
+          acc
+        else
+          acc
+          + ''
+            Host ${host}
+              HostName ${val.ipv4}
+              Port ${toString (services.ssh.hosts.${host}.port or services.ssh.defaultPort)}
+          ''
       ) "" hostsAddr
     );
 
@@ -220,6 +237,8 @@ rec {
           # Define the root user's host key for remote builders, so that nix can verify all the remote builders
 
           aquamarine.publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEOXFhFu9Duzp6ZBE288gDZ6VLrNaeWL4kDrFUh9Neic root@aquamarine";
+          # the restic backup server
+          youko.publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEs8b3CmxM+utXZVKvJBssXBupBXvvzjHP40HcY7PSyZ root@youko";
           # ruby.publicKey = "";
           # kana.publicKey = "";
 

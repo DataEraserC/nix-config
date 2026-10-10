@@ -88,6 +88,12 @@ def dus [path: string = ""] {
   }
 }
 
+# Generate a secure random base64 password of `length` characters (default 12).
+def genpass [length: int = 12] {
+  let bytes = (($length * 3 + 2) / 4 | math ceil) + 3
+  ^openssl rand -base64 $bytes | str trim | str substring 0..<$length
+}
+
 # ---------------------------
 # Commandline Editor Settings
 # ---------------------------
@@ -96,7 +102,7 @@ def dus [path: string = ""] {
 $env.config.edit_mode = "vi"
 
 # Command that will be used to edit the current line buffer with Ctrl+O.
-# If unset, uses $env.VISUAL and then $env.EDITOR ($EDITOR is `hx` via session-env).
+# If unset, uses $env.VISUAL and then $env.EDITOR ($EDITOR is `hx` from the system environment).
 #
 $env.config.buffer_editor = ["hx"]
 
@@ -187,7 +193,19 @@ const NU_PLUGIN_DIRS = [
 # a convenience method for prepending to the path:
 use std/util "path add"
 path add "~/.local/bin"
+# Tools installed outside Nix (go install / cargo install / npm -g).
+path add "~/go/bin"
+path add "~/.cargo/bin"
+path add "~/.npm/bin"
 
 # You can remove duplicate directories from the path using:
 $env.PATH = ($env.PATH | uniq)
+
+# ----------------------
+# Aliases
+# ----------------------
+
+# programs.kubecolor.enableAlias only covers bash/zsh, so wire it for nushell too.
+alias kubectl = kubecolor
+alias k = kubecolor
 

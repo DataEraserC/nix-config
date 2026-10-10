@@ -60,7 +60,6 @@
 
         #-- markdown
         marksman # language server for markdown
-        glow # markdown previewer
         pandoc # document converter
         hugo # static site generator
 
@@ -149,7 +148,8 @@
           ))
 
           #-- rust
-          # we'd better use the rust-overlays for rust development
+          # nixpkgs toolchain (cached); switch to rust-overlay if a pinned
+          # toolchain or extra components are needed.
           rustc
           rust-analyzer
           cargo # rust package manager
@@ -202,10 +202,7 @@
         #-- Optional Requirements:
         prettier # common code formatter
         fzf
-        gdu # disk usage analyzer, required by AstroNvim
-        nix-du
-        bottom # graphical process/system monitor, required by AstroNvim
-        (ripgrep.override { withPCRE2 = true; }) # recursively searches directories for a regex pattern
+        ripgrep # recursively searches directories for a regex pattern
       ]
     );
 }

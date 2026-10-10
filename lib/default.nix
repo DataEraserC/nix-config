@@ -5,12 +5,10 @@ rec {
   nixosSystem = import ./nixosSystem.nix;
   nixOnDroidConfiguration = import ./nixOnDroidConfiguration.nix;
 
-  attrs = import ./attrs.nix { inherit lib; };
-
   genK3sServerModule = import ./genK3sServerModule.nix;
   genK3sAgentModule = import ./genK3sAgentModule.nix;
-  genKubeVirtHostModule = import ./genKubeVirtHostModule.nix;
-  genKubeVirtGuestModule = import ./genKubeVirtGuestModule.nix;
+  genVmHostModule = import ./genVmHostModule.nix;
+  genMicrovmGuestModule = import ./genMicrovmGuestModule.nix;
 
   tools = import ./tools.nix;
 

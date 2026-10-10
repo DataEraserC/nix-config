@@ -9,31 +9,34 @@ systems.
 
 - **core/**: Essential cross-platform configurations
   - **core.nix**: Minimal home-manager configuration
-  - **shells/**: Shell configurations (bash, zsh, fish, nu)
+  - **shells/**: Shell configurations (bash, Nushell; zsh is Darwin-only under `home/darwin/`)
   - **editors/**: Helix + Neovim (Home Manager) and usage docs (`README.md` per editor)
   - **btop.nix**: System monitoring tools
   - **git.nix**: Git configuration and aliases
   - **npm.nix**: Node.js package management
   - **pip.nix**: Python package management
+  - **privacy.nix**: Cross-app telemetry opt-out (`DO_NOT_TRACK`)
   - **starship.nix**: Cross-shell prompt configuration
   - **theme.nix**: Color schemes and theming
+  - **xdg.nix**: XDG base-directory configuration
   - **yazi.nix**: Terminal file manager configuration
-  - **zellij/**: Terminal multiplexer with custom layouts
 
 ### Desktop Environment
 
 - **gui/**: Cross-platform GUI applications and configurations
-  - **dev-tools.nix**: Development tools and IDEs
+  - **dev-tools.nix**: Misc development and network tools (mitmproxy, wireshark)
   - **media.nix**: Media players and utilities
+  - **zed-editor.nix**: Zed editor configuration (primary GUI editor)
+  - **rime/**: Rime (flypy) customisation shared by fcitx5-rime (Linux) and Squirrel (macOS)
   - **terminal/**: Terminal emulator configurations
-    - **alacritty/**: Alacritty terminal
-    - **kitty/**: Kitty terminal
-    - **foot/**: Foot terminal (Linux)
-    - **ghostty/**: Ghostty terminal
+    - **ghostty.nix**: Ghostty terminal (default)
+    - **kitty.nix**: Kitty terminal
 
 ### Terminal Interface
 
 - **tui/**: Terminal-based interface configurations
+  - **agents/**: AI coding agents — global rules deployment, CLIs, and telemetry/auto-update
+    opt-outs
   - **cloud/**: Cloud development tools (Terraform, etc.)
   - **container.nix**: Container tools (Docker, Podman)
   - **dev-tools.nix**: Terminal-based development tools
@@ -41,9 +44,9 @@ systems.
   - **encryption/**: Encryption and security tools
   - **gpg/**: GPG key management
   - **password-store/**: Password management with pass
-  - **shell.nix**: Shell environment configurations
-  - **ssh/**: SSH configuration and management
-  - **zellij/**: Terminal workspace management
+  - **shell/**: Shell environment configurations
+  - **ssh.nix**: SSH configuration and management
+  - **tuios/**: Terminal window manager / multiplexer (config + nushell auto-start)
 
 ### System Management
 
@@ -55,10 +58,8 @@ All configurations in this directory are designed to work across:
 
 - **Linux**: All distributions with Nix and Home Manager
 - **macOS**: Darwin systems with Home Manager
-- **WSL**: Windows Subsystem for Linux
 
 ## Usage
 
-These base configurations provide the foundation for both Linux and Darwin systems, ensuring
-consistent environments across different platforms while allowing for platform-specific
-customizations.
+These base configurations provide the foundation for both Linux and Darwin systems while allowing
+for platform-specific customizations.

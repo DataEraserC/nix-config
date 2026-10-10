@@ -18,8 +18,10 @@ in
   boot.initrd.systemd.enable = true;
 
   environment.systemPackages = [
-    # `sudo ncdu -x /`
-    pkgs.ncdu
+    # Whole-filesystem disk usage (`-x` stays on one filesystem):
+    #   sudo gdu -n -x /            # non-interactive, plain text
+    #   sudo gdu -o /tmp/gdu.json / # JSON export
+    pkgs.gdu
   ];
 
   # There are two ways to clear the root filesystem on every boot:
@@ -47,13 +49,38 @@ in
       "/etc/agenix/"
 
       "/var/log"
-
-      # preserve davfs2 driver's cache to avoid large memory usage
-      "/var/cache/davfs2"
+      # system caches (e.g. restic, plocate; slow to rebuild)
+      "/var/cache"
+      # General scratch space. It is re-creatable and can grow large, so keep it
+      # off the root tmpfs and on the persistent volume. Contents only
+      # accumulate between reboots: the tmpfiles rule below wipes it at boot.
+      # World-writable scratch, so harden the bind mount like /tmp; the mode
+      # must stay 1777 to match that `D!` rule.
+      {
+        directory = "/var/tmp";
+        mode = "1777";
+        mountOptions = [
+          "nosuid"
+          "nodev"
+        ];
+      }
+      # btrbk state/home (SSH keys, cache). The owner must match the btrbk
+      # module's `d /var/lib/btrbk 0750 btrbk btrbk` rule, which preservation
+      # would otherwise override with the default root:root.
+      {
+        directory = "/var/lib/btrbk";
+        user = "btrbk";
+        group = "btrbk";
+        mode = "0750";
+      }
+      # CUPS state (the print spool lives in /var/spool/cups, not here)
+      "/var/lib/cups"
 
       # system-core
       "/var/lib/nixos"
       "/var/lib/systemd"
+      # upower device battery history (e.g. Magic Trackpad)
+      "/var/lib/upower"
       {
         directory = "/var/lib/private";
         mode = "0700";
@@ -64,13 +91,8 @@ in
       "/var/lib/cni"
       "/var/lib/containers"
 
-      # other data
-      "/var/lib/flatpak"
-
       # virtualisation
       "/var/lib/libvirt"
-      "/var/lib/lxc"
-      "/var/lib/lxd"
       "/var/lib/qemu"
       "/var/lib/waydroid"
 
@@ -79,11 +101,14 @@ in
       "/var/lib/NetworkManager"
       "/var/lib/iwd"
       "/var/lib/tailscale"
-      "/var/lib/netbird-homelab" # netbird's homelab client
-      "/var/lib/pgyvpn" # Oray PgyVisitor state
-      "/etc/netbird-homelab"
+
+      # logrotate state. Persist the directory: a single-file bind mount cannot
+      # be replaced by logrotate's atomic rename() (EBUSY).
+      "/var/lib/logrotate"
 
       # Mayuri spec
+      # pgyvpn
+      "/var/lib/pgyvpn" # Oray PgyVisitor state
 
       # zerotier
       "/var/lib/zerotier-one"
@@ -202,7 +227,8 @@ in
         # Codes / Work / Playground
         # ======================================
         "codes" # for personal code
-        "work" # for work contains a .gitconfig with my work email.
+        "work" # work code tree
+        "src" # third-party source checkouts
         "nix-config"
         "tmp"
 
@@ -212,6 +238,7 @@ in
 
         ".local/state/home-manager"
         ".local/state/nix/profiles"
+        ".local/state/noctalia" # shell settings, notification/clipboard history
         ".local/share/nix"
 
         # rclone configuration and credentials
@@ -220,9 +247,6 @@ in
         # ======================================
         # IDE / Editors
         # ======================================
-
-        # neovim plugins
-        ".wakatime"
 
         # vscode
         ".vscode"
@@ -243,17 +267,12 @@ in
         ".config/zed"
         ".local/share/zed"
 
-        # cursor ai editor / cli
-        ".cursor"
-        ".config/cursor"
-        ".config/Cursor"
-
         # ai agents
         ".agents" # skills for all agents
         ".config/agents"
-        ".claude"
         ".codex"
-        ".kimi-code"
+        ".dsh" # DeepSeek Harness
+        ".pi"
         ".config/opencode"
         ".local/share/opencode"
         ".local/state/opencode"
@@ -263,15 +282,39 @@ in
         # pi coding agent (sessions under ~/.pi/agent/sessions)
         ".pi"
 
-        # herdr: plugin registry, plugin checkouts/config, session layout
-        ".config/herdr"
-        ".local/state/herdr"
-
-        ".context7" # up-to-date docs and code examples for for LLMs & agents
+        # ctx7 docs lookup login
+        {
+          directory = ".config/context7";
+          mode = "0700";
+        }
+        # Legacy ctx7 login, still read: ctx7 cannot rename it across the two bind mounts.
+        {
+          directory = ".context7";
+          mode = "0700";
+        }
 
         # nvim
         ".local/share/nvim"
         ".local/state/nvim"
+
+        # ======================================
+        # TUIOS (terminal window manager)
+        # ======================================
+        # Without .local/state/tuios the daemon has no saved session state to
+        # restore after a reboot, and every session is lost.
+
+        # session structure (resurrection), plus each pane's saved history
+        {
+          directory = ".local/state/tuios";
+          mode = "0700";
+        }
+        # project-tape trust store and tape recordings
+        {
+          directory = ".local/share/tuios";
+          mode = "0700";
+        }
+        # layout templates (config.toml is a Home Manager symlink into the repo)
+        ".config/tuios"
 
         # Joplin
         ".config/joplin" # tui client
@@ -283,11 +326,6 @@ in
         # ======================================
         # Cloud Native
         # ======================================
-        {
-          # pulumi - infrastructure as code
-          directory = ".pulumi";
-          mode = "0700";
-        }
         {
           directory = ".aws";
           mode = "0700";
@@ -302,10 +340,6 @@ in
         }
         {
           directory = ".config/gh";
-          mode = "0700";
-        }
-        {
-          directory = ".docker";
           mode = "0700";
         }
         {
@@ -335,6 +369,11 @@ in
           directory = ".gnupg";
           mode = "0700";
         }
+        # hand-edited secret config; Nix does not deploy it
+        {
+          directory = ".secrets";
+          mode = "0700";
+        }
         {
           directory = ".ssh";
           mode = "0700";
@@ -359,9 +398,14 @@ in
         # ======================================
 
         "Games"
+        # .desktop entries created by games/installers (including the umu
+        # launchers the nix-config-umu-game skill generates). Home Manager
+        # rewrites its mimeapps.list symlink into the bind mount at activation,
+        # so that survives too.
+        ".local/share/applications"
         ".steam"
+        ".config/MangoHud"
         ".config/blender"
-        ".config/LDtk"
 
         ".local/share/umu"
 
@@ -372,6 +416,7 @@ in
         ".local/share/lutris"
         ".local/share/wine/drive_c/users/${username}"
         ".local/share/tiled"
+
         ".local/share/GOG.com"
         ".local/share/StardewValley"
         ".local/share/feral-interactive"
@@ -419,8 +464,7 @@ in
         # Containers
         # ======================================
         ".local/share/containers"
-        ".local/share/flatpak"
-        # flatpak/nixpak app's data
+        # nixpak app's data
         {
           directory = ".var";
           mode = "0700";
@@ -430,9 +474,12 @@ in
         # Misc
         # ======================================
 
-        # Clash Verge Rev
-        ".local/share/io.github.clash-verge-rev.clash-verge-rev"
-        ".local/share/clash-verge"
+        # Mihomo (native core): sources spec, generator and config all live here
+        # (contains subscription secrets, hence 0700).
+        {
+          directory = ".config/mihomo";
+          mode = "0700";
+        }
 
         # Orca Slicer - 3D Printer Slicer
         ".local/share/orca-slicer"
@@ -446,11 +493,27 @@ in
         ".config/pulse"
         ".local/state/wireplumber"
 
+        # go-musicfox - TUI NetEase Cloud Music client
+        # ~/.config/go-musicfox/config.toml is force-managed by Home Manager
+        # (see home/linux/gui/base/go-musicfox/default.nix) and reset on each
+        # rebuild; this keeps the runtime themes/ directory and the app's
+        # between-rebuild config edits.
+        ".config/go-musicfox"
+        ".local/share/go-musicfox" # login cookie + library db
+        ".local/state/go-musicfox" # logs
+
         # Digital Painting
         ".local/share/krita"
 
         # Japanese IME
         ".config/mozc" # used by fcitx5-mozc
+
+        # Vinput voice input (fcitx5-vinput): core config.json + downloaded
+        # sherpa-onnx models (~/.local/share/vinput/models/). Without these the
+        # daemon starts with "Local ASR provider model is not configured" after
+        # every reboot. Setup commands: home/linux/gui/base/vinput/README.md
+        ".config/vinput"
+        ".local/share/vinput"
 
         ".config/nushell"
 
@@ -615,10 +678,6 @@ in
       ];
       files = [
         {
-          file = ".wakatime.cfg";
-          how = "symlink";
-        }
-        {
           file = ".config/zoomus.conf";
           how = "symlink";
         }
@@ -626,21 +685,16 @@ in
           file = ".config/zoom.conf";
           how = "symlink";
         }
-        {
-          file = ".claude.json";
-          how = "bindmount";
-        }
-        {
-          file = ".condarc";
-          how = "symlink";
-        }
-        {
-          file = "nvfetcher.toml";
-          how = "symlink";
-        }
       ];
     };
   };
+
+  # Keep logrotate's state inside the directory preserved above instead of the
+  # default /var/lib/logrotate.status (a mount point `rename()` cannot replace).
+  services.logrotate.extraArgs = [
+    "--state"
+    "/var/lib/logrotate/status"
+  ];
 
   # Create some directories with custom permissions.
   #
@@ -671,6 +725,18 @@ in
       "/home/${username}/.local/state/nix".d = permission;
       "/home/${username}/.terraform.d".d = permission;
     };
+
+  # /var/tmp is re-creatable scratch, but it must not consume RAM, so it is
+  # bind-mounted onto the persistent volume above. Wipe it at boot (mirrors
+  # nixpkgs `boot.tmp.cleanOnBoot` for /tmp) so contents only accumulate
+  # between reboots.
+  #
+  # Crash dumps live in the persisted /var/lib/systemd and can contain secrets
+  # copied out of process memory, so don't keep them across reboots either.
+  systemd.tmpfiles.rules = [
+    "D! /var/tmp 1777 root root"
+    "D! /var/lib/systemd/coredump 0755 root root"
+  ];
 
   # systemd-machine-id-commit.service would fail but it is not relevant
   # in this specific setup for a persistent machine-id so we disable it

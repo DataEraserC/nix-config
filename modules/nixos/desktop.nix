@@ -28,6 +28,17 @@ in
   };
 
   config = mkMerge [
+    # Mesa userspace (OpenGL/Vulkan) for every GUI host.
+    {
+      hardware.graphics.enable = true;
+
+      # Desktops opt in to the tracing/benchmark tooling and the
+      # whole-filesystem `locate` index (both off by default; see
+      # modules/nixos/base/{packages,locate}.nix).
+      modules.debugTools.enable = true;
+      modules.locate.enable = true;
+    }
+
     (mkIf (cfgWayland.enable && !cfgKdeWayland.enable && !cfgGnomeWayland.enable) {
       ####################################################################
       #  NixOS's Configuration for Wayland based Window Manager
@@ -56,12 +67,7 @@ in
         };
       };
 
-      # Without autologin it may work
       security.pam.services.greetd.enableGnomeKeyring = true;
-    })
-    (mkIf (cfgHyprland.enable && cfgWayland.enable) {
-      # fix https://github.com/ryan4yin/nix-config/issues/10
-      security.pam.services.swaylock = { };
     })
     (mkIf (cfgNiri.enable && cfgWayland.enable) {
       security.pam.services.swaylock = { };

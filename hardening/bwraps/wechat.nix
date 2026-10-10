@@ -4,48 +4,26 @@
 #   - https://docs.flatpak.org/en/latest/manifests.html
 #   - https://docs.flatpak.org/en/latest/sandbox-permissions.html
 #
-# TODO Since appimageTools.wrapAppImage do not support overriding, I have to pack this package myself.
-# https://github.com/NixOS/nixpkgs/pull/358977
+# We repack WeChat ourselves because nixpkgs' `wechat` package hardcodes its
+# AppImage wrapper args and does not expose them for `.override`, so there is no
+# way to add our bubblewrap sandbox (bind mounts, tmpfs /home, IME env) through
+# it.  We reuse its already-extracted, libtiff-patched AppImage (`wechat.src`),
+# so the version and source hash stay maintained by nixpkgs.
+# Upstream override support: https://github.com/NixOS/nixpkgs/pull/358977
 {
   appimageTools,
-  fetchurl,
-  stdenvNoCC,
+  wechat,
 }:
 let
   pname = "wechat";
-  # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/by-name/we/wechat/package.nix
-  sources = {
-    # direct CDN urls, pinned by hash (same approach as nixpkgs' wechat package)
-    # archive.org snapshots are not used because the CDN serves different builds per edge
-    aarch64-linux = {
-      version = "4.1.1.8";
-      src = fetchurl {
-        url = "https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_arm64.AppImage";
-        hash = "sha256-RLHhac3wSS1C9rx3GsA07Tp1EzxSf2LLBMyPtrECnUY=";
-      };
-    };
-    x86_64-linux = {
-      version = "4.1.1.8";
-      src = fetchurl {
-        url = "https://github.com/Rodert/wechat-linux-versions/releases/download/v4.1.1.8/WeChatLinux_x86_64.AppImage";
-        hash = "sha256-RX26ArkbAxzdRBLu4HT7v/udnQax5Q/Bgi00hw4RSZA=";
-      };
-    };
-  };
-
-  inherit (stdenvNoCC.hostPlatform) system;
-  inherit (sources.${system} or (throw "Unsupported system: ${system}")) version src;
-
+  # nixpkgs' wechat package already extracted the AppImage and applied the
+  # libtiff.so.5 fix; reuse it so version/hash stay maintained upstream.
   # https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/we/wechat/linux.nix
-  appimageContents = appimageTools.extract {
-    inherit pname version src;
-    postExtract = ''
-      patchelf --replace-needed libtiff.so.5 libtiff.so $out/opt/wechat/wechat
-    '';
-  };
+  appimageContents = wechat.src;
 in
 appimageTools.wrapAppImage {
-  inherit pname version;
+  inherit pname;
+  inherit (wechat) version;
 
   src = appimageContents;
 
@@ -92,6 +70,7 @@ appimageTools.wrapAppImage {
     "--setenv GTK_IM_MODULE fcitx"
   ];
   chdirToPwd = false;
+  # WeChat needs outbound network; everything else is unshared
   unshareNet = false;
   unshareIpc = true;
   unsharePid = true;

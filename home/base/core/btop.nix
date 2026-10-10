@@ -1,9 +1,19 @@
 {
+  pkgs,
+  ...
+}:
+{
   # replacement of htop/nmon
   programs.btop = {
     enable = true;
+    # On NixOS `modules.btop` installs the single GPU-aware build (or a
+    # CAP_PERFMON wrapper), so don't let Home Manager add a second, plain btop.
+    # macOS has no `modules.btop` and takes btop from Home Manager.
+    package = if pkgs.stdenv.hostPlatform.isDarwin then pkgs.btop else null;
     settings = {
-      theme_background = false; # make btop transparent
+      # Use the terminal background so btop is transparent (shows when btop
+      # runs in a translucent terminal).
+      theme_background = false;
     };
   };
 }

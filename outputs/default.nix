@@ -23,14 +23,16 @@ let
     in
     inputs
     // {
-      inherit mylib myvars pkgs-stable;
+      # The spread above exposes each flake input as a top-level argument.
+      # Also expose the whole set as `inputs`, which the package overlays
+      # (`overlays/*.nix`) receive via `import ../overlays args`.
+      inherit
+        inputs
+        mylib
+        myvars
+        pkgs-stable
+        ;
 
-      # use unstable branch for some packages to get the latest updates
-      # pkgs-unstable = import inputs.nixpkgs-unstable {
-      #   inherit system; # refer the `system` parameter form outer scope recursively
-      #   # To use chrome, we need to allow the installation of non-free software
-      #   config.allowUnfree = true;
-      # };
       pkgs-2505 = import inputs.nixpkgs-2505 {
         inherit system;
         # To use chrome, we need to allow the installation of non-free software
@@ -70,22 +72,6 @@ let
           # for unrelated GPU architectures.
           cudaCapabilities = [ "8.9" ];
         };
-        overlays = lib.optional (system == "x86_64-linux") (
-          _: prev: {
-            # CMake 4.2+ breaks OIDN's nested CUDA build with nixpkgs' split CUDAToolkit_ROOT.
-            # https://github.com/NixOS/nixpkgs/issues/544701
-            openimagedenoise = prev.openimagedenoise.override { cmake = pkgs-stable.cmake; };
-          }
-        );
-      };
-
-      pkgs-x64 = import nixpkgs {
-        system = "x86_64-linux";
-
-        # To use chrome, we need to allow the installation of non-free software
-        config.allowUnfree = true;
-
-        overlays = import ../overlays args;
       };
     };
 
@@ -125,29 +111,10 @@ let
   wslSystemValues = builtins.attrValues wslSystems;
   allSystemValues = nixosSystemValues ++ darwinSystemValues ++ droidSystemValues ++ wslSystemValues;
 
-  # Helper function to generate a set of attributes for each system
-  forAllSystems = func: (nixpkgs.lib.genAttrs allSystemNames func);
-in
-rec {
-  # Add attribute sets into outputs, for debugging
-  debugAttrs = {
-    inherit
-      nixosSystems
-      darwinSystems
-      droidSystems
-      wslSystems
-      allSystems
-      allSystemNames
-      ;
-  };
-
-  # NixOS Hosts
-  nixosConfigurations =
-    lib.attrsets.mergeAttrsList (map (it: it.nixosConfigurations or { }) nixosSystemValues)
-    // wslConfigurations;
-
-  # Colmena - remote deployment via SSH
-  colmena = {
+  # Raw Colmena hive (nodes + meta), evaluated below into the exposed
+  # `colmenaHive` output. The nix-community Colmena rewrite only reads
+  # `colmenaHive`, so the raw hive is not an output of its own.
+  rawColmenaHive = {
     meta =
       (
         let
@@ -171,6 +138,31 @@ rec {
   }
   // lib.attrsets.mergeAttrsList (map (it: it.colmena or { }) nixosSystemValues);
 
+  # Helper function to generate a set of attributes for each system
+  forAllSystems = func: (nixpkgs.lib.genAttrs allSystemNames func);
+in
+rec {
+  # Add attribute sets into outputs, for debugging
+  debugAttrs = {
+    inherit
+      nixosSystems
+      droidSystems
+      wslSystems
+      darwinSystems
+      allSystems
+      allSystemNames
+      ;
+  };
+
+  # NixOS Hosts
+  nixosConfigurations = lib.attrsets.mergeAttrsList (
+    map (it: it.nixosConfigurations or { }) nixosSystemValues
+  ) // wslConfigurations;
+
+  # Colmena - remote deployment via SSH. The nix-community evaluator reads the
+  # evaluated `colmenaHive` output built from the raw hive in the `let` block.
+  colmenaHive = inputs.colmena.lib.makeHive rawColmenaHive;
+
   # macOS Hosts
   darwinConfigurations = lib.attrsets.mergeAttrsList (
     map (it: it.darwinConfigurations or { }) darwinSystemValues
@@ -192,43 +184,62 @@ rec {
   # Eval Tests for all NixOS & darwin systems.
   evalTests = lib.lists.all (it: it.evalTests == { }) allSystemValues;
 
-  checks = forAllSystems (system: {
-    # eval-tests per system
-    eval-tests = allSystems.${system}.evalTests == { };
+  checks = forAllSystems (
+    system:
+    {
+      # eval-tests per system. `nix flake check` requires every check to be a
+      # derivation, so wrap the boolean result in one instead of returning a bool.
+      eval-tests =
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+          results = allSystems.${system}.evalTests;
+        in
+        pkgs.runCommand "eval-tests" { } (
+          if results == { } then
+            "touch $out"
+          else
+            "echo 'eval tests failed: evalTests is not empty' >&2; exit 1"
+        );
 
-    pre-commit-check = pre-commit-hooks.lib.${system}.run {
-      src = mylib.relativeToRoot ".";
-      hooks = {
-        nixfmt = {
-          enable = true;
-          settings.width = 100;
-        };
-        # Source code spell checker
-        typos = {
-          enable = true;
-          settings = {
-            write = true; # Automatically fix typos
-            configPath = ".typos.toml"; # relative to the flake root
-            exclude = "rime-data/";
+      pre-commit-check = pre-commit-hooks.lib.${system}.run {
+        src = mylib.relativeToRoot ".";
+        hooks = {
+          nixfmt = {
+            enable = true;
+            settings.width = 100;
           };
-          # Vendored third-party content must stay byte-identical to upstream
-          # (noctalia plugin files are installed as-is).
-          excludes = [ "home/linux/gui/base/noctalia/config/plugins" ];
-        };
-        prettier = {
-          enable = true;
-          settings = {
-            write = true; # Automatically format files
-            configPath = ".prettierrc.yaml"; # relative to the flake root
+          # Source code spell checker
+          typos = {
+            enable = true;
+            settings = {
+              write = true; # Automatically fix typos
+              configPath = ".typos.toml"; # relative to the flake root
+              # git-hooks passes paths on the command line, which makes typos
+              # ignore .typos.toml's extend-exclude, so repeat it here
+              exclude = "rime-data/|home/base/gui/rime/flypy_user.txt";
+            };
           };
-          # Vendored third-party content must stay byte-identical to upstream.
-          excludes = [ "home/linux/gui/base/noctalia/config/plugins" ];
+          prettier = {
+            enable = true;
+            settings = {
+              write = true; # Automatically format files
+              configPath = ".prettierrc.yaml"; # relative to the flake root
+            };
+          };
+          # deadnix.enable = true; # detect unused variable bindings in `*.nix`
+          # statix.enable = true; # lints and suggestions for Nix code(auto suggestions)
         };
-        # deadnix.enable = true; # detect unused variable bindings in `*.nix`
-        # statix.enable = true; # lints and suggestions for Nix code(auto suggestions)
       };
-    };
-  });
+    }
+    // lib.optionalAttrs (system == "x86_64-linux") {
+      # Test the shared firewall in disposable VMs, without real-host imports,
+      # Home Manager or agenix identities. Linux eval tests remain cross-arch.
+      security-exporters = import ../tests/security-exporters.nix {
+        pkgs = nixpkgs.legacyPackages.${system};
+        networking = myvars.networking;
+      };
+    }
+  );
 
   # Development Shells
   devShells = import (mylib.relativeToRoot "devshells") (

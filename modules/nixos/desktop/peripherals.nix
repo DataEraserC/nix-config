@@ -18,8 +18,6 @@
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
-    # If you want to use JACK applications, uncomment this
-    jack.enable = true;
     wireplumber.enable = true;
   };
   # rtkit is optional but recommended
@@ -29,7 +27,8 @@
 
   #============================= Bluetooth =============================
 
-  # enable bluetooth & gui paring tools - blueman
+  # Pairing UI lives in Noctalia's bluetooth widget / control-center tab, which
+  # registers its own org.bluez pairing agent, so no blueman applet is needed.
   # or you can use cli:
   # $ bluetoothctl
   # [bluetooth] # power on
@@ -42,7 +41,6 @@
   # Bluetooth devices automatically connect with bluetoothctl as well:
   # [bluetooth] # trust [hex-address]
   hardware.bluetooth.enable = true;
-  services.blueman.enable = true;
 
   #================================= Misc =================================
 
@@ -53,7 +51,7 @@
     udev.packages = with pkgs; [
       gnome-settings-daemon
       # platformio # udev rules for platformio
-      # openocd # required by paltformio, see https://github.com/NixOS/nixpkgs/issues/224895
+      # openocd # platformio needs these udev rules for rootless USB access
       # openfpgaloader
     ];
 
@@ -74,6 +72,17 @@
           # overloads the capslock key to function as both escape (when tapped) and control (when held)
           capslock = "overload(control, esc)";
           esc = "capslock";
+
+          # keyd rewrites right-hand modifiers as their left counterparts, so
+          # pin them to their own keycodes. Vinput's MenuKey is right Ctrl and
+          # Rime's right Shift switches CN/EN.
+          rightcontrol = "rightcontrol";
+          rightshift = "rightshift";
+          rightmeta = "rightmeta";
+
+          # Right Alt is AltGr, the third-level shift on many European layouts
+          # (e.g. `AltGr+2` is `@` in Spanish); keyd forwards it as-is.
+          rightalt = "layer(altgr)";
         };
       };
     };

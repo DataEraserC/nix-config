@@ -9,7 +9,9 @@ ignore-files = true
 extend-exclude = [
   "data/",
   "rime-data/",
-  "home/linux/gui/base/noctalia/config/plugins/"
+  # small-duck flypy user dictionary: entries are pinyin codes ("delt", "juli"),
+  # not English words, so the spell checker flags every one of them
+  "home/base/gui/rime/flypy_user.txt",
 ]
 
 [default]
@@ -43,6 +45,24 @@ extend-ignore-re = [
   "f5e0dc",
   "f9e2af",
   "fab387",
+
+  # The upstream dictionary maps UPnP to "UOnP", which is wrong; keep UPnP.
+  "UPnP",
+
+  # nftables keyword `iif` (input interface); the spell checker wants `if`.
+  "iif",
+
+  # Steam content-server group names (tyo3 = Tokyo, sgp1 = Singapore, hkg1 = Hong
+  # Kong), not English words.
+  "tyo3",
+
+  # nixos-facter is the upstream hardware-report tool; the dictionary wants "factor".
+  "facter",
+
+  # wluma's ambient-light-sensor key (`als`, `als.iio`, `aop-sensors-als`); the
+  # checker wants `also`, and the pre-commit hook rewrites it.
+  "als",
+  "ALS",
 
   # DataEraserC
   "osu-lazer-bin",

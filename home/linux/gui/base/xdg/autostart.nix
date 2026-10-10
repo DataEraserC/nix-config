@@ -1,8 +1,5 @@
 {
   pkgs,
-  pkgs-master,
-  config,
-  lib,
   ...
 }:
 let
@@ -36,22 +33,12 @@ in
   xdg.autostart.enable = true;
   # This fixes nixpak sandboxed apps (like firefox) accessing mapped folders correctly
   xdg.autostart.entries = [
-    #"${pkgs.foot}/share/applications/foot.desktop"
-    #"${pkgs.alacritty}/share/applications/Alacritty.desktop"
-    #"${pkgs.ghostty}/share/applications/com.mitchellh.ghostty.desktop"
-
-    "${pkgs-master.clash-verge-rev}/share/applications/clash-verge.desktop"
+    "${pkgs.ghostty}/share/applications/com.mitchellh.ghostty.desktop"
+    # "${pkgs.kitty}/share/applications/kitty.desktop"
 
     # nixpaks
-    #"${pkgs.nixpaks.firefox}/share/applications/org.mozilla.firefox.desktop"
-    #"${pkgs.nixpaks.telegram-desktop}/share/applications/org.telegram.desktop.desktop"
-  ]
-  # Custom startup script (niri only)
-  ++ startupDesktop
-  ++ (
-    if pkgs.stdenv.hostPlatform.isx86_64 then
-      [ "${pkgs.google-chrome}/share/applications/google-chrome.desktop" ]
-    else
-      [ "${pkgs.chromium}/share/applications/chromium-browser.desktop" ]
-  );
+    # "${pkgs.nixpaks.firefox}/share/applications/org.mozilla.firefox.desktop"
+    # "${pkgs.nixpaks.telegram-desktop}/share/applications/org.telegram.desktop.desktop"
+    "${pkgs.google-chrome}/share/applications/google-chrome.desktop"
+  ];
 }

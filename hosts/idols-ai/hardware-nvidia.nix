@@ -29,6 +29,17 @@
     nvidiaBusId = "PCI:1:0:0";
   };
 
+  # Games launched through GameScope should use the dGPU. prime.offload keeps the
+  # Intel iGPU as the default renderer so the dGPU stays free for LLM workloads,
+  # so opt GameScope games into PRIME render offload here. Games launched outside
+  # GameScope need `nvidia-offload %command%` in their Steam launch options.
+  programs.gamescope.env = {
+    __NV_PRIME_RENDER_OFFLOAD = "1";
+    __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
+    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+    __VK_LAYER_NV_optimus = "NVIDIA_only";
+  };
+
   boot.kernelParams = [
     # Since NVIDIA does not load kernel mode setting by default,
     # enabling it is required to make Wayland compositors function properly.
@@ -76,6 +87,15 @@
   # disable cudasupport before this issue get fixed:
   # https://github.com/NixOS/nixpkgs/issues/338315
   nixpkgs.config.cudaSupport = false;
+
+  # GPU monitoring: CUDA btop (CAP_PERFMON also lets it read the Intel iGPU),
+  # nvtop, and the community nvidia_gpu_exporter.
+  modules.btop = {
+    package = pkgs.btop-cuda;
+    perfmon = true;
+  };
+  environment.systemPackages = [ pkgs.nvtopPackages.full ];
+  services.prometheus.exporters.nvidia-gpu.enable = true;
 
   services.sunshine.settings = {
     adapter_name = "/dev/dri/by-path/pci-0000:00:02.0-render"; # Intel iGPU

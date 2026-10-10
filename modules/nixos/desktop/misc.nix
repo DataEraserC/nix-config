@@ -4,7 +4,9 @@
   ...
 }:
 {
-  boot.loader.timeout = lib.mkForce 10; # wait for x seconds to select the boot entry
+  # Normal priority on purpose: it must beat the base module's
+  # `lib.mkDefault 8` without forcing (two mkDefault definitions would conflict).
+  boot.loader.timeout = 10; # wait for x seconds to select the boot entry
 
   # add user's shell into /etc/shells
   environment.shells = with pkgs; [
@@ -14,13 +16,12 @@
   # set user's default shell system-wide
   users.defaultUserShell = pkgs.bashInteractive;
 
-  # fix for `sudo xxx` in kitty/wezterm/foot and other modern terminal emulators
+  # fix for `sudo xxx` in kitty/ghostty and other modern terminal emulators
   security.sudo.keepTerminfo = true;
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    gnumake
     wl-clipboard
   ];
 

@@ -102,7 +102,7 @@ exec mpd &
 # exec swayidle -w timeout 120 'niri msg action power-off-monitors' timeout 600 "$HOME/.config/niri/scripts/lockscreen" before-sleep "$HOME/.config/niri/scripts/lockscreen -f" &
 
 # do not idle when audio
-exec sway-audio-idle-inhibit &
+# exec sway-audio-idle-inhibit &
 
 # Start alist
 # exec podman container restart alist &

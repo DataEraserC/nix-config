@@ -1,7 +1,8 @@
-{ lib, ... }:
+{ lib, pkgs, ... }:
 {
-  # Secure by default: firewall ON everywhere unless a host explicitly disables it
-  # (servers disable it in modules/nixos/server/{server,server-aarch64}.nix).
+  # Secure by default: firewall ON everywhere. Servers run the same shared
+  # firewall (modules/nixos/base/networking/firewall.nix) as every other host,
+  # as defence in depth behind the router.
   networking.firewall.enable = lib.mkDefault true;
   # Enable the OpenSSH daemon.
   services.openssh = {
@@ -23,7 +24,16 @@
     openFirewall = true;
   };
 
-  # Add terminfo database of all known terminals to the system profile.
-  # https://github.com/NixOS/nixpkgs/blob/nixos-26.05/nixos/modules/config/terminfo.nix
-  environment.enableAllTerminfo = true;
+  # NixOS appends an `Include` of systemd's ssh_config.d drop-in to
+  # /etc/ssh/ssh_config, and OpenSSH re-applies SSHCONF_CHECKPERM to included
+  # files.  A bubblewrap sandbox (`--unshare-user`) exposes root-owned store
+  # files as `nobody`, which would abort ssh there.  We do not use
+  # systemd-ssh-proxy (.host, machine/*, unix/*, vsock/*).
+  programs.ssh.systemd-ssh-proxy.enable = false;
+
+  # Terminfo for the terminals we use, so `$TERM` resolves on hosts we SSH into.
+  environment.systemPackages = [
+    pkgs.ghostty.terminfo
+    pkgs.kitty.terminfo
+  ];
 }

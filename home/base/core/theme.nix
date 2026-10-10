@@ -8,11 +8,12 @@
   catppuccin = {
     # The default `enable` value for all available programs.
     enable = true;
-    # nixpkgs renamed gemini-cli to antigravity-cli (which dropped catppuccin
-    # theme support); the v26.05 tag still references the old option name.
-    # Remove this line once the catppuccin input moves past the rename.
-    gemini-cli.enable = false;
-    cache.enable = true;
+    # Enroll every supported port (catppuccin/nix >= main behaviour).
+    autoEnable = true;
+    # Catppuccin's ports build locally, and the user-level cache entry this
+    # adds to ~/.config/nix/nix.conf would be ignored (with a warning) now that
+    # the normal user is not a trusted-user. See modules/base/nix.nix.
+    cache.enable = false;
     # one of "latte", "frappe", "macchiato", "mocha"
     flavor = "mocha";
     # one of "blue", "flamingo", "green", "lavender", "maroon", "mauve", "peach", "pink", "red", "rosewater", "sapphire", "sky", "teal", "yellow"

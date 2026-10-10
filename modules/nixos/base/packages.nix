@@ -1,60 +1,62 @@
 {
+  lib,
+  config,
   pkgs,
   ...
 }:
+let
+  inherit (config.modules) hardwareTools debugTools;
+in
 {
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
-  environment.systemPackages = with pkgs; [
-    # 'neofetch' has been removed because it is unmaintained upstream.
-    # neofetch
-    inxi
-    python313Packages.gpustat
-    cpu-x
+  options.modules.hardwareTools.enable =
+    lib.mkEnableOption ''
+      Basic hardware and disk introspection tools (lm_sensors, pciutils,
+      usbutils, dmidecode, parted, smartmontools, nvme-cli).
 
-    # system call monitoring
-    strace # system call monitoring
-    ltrace # library call monitoring
-    lsof # list open files
+      On by default for physical hosts; MicroVM guests turn it off since they
+      share the host's store and cannot use any of it.
+    ''
+    // {
+      default = true;
+    };
 
-    # ebpf related tools
-    # https://github.com/bpftrace/bpftrace
-    bpftrace # powerful tracing tool
-    bpftop # monitor BPF programs
-    bpfmon # BPF based visual packet rate monitor
+  options.modules.debugTools.enable = lib.mkEnableOption ''
+    Tracing and benchmarking tools (strace, bpftrace, sysstat, iotop-c,
+    sysbench and the BCC tools).
 
-    # system monitoring
-    sysstat
-    iotop-c
-    iftop
-    nmon
-    sysbench
-    systemctl-tui
-    pv # pipe view
+    Off by default: opt in on hosts where you actually profile with them
+    (currently idols-ai).
+  '';
 
-    # system tools
-    psmisc # killall/pstree/prtstat/fuser/...
-    lm_sensors # for `sensors` command
-    ethtool
-    lshw
-    pciutils # lspci
-    usbutils # lsusb
-    hdparm # for disk performance, command
-    dmidecode # a tool that reads information about your system's hardware from the BIOS according to the SMBIOS/DMI standard
-    parted
-    smartmontools # smartctl -a /dev/nvme0n1
-    nvme-cli
+  config = {
+    environment.systemPackages =
+      with pkgs;
+      [
+        # broadly useful on every host
+        lsof # list open files
+        psmisc # killall/pstree/prtstat/fuser/...
+        ethtool
+        pv # pipe view
+      ]
+      ++ lib.optionals hardwareTools.enable [
+        lm_sensors # `sensors` command
+        pciutils # lspci
+        usbutils # lsusb
+        dmidecode # SMBIOS/DMI hardware info (from the BIOS)
+        parted
+        smartmontools # smartctl -a /dev/nvme0n1
+        nvme-cli
+      ]
+      ++ lib.optionals debugTools.enable [
+        strace # system call tracing
+        bpftrace # eBPF tracing, https://github.com/bpftrace/bpftrace
+        sysstat
+        iotop-c
+        sysbench
+      ];
 
-    # editors: sudo's env_reset strips $EDITOR, and TUI tools such as yazi
-    # fall back to `${EDITOR:-vi}` — root needs `vi`/`nano` in the system
-    # profile, otherwise `sudo yazi` cannot open files for editing.
-    vim # provides vi/vim/vimdiff/view for root & sudo sessions
-    nano # simple editor for root; also installed by nixpkgs' programs.nano
-  ];
-
-  # BCC - Tools for BPF-based Linux IO analysis, networking, monitoring, and more
-  # https://github.com/iovisor/bcc
-  programs.bcc.enable = true;
-
-  programs.partition-manager.enable = true;
+    # BCC - tools for BPF-based IO/network analysis/monitoring
+    # https://github.com/iovisor/bcc
+    programs.bcc.enable = debugTools.enable;
+  };
 }

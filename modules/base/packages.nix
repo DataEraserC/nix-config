@@ -1,11 +1,13 @@
 { pkgs, ... }:
 {
-  # Default editor: Helix (`hx`). Privileged edits (`sudoedit`, …) prefer `nvim --clean`
-  # via `SUDO_EDITOR`; invoke `nvim --clean` manually for other sensitive workflows.
+  # Default editor: Helix (`hx`), for interactive and privileged (`sudoedit`) edits alike. This is
+  # the single source for the editor env; Home Manager does not duplicate it. `SUDO_EDITOR` is
+  # explicit rather than relying on the `$VISUAL`/`$EDITOR` fallback. Neovim stays installed as a
+  # backup.
   environment.variables = {
     EDITOR = "hx";
     VISUAL = "hx";
-    SUDO_EDITOR = "nvim --clean";
+    SUDO_EDITOR = "hx";
   };
 
   environment.systemPackages = with pkgs; [
@@ -13,15 +15,11 @@
     nushell # nushell
     fastfetch
     helix # default $EDITOR (`hx`)
-    neovim # backup editor; `nvim --clean` for sensitive / privileged edits (`$SUDO_EDITOR`)
+    neovim # backup editor
     gnumake # Makefile
     just # a command runner like gnumake, but simpler
     git # used by nix flakes
     git-lfs # used by huggingface models
-
-    # system monitoring
-    procs # a moreden ps
-    btop
 
     # archives
     zip
@@ -43,7 +41,6 @@
 
     jq # A lightweight and flexible command-line JSON processor
     yq-go # yaml processor https://github.com/mikefarah/yq
-    jc # converts the output of popular cli tools & file-types to JSON, YAML
 
     # Interactively filter its input using fuzzy searching, not limit to filenames.
     fzf
@@ -51,29 +48,22 @@
     fd
     findutils
     # search for files by its content, replacement of grep
-    (ripgrep.override { withPCRE2 = true; })
+    ripgrep
 
     duf # Disk Usage/Free Utility - a better 'df' alternative
-    dust # A more intuitive version of `du` in rust
-    gdu # disk usage analyzer(replacement of `du`)
-    ncdu # analyzer your disk usage Interactively, via TUI(replacement of `du`)
+    gdu # disk usage analyzer, non-interactive (`-n`) & JSON (`-o`)
 
     # networking tools
     mtr # A network diagnostic tool(traceroute)
     gping # ping, but with a graph(TUI)
     dnsutils # `dig` + `nslookup`
-    ldns # replacement of `dig`, it provide the command `drill`
     doggo # DNS client for humans
-    wget
     curl
-    curlie # curl with httpie
-    httpie
+    xh # friendly, fast curl-like HTTP client (Rust)
     aria2 # A lightweight multi-protocol & multi-source command-line download utility
     socat # replacement of openbsd-netcat
     nmap # A utility for network discovery and security auditing
-    ipcalc # it is a calculator for the IPv4/v6 addresses
     iperf3 # network performance test
-    hyperfine # command-line benchmarking tool
     tcpdump # network sniffer
 
     # file transfer

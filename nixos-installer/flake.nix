@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     preservation.url = "github:nix-community/preservation";
-    disko.url = "github:nix-community/disko/v1.11.0";
+    disko.url = "github:nix-community/disko/v1.13.0";
     disko.inputs.nixpkgs.follows = "nixpkgs";
 
     nixos-apple-silicon = {
@@ -74,6 +74,7 @@
             ../modules/nixos/base/ssh.nix
 
             ../hosts/12kingdoms-shoukei/hardware-configuration.nix
+            # shoukei reuses ai's preservation layout; no host-specific overrides yet
             ../hosts/idols-ai/preservation.nix
           ];
         };

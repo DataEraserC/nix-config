@@ -25,7 +25,6 @@ let
         # host specific
         "hosts/idols-${name}"
         # nixos hardening
-        # "hardening/profiles/default.nix"
         "hardening/nixpaks"
         "hardening/bwraps"
       ])
@@ -68,6 +67,10 @@ let
             };
           };
           modules.desktop.gaming.enable = true;
+          # modules.desktop.canokey.enable = true;
+          # # Native mihomo core + local web dashboard instead of the Clash Verge
+          # # GUI; its config is ~/.config/mihomo/config.yaml (out of the store).
+          # modules.networking.mihomo.enable = true;
         }
       ];
   };

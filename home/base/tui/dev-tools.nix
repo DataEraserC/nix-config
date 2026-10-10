@@ -1,8 +1,6 @@
 {
   pkgs,
-  pkgs-patched,
-  pkgs-stable,
-  nur-DataEraserC,
+  lib,
   ...
 }:
 {
@@ -17,62 +15,40 @@
   #
   #############################################################
 
-  home.packages = with pkgs; [
-    colmena # nixos's remote deployment tool
+  home.packages =
+    with pkgs;
+    [
+      colmena # nixos's remote deployment tool
 
-    tokei # count lines of code, alternative to cloc
+      # db related
+      # mycli
+      pgcli
+      sqlite
 
-    # db related
-    # mycli
-    pgcli
-    mongosh
-    sqlite
+      # spreadsheets / data files: interactive viewer for csv, xlsx, tsv, json, sqlite
+      visidata
 
-    # embedded development
-    minicom
-    rkdeveloptool
-    rkflashtool
-    dtc
-    screen
+      # embedded development
+      minicom
+      rkdeveloptool
+      rkflashtool
+      dtc
+      screen
 
-    # ai related
-    python313Packages.huggingface-hub # huggingface-cli
-    python313Packages.modelscope
-    yt-dlp # youtube/bilibili/soundcloud/... video/music downloader
+      # ai related
+      python313Packages.huggingface-hub # huggingface-cli
+      yt-dlp # youtube/bilibili/soundcloud/... video/music downloader
 
-    # misc
-    devbox
-    bfg-repo-cleaner # remove large files from git history
-    k6 # load testing tool
-
-    # solve coding extercises - learn by doing
-    exercism
-
-    # Automatically trims your branches whose tracking remote refs are merged or gone
-    # It's really useful when you work on a project for a long time.
-    git-trim
-    gitleaks
-
-    # need to run `conda-install` before using it
-    # need to run `conda-shell` before using command `conda`
-    # conda is not available for MacOS
-    conda
-
-    # manual
-    man-pages
-    man-pages-posix
-
-    # pin clang but do not add to env
-    nur-DataEraserC.packages.${pkgs.system}.clang_dev_env_fhs
-
-    # tool for quick package using
-    comma
-    nix-index
-
-    # git related
-    pre-commit
-    # commitizen # Tool to create committing rules for projects, auto bump versions, and generate changelogs
-  ];
+      # Automatically trims your branches whose tracking remote refs are merged or gone
+      # It's really useful when you work on a project for a long time.
+      git-trim
+    ]
+    # conda is not available on macOS
+    ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [
+      # need to run `conda-install` before using it
+      # need to run `conda-shell` before using command `conda`
+      conda
+    ];
 
   programs = {
     direnv = {

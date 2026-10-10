@@ -41,9 +41,8 @@
     wvkbd # On-screen keyboard for wlroots
 
     # my custom hardened packages
-    # nixpaks.qq
+    nixpaks.qq
     # nixpaks.telegram-desktop
-    # qqmusic
     bwraps.wechat
 
     #-- instant messaging
@@ -76,7 +75,7 @@
     # nur-DataEraserC.packages.${pkgs.system}.wechat-uos
 
     # nur-DataEraserC.packages.${pkgs.system}.llqqnt
-    nur-DataEraserC.packages.${pkgs.system}.bqqnt
+    # nur-DataEraserC.packages.${pkgs.system}.bqqnt
 
     #-- feishu
     feishu

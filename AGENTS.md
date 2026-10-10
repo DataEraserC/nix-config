@@ -3,8 +3,8 @@
 > **Fork-specific rules**: This repository is a DataEraserC fork of [ryan4yin/nix-config](https://github.com/ryan4yin/nix-config). Fork-specific rules are in [AGENTS_downstream.md](./AGENTS_downstream.md) (currently empty). This file preserves the upstream original content to minimize merge conflicts.
 
 This flake manages NixOS hosts, macOS via nix-darwin, shared Home Manager profiles, and Colmena
-deployments. Keep repository guidance here; reusable global rules live in `agents/AGENTS.md`. See
-[agents/README.md](./agents/README.md) for their scope and symlink installation targets.
+deployments. Keep repository guidance here; the global rules and global skills shared across
+projects live in [agents/](./agents/README.md).
 
 ## Where Changes Belong
 
@@ -15,15 +15,22 @@ deployments. Keep repository guidance here; reusable global rules live in `agent
 - `hosts/` contains host-specific configuration; `outputs/<system>/src/` wires hosts into outputs.
 - `vars/` and `lib/` provide shared values and helpers. Use `myvars` and existing abstractions
   instead of hardcoding usernames or paths.
-- `secrets/` contains agenix definitions; secret material also comes from a private external repo.
+- `secrets/` contains agenix definitions. The encrypted `.age` files live in the private
+  `~/codes/nix-secrets` repository, never in this public one — never copy a `.age` file here. Use
+  the `nix-config-secrets` skill.
+- `overlays/` and `hardening/` hold package overlays and hardened (nixpak/bwrap) wrappers.
+- Desktop (Niri and Noctalia) config is mostly out-of-store symlinks that hot-reload without a
+  rebuild; use the `nix-config-desktop` skill before changing it.
 
 ## Commands and Platforms
 
 - Prefer recipes in [Justfile](./Justfile); use `just --list` to discover available commands and
   `just --show <recipe>` to inspect behavior before running them.
 - The Justfile uses Nushell. Preserve `[linux]` / `[macos]` guards and host naming conventions.
-- `just local` uses `nixos-switch` on Linux and `darwin-build` / `darwin-switch` on macOS; their
-  arguments differ. Check both platforms when changing shared behavior.
+- Deploy by hostname: NixOS desktops are `<hostname>-niri` (`just niri`); other NixOS hosts, VMs,
+  and macOS hosts use the bare hostname (`just local`, mapping to `nixos-switch`, or `darwin-build`
+  / `darwin-switch` on macOS). Arguments differ per platform; check both when changing shared
+  behavior.
 - `nix develop` provides formatters and linters. If needed, `nix shell nixpkgs#just nixpkgs#nushell`
   provides the task runner and its shell.
 
@@ -33,8 +40,9 @@ deployments. Keep repository guidance here; reusable global rules live in `agent
   `nixfmt` with width 100.
 - For supported non-Nix files, use `prettier --write <file>` and `prettier --check <file>`;
   configuration lives in `.prettierrc.yaml`. Spelling checks use `typos` and `.typos.toml`.
-- Run `just test` for configuration changes. It evaluates `.#evalTests` across Linux and Darwin; the
-  output must be `true`. Exit code zero with `false` is a failed suite.
+- Run `just test` for configuration changes; it evaluates `.#evalTests` across Linux and Darwin and
+  exits non-zero unless the result is `true`. The bare `nix eval .#evalTests` exits 0 even on
+  `false`, so run `just test` or compare its `--json` output yourself.
 - Eval tests are `expr.nix` / `expected.nix` pairs under `outputs/<system>/tests/`. Update focused
   cases when changing behavior covered by those tests.
 - Use `nix flake check` for broader flake checks. A host build can validate changes beyond eval:
@@ -44,26 +52,100 @@ deployments. Keep repository guidance here; reusable global rules live in `agent
 
 ## Nix Conventions
 
+- Before a non-trivial change, find how nixpkgs (or the upstream project) already does it and follow
+  that shape instead of inventing a local convention. This covers a new package or overlay, a
+  hardening wrapper, a systemd unit, a kernel or driver option, and a version bump that changes the
+  build inputs. Look at the by-name siblings under `pkgs/by-name/<xx>/<name>/`, the recent history
+  of the file you are changing, and the upstream contributing docs.
 - Use `kebab-case.nix` filenames and `inherit (...)` for attribute imports.
 - Prefer `lib.mkIf`, `lib.optional`, and `lib.optionals` for conditional configuration.
 - Use `lib.mkDefault` for defaults and `lib.mkForce` only when necessary.
 - Give module options a `description` and preserve platform-specific conditions.
 
+## AI Disclosure
+
+Follow the
+[Nixpkgs Automation/AI policy](https://github.com/NixOS/nixpkgs/blob/master/CONTRIBUTING.md#automationai-policy)
+for disclosure of AI-assisted contributions:
+
+- Every commit containing non-trivial AI-generated code, documentation, or commit-message text MUST
+  include an `Assisted-by:` Git trailer, even when the generated text was subsequently edited.
+- The trailer MUST identify the tool and the primary model's name and version, for example:
+  `Assisted-by: DeepSeek Harness (gpt-6.1-sol)`. Record the actual identifiers used; if unavailable,
+  obtain them before committing rather than guessing. `Co-authored-by:` does not satisfy this rule.
+- Preserve applicable `Assisted-by:` trailers when amending, rebasing, or squashing commits. Before
+  committing, verify that the final message contains the required disclosure.
+- AI-generated PR descriptions, reviews, and issue comments MUST disclose AI assistance separately;
+  commit trailers alone do not cover them. Routine formatting and short boilerplate completions are
+  exempt. Research, testing, debugging, and private review are exempt when no substantial generated
+  output is included in the contribution; disclose significant technical influence where relevant.
+
+## Security
+
+Security architecture, control limitations, rollout checks, and prioritized work are documented in
+[SECURITY.md](./SECURITY.md). Keep it consistent with changes to security boundaries or defaults.
+
+## Workarounds
+
+Temporary workarounds, version pins, carried patches, and known gaps are recorded in
+[WORKAROUNDS.md](./WORKAROUNDS.md), each with a removal condition. Add a row in the same change that
+introduces one, and re-evaluate entries when their `Revisit` trigger comes up.
+
 ## Command Hazards
 
-- `just up`, `just upp`, and `just up-nix` use `--commit-lock-file`. When a commit is not
-  authorized, use `nix flake update <input>` for a scoped input update without committing.
-- Deployment and upload recipes change systems; use eval/build commands for validation. Remote
-  deployment requires an explicit request. When deployment behavior changes, report the exact `just`
-  command to run.
-- `just clean`, `just gc`, `just ggc`, and `just game` remove history or amend commits; they are not
-  validation steps and require explicit authorization for their target and scope.
-- Do not use `just penvof` for process inspection: it can expose secret values.
+- `just eval-host <host>`, `just build-host <host>`, `just build-microvm <guest>`, and `just test`
+  evaluate or build without activating a system. Use these commands for previews and validation.
+- `just up`, `just upp`, `just up-nix`, and `just override-pkgs <hash>` update flake inputs and
+  commit the lock file. Use `nix flake update <input>` when the update should remain uncommitted.
+- `just niri` and `just local` activate the machine you are on through `sudo` and block on a
+  password prompt; `just darwin-rollback` switches the macOS generation on the machine you are on,
+  and a bare `sudo systemctl restart <unit>` activates a running service the same way. The user runs
+  these, not an agent.
+- `just shoryu`, `just shushou`, `just youko`, `just ruby`, `just kana`, `just lab`,
+  `just k3s-test`, and `just col <tag>` activate systems through Colmena. Use the narrower recipe
+  that matches the intended host scope.
+- `just microvm-deploy <guest> <physical-host>` installs one MicroVM guest's runner on the physical
+  host and restarts its unit there. A later host activation re-points the guest at the runner baked
+  into the host's system; see WA-026 in [WORKAROUNDS.md](./WORKAROUNDS.md) before deploying. Deploy
+  guests serially and check the guest Node and host services after each activation.
+- VM hosts (`shoryu`, `shushou`, `youko`) carry the `br0` bridge for their guests. Use the
+  `boot`-based host deployment procedure for network stack or broad nixpkgs changes; see
+  [hosts/README.md](./hosts/README.md#deploying-vm-hosts).
+- MicroVM state is stored in `/var/lib/microvms/<name>/{etc,var,home}.img`. Preserve these images
+  when changing the guest configuration.
+- `just clean`, `just gc`, `just ggc`, and `just game` remove state or rewrite history. Use them
+  only for the intended cleanup or history operation.
+- `just penvof` reads a process environment and can expose secrets. Use normal process inspection
+  commands when environment values are not required.
+
+## Task Skills
+
+Repo-scoped task procedures live in `.agents/skills/` (leading dot; agents discover them and list
+them in their skill catalog). `agents/` without the dot holds the global rules and skills.
+
+## Related Repositories
+
+When a change here affects one of these, make both edits in the same task, one branch or PR per
+repository, and cross-link them — no need to be told.
+
+- `~/codes/k8s-gitops` — Flux cluster state for the k3s cluster whose hosts are defined in
+  `hosts/k8s` and `hosts/12kingdoms-youko` (NFS golden store, kube-vip block, `br0`). Host
+  networking, VM images, or cluster addons usually change both repositories together.
+- `~/codes/containers` — container images consumed by k8s-gitops; a tag bump is often a two-repo
+  change.
+- `~/codes/nix-secrets` — the private agenix store behind `secrets/` and the `mysecrets` input:
+  ciphertext and recipient rules for the secrets declared here.
+- `wallpapers`, `nur-ryan4yin`, `pyclipsync`, `nu_scripts`, `mattpocock-skills`, `i-have-adhd` —
+  flake inputs from the user's own repositories; bump with `just upp <input>` after their source
+  changes, do not edit them from here.
 
 ## Further Context
 
 - [Repository overview](./README.md)
+- [Workarounds & known gaps](./WORKAROUNDS.md)
 - [Outputs and tests](./outputs/README.md)
 - [Hosts](./hosts/README.md), [system modules](./modules/README.md), and
   [Home Manager](./home/README.md)
-- [Secrets](./secrets/README.md)
+- [Secrets](./secrets/README.md), [backups](./BACKUP.md), and
+  [hardened app wrappers](./hardening/README.md)
+- [Installing NixOS from the ISO](./nixos-installer/README.md)

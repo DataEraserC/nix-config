@@ -12,6 +12,8 @@
   clusterInit ? false,
   kubeletExtraArgs ? [ ],
   k3sExtraArgs ? [ ],
+  # Bind embedded K3s control-plane HTTPS metrics to the node address so vmagent can scrape them.
+  metricsBindAddress ? null,
   nodeLabels ? [ ],
   nodeTaints ? [ ],
   disableFlannel ? true,
@@ -37,18 +39,20 @@ in
     dive # explore docker layers
   ];
 
-  # Kernel modules required by cilium
-  boot.kernelModules = [
-    "ip6_tables"
-    "ip6table_mangle"
-    "ip6table_raw"
-    "ip6table_filter"
-  ];
   networking.enableIPv6 = true;
-  networking.nat = {
-    enable = true;
-    enableIPv6 = true;
+  boot.kernel.sysctl = {
+    "net.ipv4.ip_forward" = 1;
+    "net.ipv6.conf.all.forwarding" = 1;
   };
+
+  # Deny pods the credential-bearing host ports before the pod accept below.
+  networking.firewall.extraInputRules = lib.mkAfter ''
+    ip  saddr 10.0.0.0/8 tcp dport { 22, 2049, 2283, 5432, 5900, 5901, 5902, 5903, 8000, 8081, 8082, 9090, 9093, 9100, 9633, 9835 } drop
+    ip6 saddr fd00::/104 tcp dport { 22, 2049, 2283, 5432, 5900, 5901, 5902, 5903, 8000, 8081, 8082, 9090, 9093, 9100, 9633, 9835 } drop
+    ip  saddr 10.0.0.0/8 accept
+    ip6 saddr fd00::/104 accept
+  '';
+
   services.k3s = {
     enable = true;
     inherit package tokenFile clusterInit;
@@ -61,8 +65,10 @@ in
         flagList = [
           "--write-kubeconfig=${kubeconfigFile}"
           "--write-kubeconfig-mode=600"
+          # The Istio ingress Service uses NodePorts 80 and 443.
           "--service-node-port-range=80-32767"
-          "--kube-apiserver-arg='--allow-privileged=true'" # required by kubevirt
+          # The NFS CSI node plugin runs a privileged container to mount volumes.
+          "--kube-apiserver-arg='--allow-privileged=true'"
           "--data-dir /var/lib/rancher/k3s"
           "--etcd-expose-metrics=true"
           "--etcd-snapshot-schedule-cron='0 */12 * * *'"
@@ -70,12 +76,17 @@ in
           "--disable-helm-controller" # we use fluxcd instead
           "--disable=traefik" # deploy our own ingress controller instead
           "--disable=servicelb" # we use kube-vip instead
-          "--disable-network-policy"
+          "--disable-network-policy" # Cilium enforces network policies instead
+          "--disable-kube-proxy" # Cilium's eBPF replacement handles services
           "--tls-san=${masterHost}"
         ]
         ++ (map (label: "--node-label=${label}") nodeLabels)
         ++ (map (taint: "--node-taint=${taint}") nodeTaints)
         ++ (map (arg: "--kubelet-arg=${arg}") kubeletExtraArgs)
+        ++ (lib.optionals (metricsBindAddress != null) [
+          "--kube-controller-manager-arg=bind-address=${metricsBindAddress}"
+          "--kube-scheduler-arg=bind-address=${metricsBindAddress}"
+        ])
         ++ (lib.optionals disableFlannel [ "--flannel-backend=none" ])
         ++ k3sExtraArgs;
       in

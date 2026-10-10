@@ -1,23 +1,17 @@
 {
+  config,
   nu_scripts,
   ...
 }:
 {
   programs.nushell = {
-    # load the alias file for work
     # the file must exist, otherwise nushell will complain about it!
     #
     # currently, nushell does not support conditional sourcing of files
     # https://github.com/nushell/nushell/issues/8214
     extraConfig = ''
-      source /etc/agenix/alias-for-work.nushell
-
-      $env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = "1"
-      $env.CLAUDE_CODE_ATTRIBUTION_HEADER = "0"
-
-      # for work
-      $env.ANTHROPIC_BASE_URL = $env.WORK_ANTHROPIC_BASE_URL
-      $env.ANTHROPIC_AUTH_TOKEN = $env.WORK_ANTHROPIC_AUTH_TOKEN
+      # decrypted secret: AI agents must not read it
+      source ${config.home.homeDirectory}/.secrets/nushell-secrets.nu
 
       # Directories in this constant are searched by the
       # `use` and `source` commands.
@@ -35,7 +29,6 @@
       use custom-completions/ssh/ssh-completions.nu *
       use custom-completions/tar/tar-completions.nu *
       use custom-completions/tcpdump/tcpdump-completions.nu *
-      use custom-completions/zellij/zellij-completions.nu *
       use custom-completions/zoxide/zoxide-completions.nu *
 
       # -*- alias -*-

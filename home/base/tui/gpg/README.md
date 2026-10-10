@@ -8,7 +8,7 @@ features a versatile key management system as well as access modules for all kin
 directories.
 
 > In the following content, we will use GPG to refer to GnuPG tool, and PGP to refer to various
-> concepts defined in the OepnPGP standard(e.g. PGP key, PGP key server).
+> concepts defined in the OpenPGP standard(e.g. PGP key, PGP key server).
 
 Key functions of GnuPG:
 
@@ -37,8 +37,7 @@ Currently I use both age & GnuPG:
 
 ## Practical Cryptography for Developers
 
-To use GnuGP without seamlessly, Some Practical Cryptography knowledge is required, here is dome
-tutorials:
+To use GnuPG seamlessly, some Practical Cryptography knowledge is required, here are some tutorials:
 
 - English version: <https://github.com/nakov/Practical-Cryptography-for-Developers-Book>
 - Chinese version: <https://thiscute.world/tags/cryptography/>
@@ -49,7 +48,7 @@ tutorials:
 
 > ArchWiki's GnuPG page: <https://wiki.archlinux.org/title/GnuPG>
 
-### 0. How GnuGP generate & protect your keypair?
+### 0. How does GnuPG generate & protect your keypair?
 
 Related Docs:
 
@@ -498,7 +497,7 @@ gpg --delete-secret-keys ryan4yin@linux.com
 rm ~/.gnupg/openpgp-revocs.d/C8D84EBC5F82494F432ACEF042E49B284C30A0DA.rev
 
 # import our subkeys back
-age --decrypt -o ryan4yin-primary-key.priv ryan4yin-primary-key.priv.age
+age --decrypt -o ryan4yin-gpg-subkeys.priv ryan4yin-gpg-subkeys.priv.age
 gpg --import ryan4yin-gpg-subkeys.priv
 ```
 
@@ -549,12 +548,12 @@ gpg --verify <file> <signature-file>
 
 ```bash
 # Encrypt a file via recipient's public key, sign it via your private key for signing, and output cleartext.
-# so that the reciiptent can decrypt it via his/her private key.
+# so that the recipient can decrypt it via his/her private key.
 gpg --armor --sign --encrypt --recipient ryan4yin@linux.com <file>
 # or use this short version
 gpg -aser ryan4yin@linux.com <file>
 
-# Descrypt a file via your private key, and verify the signature via the sender's public key.
+# Decrypt a file via your private key, and verify the signature via the sender's public key.
 gpg --decrypt <file>
 # or
 gpg -d <file>
@@ -602,7 +601,7 @@ But in OpenPGP:
   the keypair. But OpenPGP standard **DO NOT provide a way to distribute this certificate to
   others**.
   - Not to mention some key status query protocol like OCSP in Web PKI.
-  - Users has to pulish their revocation certificate to their blog, github profile or somewhere
+  - Users has to publish their revocation certificate to their blog, github profile or somewhere
     else, and others has to check it and run `gpg --import <revocation-certificate>` to revoke the
     keypair manually.
 
@@ -630,7 +629,7 @@ sub   cv25519/0x9E78E897B6490D6B 2024-01-09 [E]
 # encrypt some file before revoke the keypair
 › gpg -are test@test.t README.md > README.md.asc
 
-# try to decrypt the file, it should works
+# try to decrypt the file, it should work
 › gpg -d README.md.asc
 gpg: encrypted with cv25519 key, ID 0x9E78E897B6490D6B, created 2024-01-09
       "test <test@test.t>"

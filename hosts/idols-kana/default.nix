@@ -5,7 +5,7 @@
 }:
 #############################################################
 #
-#  Kana - a NixOS VM running on Proxmox/KubeVirt
+#  Kana - a NixOS VM running under libvirt
 #
 #############################################################
 let
@@ -18,6 +18,7 @@ in
 {
   imports = [
     ../idols-ruby/packages.nix
+    ../idols-ruby/computer-use.nix
     ../idols-ruby/oci-containers
   ];
 
@@ -69,6 +70,13 @@ in
       }
     ];
     linkConfig.RequiredForOnline = "routable";
+  };
+
+  # systemd-journal - reduce disk usage
+  # https://www.freedesktop.org/software/systemd/man/latest/journald.conf.html
+  services.journald.settings.Journal = {
+    SystemMaxUse = "2G";
+    RuntimeMaxUse = "256M";
   };
 
   # This value determines the NixOS release from which the default
