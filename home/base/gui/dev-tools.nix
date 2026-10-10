@@ -14,7 +14,7 @@
     ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [
       mitmproxy # http/https proxy tool
       wireshark # network analyzer
-    ] 
+    ]
     ++ [
       # dbeaver-bin # database manager
       # NOTE: dbx-desktop can not be build currently

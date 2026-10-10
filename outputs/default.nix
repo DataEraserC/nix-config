@@ -155,9 +155,9 @@ rec {
   };
 
   # NixOS Hosts
-  nixosConfigurations = lib.attrsets.mergeAttrsList (
-    map (it: it.nixosConfigurations or { }) nixosSystemValues
-  ) // wslConfigurations;
+  nixosConfigurations =
+    lib.attrsets.mergeAttrsList (map (it: it.nixosConfigurations or { }) nixosSystemValues)
+    // wslConfigurations;
 
   # Colmena - remote deployment via SSH. The nix-community evaluator reads the
   # evaluated `colmenaHive` output built from the raw hive in the `let` block.

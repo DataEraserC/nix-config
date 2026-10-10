@@ -1,4 +1,9 @@
-{ lib, pkgs, nixpkgs, ... }:
+{
+  lib,
+  pkgs,
+  nixpkgs,
+  ...
+}:
 {
   # Nix 2.35 is newer than nixpkgs' nixVersions.stable (still 2.34), so opt into
   # the latest released version until stable catches up.

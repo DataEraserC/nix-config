@@ -84,7 +84,7 @@
     # nixGL.packages.${pkgs.system}.nixVulkanNvidia
     # nixGL.packages.${pkgs.system}.nixVulkanIntel
   ]
-  ++ [ 
+  ++ [
     pkgs.nvtopPackages.full
   ];
   # disable cudasupport before this issue get fixed:

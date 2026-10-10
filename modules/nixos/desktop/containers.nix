@@ -28,7 +28,7 @@
     # writable, but rootless sessions can fall back to a file driver
     # (k8s-file / json-file), which otherwise grows without limit.
     containers.containersConf.settings.containers.log_size_max = 10 * 1024 * 1024;
-    
+
     # Containers registries configuration (shared by Docker and Podman)
     # https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md
     containers = {

@@ -105,7 +105,8 @@ in
       "https://ai.cachix.org"
 
       # "https://cache.garnix.io"
-    ] ++ extra-substituters;
+    ]
+    ++ extra-substituters;
 
     # WARNING: every key here trusts *everything* that key signs. Add one only
     # for a cache you trust as much as the official one — a careless key hands
@@ -119,7 +120,8 @@ in
       "ai.cachix.org-1:N9dzRK+alWwoKXQlnn0H6aUx0lU/mspIoz8hMvGvbbc="
       "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
       "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
-    ] ++ extra-trusted-public-keys;
+    ]
+    ++ extra-trusted-public-keys;
     builders-use-substitutes = true;
   };
 }
