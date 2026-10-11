@@ -493,15 +493,6 @@ in
         ".config/pulse"
         ".local/state/wireplumber"
 
-        # go-musicfox - TUI NetEase Cloud Music client
-        # ~/.config/go-musicfox/config.toml is force-managed by Home Manager
-        # (see home/linux/gui/base/go-musicfox/default.nix) and reset on each
-        # rebuild; this keeps the runtime themes/ directory and the app's
-        # between-rebuild config edits.
-        ".config/go-musicfox"
-        ".local/share/go-musicfox" # login cookie + library db
-        ".local/state/go-musicfox" # logs
-
         # Digital Painting
         ".local/share/krita"
 
@@ -522,6 +513,10 @@ in
         # ======================================
         # Apps
         # ======================================
+
+        # Clash Verge Rev
+        ".local/share/io.github.clash-verge-rev.clash-verge-rev"
+        ".local/share/clash-verge"
 
         # piliplus
         ".local/share/com.example.piliplus/"
@@ -645,7 +640,6 @@ in
         ".config/Genymobile"
         # this is set to 0700
         # ".config/gh"
-        ".config/go-musicfox"
         ".config/GIMP"
         ".config/anytype"
         ".config/obs-studio"
