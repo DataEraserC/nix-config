@@ -2,7 +2,7 @@
 
 # Use nushell for shell commands
 # To use this justfile, you need to enter a shell with just & nushell installed:
-#
+# 
 #   nix shell nixpkgs#just nixpkgs#nushell
 set shell := ["nu", "-c"]
 
@@ -137,37 +137,6 @@ override-pkgs hash:
 
 ############################################################################
 #
-#  NixOS WSL related commands
-#
-#  WARNING: current do not work bcs https://github.com/casey/just/pull/2798
-#
-############################################################################
-
-[linux]
-wsl-work mode="switch-notify" verbosity="normal":
-  #!/usr/bin/env nu
-  use {{utils_nu}} *;
-  nixos-switch wsl-work {{mode}} {{verbosity}}
-
-[linux]
-wsl mode="switch-notify" verbosity="normal":
-  #!/usr/bin/env nu
-  use {{utils_nu}} *;
-  nixos-switch wsl-y9000p2025 {{mode}} {{verbosity}}
-
-############################################################################
-#
-#  Nix-On-Droid related commands
-#
-############################################################################
-
-droid mode="default":
-  #!/usr/bin/env nu
-  use {{utils_nu}} *;
-  nod-switch mondrian {{mode}}
-
-############################################################################
-#
 #  NixOS Desktop related commands
 #
 ############################################################################
@@ -180,15 +149,6 @@ local mode="switch" verbosity="normal":
   use {{utils_nu}} *;
   nixos-switch (hostname) {{mode}} {{verbosity}}
 
-
-
-[linux]
-[group('desktop')]
-s-hypr mode="default":
-  #!/usr/bin/env nu
-  use {{utils_nu}} *;
-  nixos-switch shoukei-hyprland {{mode}}
-
 # Deploy the niri nixosConfiguration by hostname match
 [linux]
 [group('desktop')]
@@ -196,22 +156,6 @@ niri mode="switch-notify" verbosity="normal":
   #!/usr/bin/env nu
   use {{utils_nu}} *;
   nixos-switch $"(hostname)-niri" {{mode}} {{verbosity}}
-
-[linux]
-[group('desktop')]
-gnome-wayland mode="switch-notify" verbosity="normal":
-  #!/usr/bin/env nu
-  use {{utils_nu}} *;
-  nixos-switch "ai-gnome-wayland" {{mode}} {{verbosity}}
-  # nixos-switch $"(hostname)-gnome-wayland" {{mode}} {{verbosity}}
-
-[linux]
-[group('desktop')]
-kde-wayland mode="switch-notify" verbosity="normal":
-  #!/usr/bin/env nu
-  use {{utils_nu}} *;
-  nixos-switch "ai-kde-wayland" {{mode}} {{verbosity}}
-  # nixos-switch $"(hostname)-kde-wayland" {{mode}} {{verbosity}}
 
 # Pin shoukei's home Wi-Fi to a static IPv4 (run once; the profile persists).
 [linux]
@@ -479,3 +423,5 @@ pkg-test pr pname:
 [group('nixpkgs')]
 pkg-summary:
   gh workflow view review.yml --repo ryan4yin/nixpkgs-review-gha
+
+import "justfile.d/downstream.just"
