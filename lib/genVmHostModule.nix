@@ -1,7 +1,7 @@
 {
   pkgs,
   hostName,
-  network,
+  networking,
   ...
 }:
 let

@@ -15,12 +15,10 @@ in
   # 时才会 copy_owned_file 覆盖 $DSH_HOME/cordis.patch.yml（validate_owned_file
   # 遇到符号链接直接 die），null 才能让 activation 的链接在每次 dsh 启动后存活。
   homePatchDisabled = cfg.programs.dsh.patch == null;
-  # 仓库 yml 即黄金内容：模型目录行与现网 provider
-  ymlDeclaresProvider = lib.hasInfix "new-api-y9000p2025-openai-responses" yml;
-  ymlUsesEnvReference = lib.hasInfix "apiKeyEnv: NEW_API_Y9000P2025_OPENAI_RESPONSES_API_KEY" yml;
-  # 密钥只以环境变量引用存在，不允许出现裸 apiKey: 行
+  # common.yml 现在只承载机器级 rows（当前为空 []，模型目录已收编进各 profile
+  # 的 <key>.yml，由 dsh-profile-patch 测试覆盖）；密钥只允许以环境变量引用
+  # 存在，不允许出现裸 apiKey: 行。
   ymlHasNoInlineKey = !(lib.hasInfix "apiKey:" yml);
-  ymlHasModelRow = lib.hasInfix "llm-pi-ai" yml;
   # activation 负责把仓库文件链接到 $DSH_HOME/cordis.patch.yml
   activationSymlinksHomePatch =
     lib.hasInfix "ln -sfnT" activation && lib.hasInfix "cordis.patch.yml" activation;

@@ -1,7 +1,6 @@
 {
   myvars,
   config,
-  lib,
   ...
 }:
 {
@@ -48,13 +47,12 @@
       "adbusers" # android debugging
       "fileshare"
 
-      "disk"
-      "vboxusers"
-      "kvm"
+      # fork-owned services below; each group is declared by its own module
+      # and is a no-op on hosts where that module is disabled
       "warp"
       "ollama"
       "open-webui"
-      "input" # input for bongocat
+      "vboxusers"
     ];
   };
 
