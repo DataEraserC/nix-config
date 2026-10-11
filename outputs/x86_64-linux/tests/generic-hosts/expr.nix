@@ -1,9 +1,10 @@
-# Eval test for the overlay address registry in vars/networking.nix: the
+# Eval test for the merged address registry (vars/networking.nix plus
+# vars/networking-downstream.nix, combined by vars/default.nix): the
 # (devices × networks) matrix behind `networking.extraHosts`, `peers` and
 # `easytier.instances` on idols-ai / wsl-work / wsl-y9000p2025.
 { lib, ... }:
 let
-  network = import ../../../../vars/networking.nix { inherit lib; };
+  network = (import ../../../../vars { inherit lib; }).networking;
 in
 {
   # Full /etc/hosts payload: pins every rendered line, so growing the matrix
