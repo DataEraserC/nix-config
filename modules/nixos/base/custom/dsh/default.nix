@@ -336,6 +336,11 @@ let
     # package.json dsh.client declaration. Egress runs through the mihomo
     # binary from its runtimeDeps — no PATH wiring needed at this layer.
     nur-DataEraserC.packages.${pkgs.system}.dsh-our-free-model
+    # Free web search with smart engine routing (ddg/bing/searxng… plus a
+    # keyless fallback) and a settings UI. The browser half rides the
+    # package.json dsh.client declaration (web profiles, hence passthru.requiresWeb)
+    # and the server half links its node_modules straight into the kernel.
+    nur-DataEraserC.packages.${pkgs.system}.dsh-free-search
     pkgs.dsh.bundles.harbor
     pkgs.dsh.bundles.graph-memory
     pkgs.dsh.bundles.notification
