@@ -31,10 +31,6 @@
     # kubernetes-helm uses it (home/base/tui/container.nix); extend or drop this
     # input together with that consumer.
     nixpkgs-2505.url = "github:nixos/nixpkgs/nixos-25.05";
-    nixpkgs-latest.url = "github:nixos/nixpkgs/master";
-    nixpkgs-unstable-yuzu.url = "github:nixos/nixpkgs?rev=6a59b7def496268fc32175183e4041d92586b00b";
-    nixpkgs-unstable-etcher.url = "github:nixos/nixpkgs?rev=15cf1bacec81d3905d40b8005f88bb3ad8dc5a56";
-    # nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
     # ryan4yin/nixpkgs fork for the `.agents/skills/nixpkgs-patched` workflow. It
     # currently carries no patches (see WORKAROUNDS.md), but `pkgs-patched` is
@@ -115,11 +111,6 @@
       inputs.home-manager.follows = "home-manager";
     };
 
-    sops-nix = {
-      url = "github:Mic92/sops-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     disko = {
       url = "github:nix-community/disko/v1.13.0";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -154,21 +145,11 @@
     # AI coding agents
     llm-agents.url = "github:numtide/llm-agents.nix";
 
-    # DeepSeek Harness (dsh)
-    deepseek-harness = {
-      url = "github:moraxyc/deepseek-harness.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # -------------- Gaming ---------------------
 
     nix-gaming = {
       url = "github:fufexan/nix-gaming";
       inputs.nixpkgs.follows = "nixpkgs";
-    };
-    aagl = {
-      url = "github:ezKEa/aagl-gtk-on-nix/main";
-      # inputs.nixpkgs.follows = "nixpkgs";
     };
 
     # x86/x86_64 emulation on 16K-page ARM64 (Apple Silicon). FEX cannot run
@@ -224,7 +205,7 @@
       flake = false;
     };
 
-    # my-asahi-firmware = {
+    # my-asahi-firmware = {  # not fetched downstream: no asahi host here
     #   url = "git+ssh://git@github.com/ryan4yin/asahi-firmware.git?shallow=1";
     #   flake = false;
     # };
@@ -254,6 +235,27 @@
     tuios = {
       url = "github:Gaurav-Gosain/tuios/v0.9.0";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+    # ------------------ Downstream inputs (keep this block last) ------------------
+    nixpkgs-latest.url = "github:nixos/nixpkgs/master";
+    nixpkgs-unstable-yuzu.url = "github:nixos/nixpkgs?rev=6a59b7def496268fc32175183e4041d92586b00b";
+    nixpkgs-unstable-etcher.url = "github:nixos/nixpkgs?rev=15cf1bacec81d3905d40b8005f88bb3ad8dc5a56";
+    # nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # DeepSeek Harness (dsh)
+    deepseek-harness = {
+      url = "github:moraxyc/deepseek-harness.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    aagl = {
+      url = "github:ezKEa/aagl-gtk-on-nix/main";
+      # inputs.nixpkgs.follows = "nixpkgs";
     };
 
     # for waydroid
