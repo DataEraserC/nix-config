@@ -12,7 +12,7 @@
 
   # This is the standard format for flake.nix. `inputs` are the dependencies of the flake,
   # Each item in `inputs` will be passed as a parameter to the `outputs` function after being pulled and built.
-  inputs = rec {
+  inputs = {
     # There are many ways to reference flake inputs. The most widely used is github:owner/name/reference,
     # which represents the GitHub repository URL + branch/commit-id/tag.
 
