@@ -47,6 +47,7 @@ rec {
     ./hardware-nvidia.nix
 
     ./preservation.nix
+    ./preservation-downstream.nix
     ./secureboot.nix
     ./sunshine.nix
 

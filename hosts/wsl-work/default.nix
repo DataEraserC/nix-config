@@ -31,6 +31,7 @@ rec {
     ./ai
 
     ./preservation.nix
+    ./preservation-downstream.nix
     ./impermanence_addon.nix
     # ./secureboot.nix
     # ./dae.nix
