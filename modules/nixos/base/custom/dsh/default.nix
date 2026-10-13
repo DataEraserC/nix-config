@@ -307,7 +307,7 @@ let
     # pkgs.dsh.bundles.message-edit
     # dsh.nix pins 0.1.21 (peer ranges stop before DSH 0.2.0-rc.2); the nur package
     # carries upstream's fixed 0.1.22. Drop back once deepseek-harness.nix catches up.
-    nur-DataEraserC.packages.${pkgs.system}.dsh-agent-teams
+    # nur-DataEraserC.packages.${pkgs.system}.dsh-agent-teams
     # pkgs.dsh.bundles.ads
     # Archived: dsh ships a built-in navbar implementation now.
     # pkgs.dsh.bundles.navbar
@@ -467,30 +467,36 @@ let
   webQQBundles = lib.unique (webBundles ++ qqBundles);
   webQQFailsafeBundles = webFailsafeBundles ++ qqBundles;
 
-  # The webserver row patched to bind every interface, shared by the two
-  # LAN profiles. dsh refuses `--host 0.0.0.0` at startup, so the bind
-  # host can come neither from the command line nor from
-  # `services.dsh.listenAddress`; this profile layer is the only seam.
+  # The LAN profiles deliberately declare NO webserver row. The web-app bundle
+  # already ships one, whose bind host is the launcher provider:
   #
-  # Reachability is then the firewall's decision: 3080 is not in
-  # `allowedTCPPorts`, so only `trustedInterfaces` (tailscale0, zt5u4z6wb4,
-  # easytier0) reach it. A 0.0.0.0 bind also makes dsh derive every
-  # non-internal IPv4 into its browser-trust fence, so the overlay
-  # addresses need no `trustedHosts` entry.
+  #   host: !!js ctx.webStartup.host ?? '127.0.0.1'
   #
-  # `host` is pinned on purpose, so `--host` has no effect here; the port
-  # keeps the row's own override so `--port` still works. Start it
-  # deliberately rather than by default:
-  #   dsh --profile nix-web-lan --no-open
-  webLanPatch = ''
-    - id: webserver
-      config:
-        host: 0.0.0.0
-        port: !!js ctx.webStartup.port ?? 3080
-        compression: gzip
-        compressionLevel: 1
-        compressionThresholdBytes: 1024
-  '';
+  # so `--host <concrete literal>` reaches the bind while the default stays
+  # loopback:  dsh --profile nix-web-lan --host 10.126.126.150 --no-open
+  #
+  # Restating that row here would not be a harmless no-op: a patch assigns the
+  # whole `config` object (`target[key] = value` in dsh-app-boot's
+  # `applyEntryPatches`), never a deep merge, so a local restatement silently
+  # drops every key it does not repeat — including `tls: !!js ctx.webStartup.tls`,
+  # which disables `--tls-cert`/`--tls-key` without any error because the
+  # schema defaults `tls` to undefined. It also freezes the row against every
+  # key upstream adds later. (The row this replaced existed only to pin
+  # `host: 0.0.0.0`, which is now rejected outright.)
+  #
+  # Nothing else could be pinned usefully either: `@deepseek-ai/dsh-host-webserver`
+  # refuses unspecified addresses ("bind one concrete IPv4 or IPv6 address of a
+  # local interface instead"), and the Nix build sandbox is a private network
+  # namespace whose only interface is loopback (binding 192.168.1.8/192.168.5.100/
+  # 10.147.20.150 there all fail), so no profile can pass `dshBundleCheckHook`
+  # while default-binding a LAN address. LAN reachability is therefore a
+  # launch-time decision plus the firewall: 3080 is not in `allowedTCPPorts`, so
+  # only `trustedInterfaces` (tailscale0, zt5u4z6wb4, easytier0) reach it, and
+  # the address must be one of this host's own
+  # (`devices.y9000p2025.addrs.{easytier,tailscale,zerotier}.ip` in
+  # vars/networking-downstream.nix) or the bind fails with EADDRNOTAVAIL. Only
+  # the bound address enters dsh's browser-trust fence, so reaching the UI by
+  # any other name needs an explicit `--trusted-host`.
 
   # Every profile's `cordis.patch.yml` rows come from the file
   # `<key>.yml` in this directory (dotfile-style: edit + prettier + `just local`).
@@ -498,21 +504,6 @@ let
   # that repo file and is restored on the next launch — in-place edits never
   # persist by design.
   repoPatch = key: builtins.readFile (./${key}.yml);
-
-  # Compose a LAN profile's patch: the Nix webserver row first, the repo yml
-  # rows after it, so a same-id row declared in the git file wins. The yml's
-  # %YAML/--- document header cannot follow a document that already started,
-  # so strip those lines, and strip a bare `[]` (no rows yet) for the same
-  # reason; `#` comments are legal between items and survive verbatim.
-  mergeWebLan =
-    yml: web:
-    let
-      isHeaderLine =
-        line: builtins.match "%YAML.*" line != null || builtins.match "---[[:space:]]*" line != null;
-      isBareEmptySeq = line: builtins.match "[[:space:]]*[][[:space:]]*" line != null;
-      keepLine = line: !(isHeaderLine line || isBareEmptySeq line);
-    in
-    web + "\n" + lib.concatStringsSep "\n" (lib.filter keepLine (lib.splitString "\n" yml));
 
   # 主页>插件 的卡片过滤是 `installed = dependencies.includes(name)`（读 profile
   # package.json 顶层 dependencies），可上游 resolve-dsh-bundles.mjs 的 profile
@@ -702,9 +693,9 @@ in
       # material (values stay in `$DSH_HOME/.credentials.yaml`, mode 600).
       patch = null;
 
-      # Each profile's patch layer is its repo yml (`repoPatch`); the four
-      # LAN profiles merge `webLanPatch` ahead of the git rows (see
-      # `mergeWebLan` above).
+      # Each profile's patch layer is exactly its repo yml (`repoPatch`) — no
+      # profile injects rows from Nix. The `-lan` keys differ only in being the
+      # deliberate-start LAN surfaces the user picks at launch.
       profiles = {
         # Full profiles: entry + shared base + shared extras.
         tui = {
@@ -742,29 +733,30 @@ in
           patch = repoPatch "web-qq-failsafe";
         };
 
-        # The same composition as `web`, with the webserver row patched to
-        # bind every interface (see `webLanPatch` above):
-        #   dsh --profile nix-web-lan --no-open
+        # The same composition as `web`; these are the profiles to launch when
+        # the UI must answer on an overlay address — pass it explicitly, since
+        # an unspecified (wildcard) bind is rejected by dsh 0.2.1-alpha.2:
+        #   dsh --profile nix-web-lan --host 10.126.126.150 --no-open
         web-lan = {
           bundles = webBundles;
-          patch = mergeWebLan (repoPatch "web-lan") webLanPatch;
+          patch = repoPatch "web-lan";
         };
         web-lan-failsafe = {
           bundles = webFailsafeBundles;
-          patch = mergeWebLan (repoPatch "web-lan-failsafe") webLanPatch;
+          patch = repoPatch "web-lan-failsafe";
         };
 
-        # The two qq combos with the same LAN webserver patch — deliberate
-        # starts, like `web-lan`:
-        #   dsh --profile nix-web-qq-lan --no-open
-        #   dsh --profile nix-web-qq-lan-failsafe --no-open
+        # The two qq combos on the same seam — deliberate starts, like
+        # `web-lan`, and reachable only with an explicit `--host`:
+        #   dsh --profile nix-web-qq-lan --host 10.126.126.150 --no-open
+        #   dsh --profile nix-web-qq-lan-failsafe --host 10.126.126.150 --no-open
         web-qq-lan = {
           bundles = webQQBundles;
-          patch = mergeWebLan (repoPatch "web-qq-lan") webLanPatch;
+          patch = repoPatch "web-qq-lan";
         };
         web-qq-lan-failsafe = {
           bundles = webQQFailsafeBundles;
-          patch = mergeWebLan (repoPatch "web-qq-lan-failsafe") webLanPatch;
+          patch = repoPatch "web-qq-lan-failsafe";
         };
       };
       defaultProfile = config.programs.dsh.profiles.tui.materializedName;

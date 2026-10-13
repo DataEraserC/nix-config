@@ -7,6 +7,7 @@
 # profile file is a store snapshot of it - edit here, run `just local`, then
 # restart dsh. In-place edits (Settings UI or $DSH_HOME/profiles/...) are
 # reverted to the snapshot on the next launch, by design (managed fingerprint).
-# LAN profile: dsh.nix additionally merges the Nix webserver row
-# (webLanPatch) before these rows, so a same-id row declared here wins.
+# LAN profile: dsh.nix injects no rows, so these are the profile's only rows.
+# The webserver row, with its launcher-provided bind host (`--host`), comes
+# from the dsh-web-app bundle.
 []
