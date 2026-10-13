@@ -278,6 +278,10 @@ in
         ".local/state/opencode"
         ".dsh"
         ".dsh-tui"
+        # opencode2dsh bridge: agent-config.json, agent-token.txt (0600, the
+        # loopback bridge token), adapter-status.json, the models.dev price
+        # cache and singbox/singbox-config.json (subscription nodes).
+        ".opencode2dsh"
 
         # pi coding agent (sessions under ~/.pi/agent/sessions)
         ".pi"
