@@ -335,7 +335,19 @@ let
     # rows and order here is irrelevant; the browser half rides the
     # package.json dsh.client declaration. Egress runs through the mihomo
     # binary from its runtimeDeps — no PATH wiring needed at this layer.
-    nur-DataEraserC.packages.${pkgs.system}.dsh-our-free-model
+    # extraWebProfiles unlocks the sealed EAC lane: src/vault.js admits only
+    # the profile names `web`/`web-desktop`/`desktop`, so every custom web
+    # profile would render a dark lane and never load the EAC roster. List
+    # the profiles that both load this bundle and can show its client half —
+    # the *-failsafe ones carry no extras at all, and tui has no web UI.
+    (nur-DataEraserC.packages.${pkgs.system}.dsh-our-free-model.override {
+      extraWebProfiles = [
+        "nix-web"
+        "nix-web-lan"
+        "nix-web-qq"
+        "nix-web-qq-lan"
+      ];
+    })
     # Free web search with smart engine routing (ddg/bing/searxng… plus a
     # keyless fallback) and a settings UI. The browser half rides the
     # package.json dsh.client declaration (web profiles, hence passthru.requiresWeb)
