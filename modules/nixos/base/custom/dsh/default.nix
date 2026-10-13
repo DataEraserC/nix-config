@@ -121,12 +121,13 @@ let
   # Pinned fork commit instead of local patch files: the upstream repo did
   # not merge the PRs we needed, and three stacked patch files were a
   # maintenance burden (context drift on every upstream tag). The fork branch
-  # `master-patches` (rev pinned below) is now a true MERGE of upstream
-  # master (0.3.5 era, b69e25d) with our IP-pool line — both histories stay
+  # `master-patches-fix` (rev pinned below) is now a true MERGE of upstream
+  # master (0.3.11 era, 235bcb4) with our IP-pool line — both histories stay
   # reachable, future upstream syncs are ordinary merges, and GitHub shows
   # 0 behind. The first two picks below (#14, #23) were adopted upstream
-  # during that sync (1f270f4 / 36e83bb), so the only content delta against
-  # upstream is the pool line; the commits in order:
+  # during that sync (1f270f4 / 36e83bb), so the content delta against
+  # upstream is the pool line plus the session-id fix recorded last below;
+  # the commits in order:
   #
   #  - opencode2dsh#14 (author superzzm2026, cherry-picked with -x): ZenAdapter
   #    never implements imageRequestPricing(), so dsh-llm's pricing lookup
@@ -222,6 +223,16 @@ let
   #    count). Docs §1.2.4. pnpmDeps hash UNCHANGED: the lockfile is
   #    byte-identical (package.json version is not a pnpm-store input).
   #
+  #  - OpenCode session-id time field (Assisted-by trailer): #62 reported a
+  #    permanent 403 FREE_TIER_BLOCKED on the free lane. The derived `ses_`
+  #    id took its 12 hex characters from a sha256 digest, but OpenCode's
+  #    identifier.create() stamps the low 48 bits of ~((Date.now()*0x1000) +
+  #    counter) into that field and the lane rejects a session id without a
+  #    plausible timestamp. The prefix is minted OpenCode's way now, memoized
+  #    per digest so ids stay stable across turns, and FreeTierError is
+  #    classified as FREE_TIER_BLOCKED ahead of the 401/403 AUTH branch so
+  #    DSH reports the real cause instead of "invalid API key".
+  #
   # The first two commits keep their upstream author/message; the later ones
   # are ours. Rebase the fork branch onto the next upstream tag when
   # nur-DataEraserC catches up, then drop this override entirely. `patches = [ ]`
@@ -229,22 +240,17 @@ let
   opencode2dsh = nur-DataEraserC.packages.${pkgs.system}.opencode2dsh.overrideAttrs (
     old:
     let
-      # db1f4d2 = 946ac03 + the empty-proxyHosts fix (Assisted-by trailer):
-      # the schema resolves ipPool.proxyHosts to [] when the profile omits
-      # it, and the router constructor's `?? DEFAULT` kept that empty array
-      # — new Set([]).has(host) failed for EVERY host, so all zen traffic
-      # routed direct and 429 concentrated on one Clash exit IP while the
-      # pool and status card looked green (live-observed 2026-10-02). An
-      # empty array now defaults exactly like setProxyHosts, and the status
-      # bridge prefers the LIVE router's set over settings/fallback so the
-      # two can never diverge silently again. No dependency changes: the
-      # pnpmDeps fixed-output hash is unchanged (lockfile byte-identical to
-      # 946ac03).
+      # 691e8ed = db1f4d2 + the upstream 0.3.11 sync merge (4fa1609) + the
+      # OpenCode session-id fix (Assisted-by trailer, detailed above): the
+      # free lane answered 403 FREE_TIER_BLOCKED for every request because
+      # the derived `ses_` id carried sha256 bytes where OpenCode stamps a
+      # timestamp (#62). No dependency changes: the pnpmDeps fixed-output
+      # hash is unchanged (lockfile byte-identical to db1f4d2).
       forkSrc = pkgs.fetchFromGitHub {
         owner = "DataEraserC";
         repo = "opencode2dsh";
-        rev = "db1f4d270c449ebc8dda5bfe28fbfebcf7c4a84e";
-        hash = "sha256-NcCTuXm9Wlo0QKnc+QxVHaOplLJIWW5YZFuPZ//C56U=";
+        rev = "691e8ed967e1efad77e772ce83ce772d39709f45";
+        hash = "sha256-SRk/DsmYMSsGB8ctzUnmlA5CYqNAjSZJv8ZL57evZNs=";
       };
     in
     {
