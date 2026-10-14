@@ -9,9 +9,13 @@
 {
   nixpkgs.config.permittedInsecurePackages = [
     "electron-40.10.5"
+    "electron-41.10.6"
     "ventoy-1.1.17"
     "idea-oss-2025.3.4"
     "idea-oss-with-plugins-2025.3.4"
+    # same package after nixpkgs renamed pname idea-oss -> intellij-idea-oss
+    "intellij-idea-oss-2025.3.4"
+    "intellij-idea-oss-with-plugins-2025.3.4"
     # build-time dependency of cherry-studio
     "pnpm-10.29.2"
   ];
