@@ -41,7 +41,8 @@
     wvkbd # On-screen keyboard for wlroots
 
     # my custom hardened packages
-    nixpaks.qq
+    # nixpaks.qq
+    qq
     # nixpaks.telegram-desktop
     bwraps.wechat
 
