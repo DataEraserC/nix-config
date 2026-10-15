@@ -122,12 +122,14 @@ let
   # not merge the PRs we needed, and three stacked patch files were a
   # maintenance burden (context drift on every upstream tag). The fork branch
   # `master-patches-fix` (rev pinned below) is now a true MERGE of upstream
-  # master (0.3.11 era, 235bcb4) with our IP-pool line — both histories stay
-  # reachable, future upstream syncs are ordinary merges, and GitHub shows
-  # 0 behind. The first two picks below (#14, #23) were adopted upstream
-  # during that sync (1f270f4 / 36e83bb), so the content delta against
-  # upstream is the pool line plus the session-id fix recorded last below;
-  # the commits in order:
+  # master with our IP-pool line — both histories stay reachable, future
+  # upstream syncs are ordinary merges, and GitHub shows 0 behind. Two syncs
+  # so far: 0.3.11 (upstream 235bcb4) and the #59-#66 batch (upstream
+  # 8ccc3f8). The first two picks below (#14, #23) were adopted upstream
+  # during the first sync (1f270f4 / 36e83bb), and the session-id fix during
+  # the second — upstream fixed #62 itself with the same algorithm — so the
+  # content delta against upstream is the pool line plus the inference-surface
+  # fix recorded last below; the commits in order:
   #
   #  - opencode2dsh#14 (author superzzm2026, cherry-picked with -x): ZenAdapter
   #    never implements imageRequestPricing(), so dsh-llm's pricing lookup
@@ -224,14 +226,32 @@ let
   #    byte-identical (package.json version is not a pnpm-store input).
   #
   #  - OpenCode session-id time field (Assisted-by trailer): #62 reported a
-  #    permanent 403 FREE_TIER_BLOCKED on the free lane. The derived `ses_`
-  #    id took its 12 hex characters from a sha256 digest, but OpenCode's
-  #    identifier.create() stamps the low 48 bits of ~((Date.now()*0x1000) +
-  #    counter) into that field and the lane rejects a session id without a
-  #    plausible timestamp. The prefix is minted OpenCode's way now, memoized
-  #    per digest so ids stay stable across turns, and FreeTierError is
-  #    classified as FREE_TIER_BLOCKED ahead of the 401/403 AUTH branch so
-  #    DSH reports the real cause instead of "invalid API key".
+  #    permanent 403 on the free lane. The derived `ses_` id took its 12 hex
+  #    characters from a sha256 digest, but OpenCode's identifier.create()
+  #    stamps the low 48 bits of ~((Date.now()*0x1000) + counter) into that
+  #    field and the lane rejects a session id without a plausible timestamp.
+  #    The prefix is minted OpenCode's way now, memoized per digest so ids
+  #    stay stable across turns, and the free-tier error is classified ahead
+  #    of the 401/403 AUTH branch so DSH reports the real cause instead of
+  #    "invalid API key".
+  #
+  #    Superseded by upstream in the second sync: upstream fixed #62 itself
+  #    (PR #65, 79f01a5) with the identical algorithm, so the fork takes
+  #    upstream's files wholesale — src/adapter/{ids,events}.ts and both test
+  #    files are byte-identical to upstream, and the label is upstream's
+  #    FREE_TIER_RESTRICTED. No part of that fix is still ours.
+  #
+  #  - Free-lane inference surface (Assisted-by trailer, refs
+  #    Ebony-Vinyl/dsh-our-free-model#310): the anonymous lane moved from
+  #    /zen to /inference and added an agent-shape gate. Four independent
+  #    refusals, each fatal alone: a non-empty `x-opencode-request` header, a
+  #    `prj_*` project id, a gate tool advertising an empty parameter object,
+  #    and the old base URL. The adapter now points at
+  #    https://opencode.ai/inference, drops that header, sends project
+  #    `global`, and gates on the official `read` tool definition. Ablated
+  #    one at a time: each alone still 403s, all four together 200. Model
+  #    lists answered 200 on both surfaces with the same 85 ids, which is why
+  #    it read as a key problem while every conversation was refused.
   #
   # The first two commits keep their upstream author/message; the later ones
   # are ours. Rebase the fork branch onto the next upstream tag when
@@ -240,17 +260,18 @@ let
   opencode2dsh = nur-DataEraserC.packages.${pkgs.system}.opencode2dsh.overrideAttrs (
     old:
     let
-      # 691e8ed = db1f4d2 + the upstream 0.3.11 sync merge (4fa1609) + the
-      # OpenCode session-id fix (Assisted-by trailer, detailed above): the
-      # free lane answered 403 FREE_TIER_BLOCKED for every request because
-      # the derived `ses_` id carried sha256 bytes where OpenCode stamps a
-      # timestamp (#62). No dependency changes: the pnpmDeps fixed-output
-      # hash is unchanged (lockfile byte-identical to db1f4d2).
+      # c91dcae = 691e8ed + the second upstream sync merge (upstream master
+      # through the #59-#66 batch, 8ccc3f8) + the free-lane inference-surface
+      # fix (refs #310, detailed above). The sync carries upstream's own fix
+      # for #62 (PR #65, identical algorithm), which replaced ours, so the
+      # fork's content delta against upstream is the IP-pool line plus the
+      # inference-surface fix. No dependency changes: the pnpmDeps
+      # fixed-output hash is unchanged (lockfile byte-identical to 691e8ed).
       forkSrc = pkgs.fetchFromGitHub {
         owner = "DataEraserC";
         repo = "opencode2dsh";
-        rev = "691e8ed967e1efad77e772ce83ce772d39709f45";
-        hash = "sha256-SRk/DsmYMSsGB8ctzUnmlA5CYqNAjSZJv8ZL57evZNs=";
+        rev = "c91dcae532a5a388cd9ac3a026763aa1ed67a5b7";
+        hash = "sha256-nj8n4Y2b1olJBwvEHa2+JbB8ABUyDBbwqZea0R/Bd6o=";
       };
     in
     {
