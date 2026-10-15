@@ -383,6 +383,20 @@ let
     pkgs.dsh.bundles.harbor
     pkgs.dsh.bundles.graph-memory
     pkgs.dsh.bundles.notification
+    # Official experimental plugins, declared so the WebUI switch is durable:
+    # the switch only edits the profile package.json's dsh.profile.bundles,
+    # which dsh-sync-profiles reverts on every launch — the "reset after
+    # restart" bug. In the template they ship enabled and the fingerprint
+    # stays self-consistent. extraBundles is the intended home: every full
+    # profile (tui/web/web-lan/web-qq/web-qq-lan) carries it and every
+    # *-failsafe drops it, so the escape hatch stays a pure baseline.
+    # agent-team-profile layers last on purpose — its patch replaces the
+    # subagent tool rows and must apply after dsh-base ("Apply after
+    # dsh-base" in its cordis.patch.yml); it is requiresWeb, but so is the
+    # rest of this list (baseBundles' modsearch/remote already force
+    # needsWeb on every profile including tui).
+    pkgs.dsh.bundles.experimental-agent-team-profile
+    pkgs.dsh.bundles.experimental-auto-review
   ];
 
   # QQ group-chat stack: unstable, so it stays out of the plain profiles and
