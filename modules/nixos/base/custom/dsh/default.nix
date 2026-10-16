@@ -395,6 +395,8 @@ let
     # dsh-base" in its cordis.patch.yml); it is requiresWeb, but so is the
     # rest of this list (baseBundles' modsearch/remote already force
     # needsWeb on every profile including tui).
+    pkgs.dsh.bundles.experimental-session-search
+    pkgs.dsh.bundles.experimental-tool-worktree
     pkgs.dsh.bundles.experimental-agent-team-profile
     pkgs.dsh.bundles.experimental-auto-review
   ];
