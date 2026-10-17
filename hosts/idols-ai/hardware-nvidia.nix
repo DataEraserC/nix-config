@@ -87,9 +87,6 @@
   ++ [
     pkgs.nvtopPackages.full
   ];
-  # disable cudasupport before this issue get fixed:
-  # https://github.com/NixOS/nixpkgs/issues/338315
-  nixpkgs.config.cudaSupport = false;
 
   # GPU monitoring: CUDA btop (CAP_PERFMON also lets it read the Intel iGPU),
   # nvtop, and the community nvidia_gpu_exporter.
