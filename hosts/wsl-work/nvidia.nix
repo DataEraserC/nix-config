@@ -64,21 +64,4 @@
     # nixGL.packages.${pkgs.system}.nixVulkanNvidia
     # nixGL.packages.${pkgs.system}.nixVulkanIntel
   ];
-  # disable cudasupport before this issue get fixed:
-  # https://github.com/NixOS/nixpkgs/issues/338315
-  nixpkgs.config.cudaSupport = false;
-
-  nixpkgs.overlays = [
-    (_: super: {
-      blender = super.blender.override {
-        # https://nixos.org/manual/nixpkgs/unstable/#opt-cudaSupport
-        cudaSupport = true;
-        waylandSupport = true;
-      };
-
-      # ffmpeg-full = super.ffmpeg-full.override {
-      #   withNvcodec = true;
-      # };
-    })
-  ];
 }
