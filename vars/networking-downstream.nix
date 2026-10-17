@@ -352,17 +352,17 @@ rec {
         idols-ai = {
           enable = false;
           host = "0.0.0.0";
-          port = 1107;
+          port = 1120;
         };
         wsl-y9000p2025 = {
           enable = false;
           host = "0.0.0.0";
-          port = 1107;
+          port = 1120;
         };
         wsl-work = {
           enable = false;
           host = "0.0.0.0";
-          port = 1107;
+          port = 1120;
         };
       };
     };
@@ -389,17 +389,17 @@ rec {
         idols-ai = {
           enable = true;
           host = "127.0.0.1";
-          port = 18900;
+          port = 1107;
         };
         wsl-y9000p2025 = {
           enable = true;
           host = "127.0.0.1";
-          port = 18900;
+          port = 1107;
         };
         wsl-work = {
           enable = true;
           host = "127.0.0.1";
-          port = 18900;
+          port = 1107;
         };
       };
     };
@@ -493,49 +493,55 @@ rec {
     # idols-ai / y9000p2025 (10.126.126.150) - 3xxxx range
     {
       name = "new-api";
-      localPort = 31100;
+      localPort = 30000 + services.new-api.hosts.idols-ai.port;
       remoteHost = endpoints.y9000p2025.easytier;
       remotePort = services.new-api.hosts.idols-ai.port;
     }
     {
       name = "opencode2api";
-      localPort = 31101;
+      localPort = 30000 + services.opencode2api.hosts.idols-ai.port;
       remoteHost = endpoints.y9000p2025.easytier;
       remotePort = services.opencode2api.hosts.idols-ai.port;
     }
     {
       name = "opencode2api-management-center";
-      localPort = 31102;
+      localPort = 30000 + services.opencode2api.hosts.idols-ai.adminPort;
       remoteHost = endpoints.y9000p2025.easytier;
       remotePort = services.opencode2api.hosts.idols-ai.adminPort;
     }
     {
       name = "mimocode2api";
-      localPort = 31103;
+      localPort = 30000 + services.mimocode2api.hosts.idols-ai.port;
       remoteHost = endpoints.y9000p2025.easytier;
       remotePort = services.mimocode2api.hosts.idols-ai.port;
     }
     {
       name = "M365-Copilot2API";
-      localPort = 31104;
+      localPort = 30000 + services.m365-copilot2api.hosts.idols-ai.port;
       remoteHost = endpoints.y9000p2025.easytier;
       remotePort = services.m365-copilot2api.hosts.idols-ai.port;
     }
     {
       name = "cliproxyapimanagementcenter";
-      localPort = 31105;
+      localPort = 30000 + services.cliproxyapi.hosts.idols-ai.port;
       remoteHost = endpoints.y9000p2025.easytier;
       remotePort = services.cliproxyapi.hosts.idols-ai.port;
     }
     # {
     #   name = "omniroute";
-    #   localPort = 31106;
+    #   localPort = 30000 + services.omniroute.hosts.idols-ai.port;
     #   remoteHost = endpoints.y9000p2025.easytier;
     #   remotePort = services.omniroute.hosts.idols-ai.port;
     # }
+    # {
+    #   name = "our-free-model-standalone";
+    #   localPort = 30000 + services.our-free-model-standalone.hosts.idols-ai.port;
+    #   remoteHost = endpoints.y9000p2025.easytier;
+    #   remotePort = services.our-free-model-standalone.hosts.idols-ai.port;
+    # }
     {
       name = "openwebui";
-      localPort = 31107;
+      localPort = 30000 + services.open-webui.hosts.idols-ai.port;
       remoteHost = endpoints.y9000p2025.easytier;
       remotePort = services.open-webui.hosts.idols-ai.port;
     }
@@ -543,7 +549,7 @@ rec {
     # plain TCP), so the tunnel must speak ssh - kept for a future re-enable:
     # {
     #   name = "dsh";
-    #   localPort = 33080;
+    #   localPort = 30000 + 3080;
     #   remoteHost = endpoints.y9000p2025.easytier;
     #   remotePort = 3080;
     # }
@@ -551,46 +557,46 @@ rec {
     # module, so they stay unregistered (registry scope) and carry literals.
     {
       name = "rdp";
-      localPort = 33389;
+      localPort = 30000 + 3389;
       remoteHost = endpoints.y9000p2025.easytier;
       remotePort = 3389;
     }
     {
       name = "ssh";
-      localPort = 30022;
+      localPort = 30000 + services.ssh.hosts.idols-ai.port;
       remoteHost = endpoints.y9000p2025.easytier;
       remotePort = services.ssh.hosts.idols-ai.port;
     }
     {
       name = "opencode";
-      localPort = 34096;
+      localPort = 30000 + 4096;
       remoteHost = endpoints.y9000p2025.easytier;
       remotePort = 4096;
     }
-    {
-      name = "y9000p2025-proxy";
-      localPort = 37890;
-      remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = 7897;
-    }
+    # {
+    #   name = "y9000p2025-proxy";
+    #   localPort = 30000 + 7890;
+    #   remoteHost = endpoints.y9000p2025.easytier;
+    #   remotePort = 7897;
+    # }
     # apatch-infiniti (10.126.126.154) - 4xxxx range; adb, the device's SOCKS
     # proxy and the Termux sshd run outside this flake, so their ports are
     # literals until a NixOS module owns them.
     {
       name = "adb";
-      localPort = 45555;
+      localPort = 40000 + 5555;
       remoteHost = endpoints.infiniti.easytier;
       remotePort = 5555;
     }
     {
       name = "infiniti-proxy";
-      localPort = 42080;
+      localPort = 40000 + 2080;
       remoteHost = endpoints.infiniti.easytier;
       remotePort = 2080;
     }
     {
       name = "termux-ssh";
-      localPort = 40022;
+      localPort = 40000 + 0022;
       remoteHost = endpoints.infiniti.easytier;
       remotePort = 8022;
     }
