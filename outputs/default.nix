@@ -73,6 +73,16 @@ let
           cudaCapabilities = [ "8.9" ];
         };
       };
+      pkgs-cuda = import inputs.nixpkgs {
+        inherit system;
+        config = lib.optionalAttrs (system == "x86_64-linux") {
+          allowUnfree = true;
+          cudaSupport = true;
+          # CUDA compute capability 12.0 targets the NVIDIA GeForce RTX 5070 Max-Q / Mobile and avoids building kernels
+          # for unrelated GPU architectures.
+          cudaCapabilities = [ "12.0" ];
+        };
+      };
     };
 
   # This is the args for all the haumea modules in this folder.
