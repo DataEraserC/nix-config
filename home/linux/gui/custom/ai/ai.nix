@@ -17,5 +17,9 @@
     # comfyui-nix.packages.${pkgs.system}.cuda   # CUDA (Linux/NVIDIA)
     # comfyui-nix.packages.${pkgs.system}.rocm   # ROCm (Linux/AMD)
     # comfyui-nix.packages.${pkgs.system}.xpu    # Intel XPU
+
+    (pkgs.comfyui.override {
+      withManager = true;
+    })
   ];
 }
