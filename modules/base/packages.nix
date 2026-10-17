@@ -51,7 +51,8 @@
     ripgrep
 
     duf # Disk Usage/Free Utility - a better 'df' alternative
-    gdu # disk usage analyzer, non-interactive (`-n`) & JSON (`-o`)
+    gdu # disk usage analyzer, non-interactive (`-n`) & JSON (`-o`); required by AstroNvim
+    nix-du # visualize /nix/store disk usage as a tree, companion of gdu/duf
 
     # networking tools
     mtr # A network diagnostic tool(traceroute)

@@ -40,5 +40,8 @@
     # nur-DataEraserC.packages.${pkgs.system}.flutter_server_box
 
     nur-DataEraserC.packages.${pkgs.system}.devtunnel
+
+    # -- diff/merge
+    meld # GUI diff/merge tool for git and files
   ];
 }

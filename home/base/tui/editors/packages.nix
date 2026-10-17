@@ -42,6 +42,7 @@
         nvfetcher
         nix-update
         patchelf # Patch ELF for nixos
+        nixos-shell # run a NixOS system in a shell for rapid config prototyping
 
         #-- nickel lang
         nickel

@@ -81,7 +81,8 @@ Noctalia consolidates functionality that previously required multiple tools:
 ### Applications
 
 - **[`desktop-tools.nix`](./desktop-tools.nix)**: Wayland session tools (clipboard, brightness,
-  screen recording, auto-mount, virt-manager/virt-viewer, `wlogout` emergency fallback)
+  screen recording, auto-mount, virt-manager/virt-viewer & WinBoat (x86_64 only), `wlogout`
+  emergency fallback)
 - **[`browsers.nix`](./browsers.nix)**: Web browsers
 - **[`vscode.nix`](./vscode.nix)**: VS Code (GUI editor; the primary Zed config is shared from
   [`home/base/gui/zed-editor.nix`](../../../base/gui/zed-editor.nix))

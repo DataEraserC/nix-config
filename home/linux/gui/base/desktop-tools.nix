@@ -1,7 +1,10 @@
 {
   mylib,
   config,
+  lib,
   pkgs,
+  # flake input, bound so the commented winpodx line below stays valid when uncommented
+  winpodx,
   ...
 }:
 {
@@ -28,15 +31,29 @@
     "XDG_SESSION_TYPE" = "wayland";
   };
 
-  home.packages = with pkgs; [
-    wl-clipboard # copying and pasting
-    brightnessctl
-    # screen recording
-    wf-recorder # screen recording
+  home.packages =
+    with pkgs;
+    [
+      wl-clipboard # copying and pasting
+      brightnessctl
+      # screen recording
+      wf-recorder # screen recording
 
-    virt-manager # manage the libvirt VMs
-    virt-viewer # vnc/spice console for the libvirt VMs
-  ];
+      virt-manager # manage the libvirt VMs
+      virt-viewer # vnc/spice console for the libvirt VMs
+    ]
+    # WinBoat: run Windows in a Podman container on top of host KVM (the wrapper
+    # already ships freerdp/docker-compose/podman-compose; podman and the kvm
+    # module come from the NixOS desktop module + hardware config). The package
+    # is x86_64-only, so the aarch64 desktop (shoukei) skips it - same pattern
+    # as zoom-us in media.nix.
+    ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [
+      winboat
+      # TODO: test which one is better, and if we choose winpodx, we need to
+      # persist winpodx data (`.winboat` / `~/winboat`, see the per-host
+      # preservation-downstream.nix).
+      # winpodx.packages.${pkgs.system}.winpodx
+    ];
 
   # Emergency session-menu fallback; the normal flow uses Noctalia's session panel.
   programs.wlogout.enable = true;
