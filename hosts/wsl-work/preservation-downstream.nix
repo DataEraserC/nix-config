@@ -234,6 +234,8 @@ in
 
         # ai related file dirs
         "invokeai"
+        # comfyui user dir (custom_nodes, input); created by pkgs.comfyui on first run
+        ".local/share/comfyui"
         ".textgen"
         ".config/LaphaeLaicmd"
         ".config/aichat"
