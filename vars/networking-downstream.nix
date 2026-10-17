@@ -379,6 +379,31 @@ rec {
       };
     };
 
+    # --- Our Free Model standalone gateway (base/custom/our-free-model-standalone) ---
+    # Not part of the 1100 series: the gateway hard-binds 127.0.0.1 (the
+    # upstream entry point rejects any other address), so nothing tunnels it;
+    # the row documents the port it is told to take and the machines that run
+    # it for the catalog page.
+    our-free-model-standalone = {
+      hosts = {
+        idols-ai = {
+          enable = true;
+          host = "127.0.0.1";
+          port = 18900;
+        };
+        wsl-y9000p2025 = {
+          enable = true;
+          host = "127.0.0.1";
+          port = 18900;
+        };
+        wsl-work = {
+          enable = true;
+          host = "127.0.0.1";
+          port = 18900;
+        };
+      };
+    };
+
     # --- subscription manager, fronted by Caddy (base/custom/sub-store) ---
     # The one service whose bind address a module option consumes directly
     # (`modules.sub-store.host`, see the shape notes above); its enable is

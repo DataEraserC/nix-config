@@ -248,6 +248,12 @@ rec {
   modules.new-api.enable = myvars.networking.services.new-api.hosts.idols-ai.enable;
   modules.new-api.port = myvars.networking.services.new-api.hosts.idols-ai.port;
 
+  # Our Free Model standalone gateway, 127.0.0.1:18900 (loopback only).
+  modules.our-free-model-standalone.enable =
+    myvars.networking.services.our-free-model-standalone.hosts.idols-ai.enable;
+  modules.our-free-model-standalone.port =
+    myvars.networking.services.our-free-model-standalone.hosts.idols-ai.port;
+
   # Open WebUI chat frontend, 0.0.0.0:1107 (shared modules.open-webui) - disabled.
   modules.open-webui.enable = myvars.networking.services.open-webui.hosts.idols-ai.enable;
   modules.open-webui.port = myvars.networking.services.open-webui.hosts.idols-ai.port;

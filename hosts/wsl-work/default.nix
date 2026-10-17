@@ -112,6 +112,12 @@ rec {
   modules.new-api.enable = myvars.networking.services.new-api.hosts.wsl-work.enable;
   modules.new-api.port = myvars.networking.services.new-api.hosts.wsl-work.port;
 
+  # Our Free Model standalone gateway, 127.0.0.1:18900 (loopback only).
+  modules.our-free-model-standalone.enable =
+    myvars.networking.services.our-free-model-standalone.hosts.wsl-work.enable;
+  modules.our-free-model-standalone.port =
+    myvars.networking.services.our-free-model-standalone.hosts.wsl-work.port;
+
   # Open WebUI: disabled on every host and no local instance here either;
   # the `openwebui` entry in myvars.networking.tunnels.work (local 31107 ->
   # remote 1107) is kept for a future re-enable.

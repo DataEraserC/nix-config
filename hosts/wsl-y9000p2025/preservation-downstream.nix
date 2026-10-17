@@ -63,6 +63,12 @@ in
         mode = "0700";
       }
 
+      # our-free-model-standalone (account pool, credentials, settings, API key)
+      {
+        directory = "/var/lib/our-free-model-standalone";
+        mode = "0700";
+      }
+
       # ccache
       "/var/cache/ccache"
 
