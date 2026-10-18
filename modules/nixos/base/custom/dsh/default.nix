@@ -380,6 +380,11 @@ let
     # package.json dsh.client declaration (web profiles, hence passthru.requiresWeb)
     # and the server half links its node_modules straight into the kernel.
     nur-DataEraserC.packages.${pkgs.system}.dsh-free-search
+    # yt-dlp video download with per-site login (bilibili QR / cookie import)
+    # and ffmpeg compression to QQ-sendable size. Server-only — no dsh.client
+    # half, so tui and web profiles both get it. yt-dlp/ffmpeg arrive via the
+    # package's own runtimeDeps, no PATH wiring needed here.
+    nur-DataEraserC.packages.${pkgs.system}.dsh-video-fetch
     pkgs.dsh.bundles.harbor
     pkgs.dsh.bundles.graph-memory
     pkgs.dsh.bundles.notification
@@ -432,6 +437,13 @@ let
         "web_search"
         "x_search"
         "read_page"
+        # dsh-video-fetch (3 tools): download, per-site login — its QR flow
+        # exists to be shown to the chat and scanned there — and compression
+        # to QQ-sendable size. Exact names; cookie values never enter context
+        # and login import takes a path, not file contents.
+        "video_fetch"
+        "video_login"
+        "video_compress"
         "ego_captcha"
         "ego_check"
         "ego_click"
