@@ -385,6 +385,13 @@ let
     # half, so tui and web profiles both get it. yt-dlp/ffmpeg arrive via the
     # package's own runtimeDeps, no PATH wiring needed here.
     nur-DataEraserC.packages.${pkgs.system}.dsh-video-fetch
+    # Drive the local ComfyUI (image / video / audio generation) with the whole
+    # workflow adjustable from the dsh side: parameter snapshots per saved
+    # workflow plus user-added advanced parameters covering any node input,
+    # including custom nodes. Web-only client half (panels), hence
+    # passthru.requiresWeb; the server half talks to the ComfyUI HTTP endpoint
+    # and carries no runtime deps of its own.
+    nur-DataEraserC.packages.${pkgs.system}.dsh-comfyui
     pkgs.dsh.bundles.harbor
     pkgs.dsh.bundles.graph-memory
     pkgs.dsh.bundles.notification
@@ -446,6 +453,15 @@ let
         "video_login"
         "video_compress"
         "video_settings"
+        # dsh-comfyui (4 tools): list/run the saved workflow library with its
+        # per-run parameter overrides, hand-written API workflows for one-off
+        # tests, node/model inspection, and the per-workflow skill pack. They
+        # only reach the ComfyUI HTTP endpoint and the pack's own directory
+        # (path containment), never the local shell — no restricted sibling.
+        "comfyui_workflow"
+        "comfyui_run"
+        "comfyui_object_info"
+        "comfyui_skill"
         "ego_captcha"
         "ego_check"
         "ego_click"
