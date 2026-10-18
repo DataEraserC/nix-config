@@ -437,13 +437,15 @@ let
         "web_search"
         "x_search"
         "read_page"
-        # dsh-video-fetch (3 tools): download, per-site login — its QR flow
-        # exists to be shown to the chat and scanned there — and compression
-        # to QQ-sendable size. Exact names; cookie values never enter context
-        # and login import takes a path, not file contents.
+        # dsh-video-fetch (4 tools): download, per-site login — its QR flow
+        # exists to be shown to the chat and scanned there — compression to
+        # QQ-sendable size, and the settings tool that edits the same profile
+        # patch the web card writes. Exact names; cookie values never enter
+        # context and login import takes a path, not file contents.
         "video_fetch"
         "video_login"
         "video_compress"
+        "video_settings"
         "ego_captcha"
         "ego_check"
         "ego_click"
