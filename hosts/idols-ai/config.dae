@@ -421,6 +421,7 @@ routing {
     domain(keyword:'zhihu') -> direct
     domain(keyword:'douyu') -> direct
     domain(geosite:cloudflare-cn) -> direct
+    domain(full:new.xinjianya.top) -> direct
 
     # Block ads
     domain(full:analytics.google.com) -> proxy  # do not block google analytics(console)
