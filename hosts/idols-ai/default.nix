@@ -272,6 +272,17 @@ rec {
   # Route CLI traffic through the local / LAN SOCKS proxies.
   modules.proxychains.enable = true;
 
+  # CodeBuddy, CodeArts and WorkBuddy agent tools (packages from nur-DataEraserC).
+  # Built and smoke-tested on this host (2.169.0 / 26.9.26 / 5.6.2.40046327); the
+  # switches are parked commented out until one is wanted. Their ~/.codebuddy,
+  # ~/.codeartsdoer, ~/.workbuddy and ~/.local/share/CodeBuddyExtension state is
+  # persisted unconditionally in preservation-downstream.nix, so re-enabling one
+  # keeps whatever login and history already exists.
+  # See modules/nixos/base/custom/{codebuddy,codearts,workbuddy}.nix.
+  # modules.codebuddy.enable = true;
+  # modules.codearts.enable = true;
+  # modules.workbuddy.enable = true;
+
   # WARP tunnel + its root CA cert, replaces the connection between this
   # device and the Internet. Download:
   # https://developers.cloudflare.com/cloudflare-one/connections/connect-devices/warp/install-cloudflare-cert/
