@@ -18,12 +18,12 @@ let
   #   2. qqBridgeVersion ← fork package.json 的 version；
   #   3. qqBridgeNpmDepsHash ← fork package-lock.json（FOD 不匹配时错误里的
   #      "got: sha256-..." 即新值）。
-  qqBridgeVersion = "0.2.0-r3";
-  qqBridgeNpmDepsHash = "sha256-wrhFeMI4uNjtPDH6vHLyCTgOZAOtF8bbo/VLdWCz488=";
+  qqBridgeVersion = "0.2.0-r4";
+  qqBridgeNpmDepsHash = "sha256-0J+novef8zIp5xyFumglORObBtWJHBZ8PhY3v7Irhyg=";
 
   # 用 fork（flake input qq-bridge-fork）覆盖 qq-bridge-unwrapped 的 src，再喂给
   # 下面三处 .override 的 unwrapped 参数，让 bridge 服务、DSH MCP servers、
-  # agent presets 三件套都跑 fork 代码（master-downstream：上游 0.2.0-r3 合并 +
+  # agent presets 三件套都跑 fork 代码（master-downstream：上游 0.2.0-r4 合并 +
   # 下游扩展，含工具 qq_get_message_media）。刻意用 overrideAttrs 而不是改 nur
   # 侧的 default.nix：qq-bridge-unwrapped 文件与上游保持逐字一致，nix-update /
   # 自动更新不受影响。
