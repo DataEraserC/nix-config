@@ -379,7 +379,7 @@ rec {
       };
     };
 
-    # --- Our Free Model standalone gateway (base/custom/our-free-model-standalone) ---
+    # --- Our Free Model standalone gateway (base/custom/ai/our-free-model-standalone) ---
     # Not part of the 1100 series: the gateway hard-binds 127.0.0.1 (the
     # upstream entry point rejects any other address), so nothing tunnels it;
     # the row documents the port it is told to take and the machines that run
@@ -404,7 +404,7 @@ rec {
       };
     };
 
-    # --- subscription manager, fronted by Caddy (base/custom/sub-store) ---
+    # --- subscription manager, fronted by Caddy (base/custom/network/sub-store) ---
     # The one service whose bind address a module option consumes directly
     # (`modules.sub-store.host`, see the shape notes above); its enable is
     # wired from the row the same way. port / frontendPort document what
@@ -421,7 +421,7 @@ rec {
       };
     };
 
-    # --- authenticated SOCKS5 proxy (modules/nixos/base/custom/gost-proxy.nix)
+    # --- authenticated SOCKS5 proxy (modules/nixos/base/custom/network/gost-proxy.nix)
     # The same instance names are used on several hosts, so each row lists
     # the instances that machine declares; ports, not enablement, live here.
     gost-proxy = rec {

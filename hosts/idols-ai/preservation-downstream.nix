@@ -129,7 +129,7 @@ in
         # pi coding agent (sessions under ~/.pi/agent/sessions)
         ".pi"
 
-        # Agent tools (modules/nixos/base/custom/{codebuddy,codearts,workbuddy}.nix).
+        # Agent tools (modules/nixos/base/custom/ai/{codebuddy,codearts,workbuddy}.nix).
         # Unconditional on purpose: the modules are commented out in default.nix,
         # but a re-enable must not lose the logins, sessions and plugin state
         # already on disk. Owner-only - they hold credentials and history.

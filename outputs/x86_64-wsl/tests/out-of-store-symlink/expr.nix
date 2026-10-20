@@ -6,7 +6,7 @@
 let
   cfg = outputs.nixosConfigurations.wsl-work.config;
   # dsh 所在的 WSL 主机是该 helper 的直接消费方，故实际调用一次
-  link = cfg.lib.file.mkOutOfStoreSymlink "/home/nixos/nix-config/modules/nixos/base/custom/dsh/default.nix";
+  link = cfg.lib.file.mkOutOfStoreSymlink "/home/nixos/nix-config/modules/nixos/base/custom/ai/dsh/default.nix";
 in
 {
   wslLibFileExists = builtins.isFunction (cfg.lib.file.mkOutOfStoreSymlink or null);

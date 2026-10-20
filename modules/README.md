@@ -30,6 +30,14 @@ modules/
     │   ├── btop.nix       # System resource monitor
     │   ├── btrbk.nix      # Local btrfs snapshots
     │   ├── core.nix       # Core system settings
+    │   ├── custom/        # DataEraserC-specific modules, grouped by area
+    │   │   ├── ai/        # LLM gateways, agents, dsh (codebuddy/codearts/workbuddy)
+    │   │   ├── desktop/   # Session-level extras (wf-recorder)
+    │   │   ├── hardware/  # Machine-specific tools (intel-gpu-tools, lenovo-legion)
+    │   │   ├── network/   # Proxies, tunnels, forwarding, sub-store
+    │   │   ├── notify/    # ntfy notifiers (heartbeat, power, network, cpolar)
+    │   │   ├── services/  # Self-hosted services (alist, hadoop)
+    │   │   └── system/    # Boot/login/power and packaging policy
     │   ├── default.nix
     │   ├── i18n.nix       # Internationalization
     │   ├── locate.nix     # locate/updatedb file search

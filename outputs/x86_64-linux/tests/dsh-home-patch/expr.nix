@@ -6,9 +6,9 @@
 }:
 let
   cfg = outputs.nixosConfigurations.ai-niri.config;
-  yml = builtins.readFile ../../../../modules/nixos/base/custom/dsh/common.yml;
+  yml = builtins.readFile ../../../../modules/nixos/base/custom/ai/dsh/common.yml;
   activation = cfg.system.activationScripts.dsh-cordis-patch.text;
-  homeLink = mylib.mklinkRelativeToRoot cfg "modules/nixos/base/custom/dsh/common.yml";
+  homeLink = mylib.mklinkRelativeToRoot cfg "modules/nixos/base/custom/ai/dsh/common.yml";
 in
 {
   # patch 必须保持 null：seed 脚本只在声明了 home patch（homePatchFile != null）

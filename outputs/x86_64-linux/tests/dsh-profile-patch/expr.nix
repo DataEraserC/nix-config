@@ -6,7 +6,7 @@
 let
   cfg = outputs.nixosConfigurations.ai-niri.config;
   profiles = cfg.programs.dsh.profiles;
-  ymlDir = ../../../../modules/nixos/base/custom;
+  ymlDir = ../../../../modules/nixos/base/custom/ai;
   repoPatch = key: builtins.readFile (ymlDir + "/dsh/${key}.yml");
 
   allKeys = [

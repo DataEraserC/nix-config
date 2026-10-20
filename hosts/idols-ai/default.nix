@@ -60,7 +60,7 @@ rec {
   ];
 
   # dae transparent proxy - the shared module lives in
-  # modules/nixos/base/custom/dae.nix and is only enabled on this host for now.
+  # modules/nixos/base/custom/network/dae.nix and is only enabled on this host for now.
   # Its main config is the host-local ./config.dae, the subscription comes from agenix.
   modules.dae = {
     enable = true;
@@ -92,7 +92,7 @@ rec {
   # The host firewall still only trusts tailscale/zerotier/easytier, so
   # openFirewall stays off - flip it on later to reach the ports from the campus
   # LAN (asserted to require auth.enable).
-  # See modules/nixos/base/custom/sub-store/default.nix.
+  # See modules/nixos/base/custom/network/sub-store/default.nix.
   modules.sub-store = {
     enable = myvars.networking.services.sub-store.hosts.idols-ai.enable;
     host = myvars.networking.services.sub-store.hosts.idols-ai.host;
@@ -211,7 +211,7 @@ rec {
   # EasyTier decentralized P2P VPN
   modules.easytier.enable = true;
 
-  # Authenticated SOCKS5 proxy (shared modules/nixos/base/custom/gost-proxy.nix).
+  # Authenticated SOCKS5 proxy (shared modules/nixos/base/custom/network/gost-proxy.nix).
   # Listens on 1080 for every interface, but the firewall only trusts the
   # overlay interfaces (easytier/tailscale/zerotier) and openFirewall stays off,
   # so the campus LAN cannot connect - SOCKS5 credentials are clear text there.
@@ -263,7 +263,7 @@ rec {
   modules.alist.port = myvars.networking.services.alist.hosts.idols-ai.port;
   modules.alist.s3Port = myvars.networking.services.alist.hosts.idols-ai.s3Port;
 
-  # Clash Verge Rev GUI client (shared modules/nixos/base/custom/clash-verge.nix,
+  # Clash Verge Rev GUI client (shared modules/nixos/base/custom/network/clash-verge.nix,
   # nixpkgs programs.clash-verge with the package from nixpkgs-master). Service
   # mode runs the mihomo core as a root systemd unit; autoStart and TUN stay off
   # (dae owns transparent proxying here, so no second TUN stack).
@@ -278,7 +278,7 @@ rec {
   # ~/.codeartsdoer, ~/.workbuddy and ~/.local/share/CodeBuddyExtension state is
   # persisted unconditionally in preservation-downstream.nix, so re-enabling one
   # keeps whatever login and history already exists.
-  # See modules/nixos/base/custom/{codebuddy,codearts,workbuddy}.nix.
+  # See modules/nixos/base/custom/ai/{codebuddy,codearts,workbuddy}.nix.
   # modules.codebuddy.enable = true;
   # modules.codearts.enable = true;
   # modules.workbuddy.enable = true;
@@ -301,7 +301,7 @@ rec {
   # myvars.networking.peers (easytier/zerotier/tailscale).
   # For temporary live tweaks without a rebuild use
   # `sudo auto-shutdown {disable|enable|grace|reset}`(changes reset on reboot).
-  # See modules/nixos/base/custom/auto-shutdown/default.nix.
+  # See modules/nixos/base/custom/system/auto-shutdown/default.nix.
   modules.auto-shutdown = {
     enable = true;
     mode = "any";

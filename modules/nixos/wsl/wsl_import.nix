@@ -21,7 +21,7 @@
   networking.wireless.enable = lib.mkForce false;
 
   # Service accounts required by agenix secrets (cpolar.yml).
-  # alist is superseded by the unconditional account in ../base/custom/alist.nix
+  # alist is superseded by the unconditional account in ../base/custom/services/alist.nix
   # (this stub declared group = "nogroup", which conflicts with it).
   users.users.cpolar = {
     isSystemUser = true;

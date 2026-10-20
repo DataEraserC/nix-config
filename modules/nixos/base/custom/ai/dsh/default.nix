@@ -750,7 +750,7 @@ in
       # (profile-boot), below the profile layers. The rows used to be
       # declared here (the two Settings rows plus the model catalog from
       # dsh-model-patch.json); they now live verbatim in the repo file
-      # `modules/nixos/base/custom/dsh/common.yml`, which activation
+      # `modules/nixos/base/custom/ai/dsh/common.yml`, which activation
       # symlinks to `$DSH_HOME/cordis.patch.yml` (see below).
       #
       # Leaving `patch` null is load-bearing, not an omission: the seed
@@ -844,7 +844,7 @@ in
         if [ ! -d "$dshHome" ]; then
           install -d -m 755 -o ${myvars.username} -g users "$dshHome"
         fi
-        ln -sfnT ${mylib.mklinkRelativeToRoot config "modules/nixos/base/custom/dsh/common.yml"} "$dshHome/cordis.patch.yml"
+        ln -sfnT ${mylib.mklinkRelativeToRoot config "modules/nixos/base/custom/ai/dsh/common.yml"} "$dshHome/cordis.patch.yml"
       '';
     };
 

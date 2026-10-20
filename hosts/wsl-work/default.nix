@@ -72,7 +72,7 @@ rec {
   # EasyTier decentralized P2P VPN
   modules.easytier.enable = true;
 
-  # Authenticated SOCKS5 proxies (shared modules/nixos/base/custom/gost-proxy.nix):
+  # Authenticated SOCKS5 proxies (shared modules/nixos/base/custom/network/gost-proxy.nix):
   # - 1080: direct proxy for reaching intranet/overlay resources via this host;
   # - 31080: chained through idols-ai's 1080 (easytier 10.126.126.150), so a
   #   client of 31080 resolves destinations ON idols-ai - notably its loopback
