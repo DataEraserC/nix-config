@@ -868,11 +868,11 @@
         "systems": "systems_13"
       },
       "locked": {
-        "lastModified": 1792400035,
-        "narHash": "sha256-SZX9Pn1zQ2oIj3SSURdya4PFLupW8zzX52sKjJtRCqs=",
+        "lastModified": 1792486543,
+        "narHash": "sha256-uBk/OK8gbnMo80ZW+PaQWFFYsAPh8Z11ZwtDQAmPpq0=",
         "owner": "moraxyc",
         "repo": "deepseek-harness.nix",
-        "rev": "3ab3c167f3f28de2d0d26aa6966ad4fad7173edc",
+        "rev": "88dbcc7e45be9626aea307a771235ce4d69f7e51",
         "type": "github"
       },
       "original": {
@@ -914,11 +914,11 @@
         "systems": "systems_39"
       },
       "locked": {
-        "lastModified": 1792400035,
-        "narHash": "sha256-SZX9Pn1zQ2oIj3SSURdya4PFLupW8zzX52sKjJtRCqs=",
+        "lastModified": 1792486543,
+        "narHash": "sha256-uBk/OK8gbnMo80ZW+PaQWFFYsAPh8Z11ZwtDQAmPpq0=",
         "owner": "Moraxyc",
         "repo": "deepseek-harness.nix",
-        "rev": "3ab3c167f3f28de2d0d26aa6966ad4fad7173edc",
+        "rev": "88dbcc7e45be9626aea307a771235ce4d69f7e51",
         "type": "github"
       },
       "original": {
@@ -1160,6 +1160,56 @@
         "owner": "storj",
         "ref": "v0.0.34",
         "repo": "drpc",
+        "type": "github"
+      }
+    },
+    "dsh-bas-remote": {
+      "inputs": {
+        "deepseek-harness": [
+          "nur-DataEraserC",
+          "deepseek-harness"
+        ],
+        "nixpkgs": [
+          "nur-DataEraserC",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1792514248,
+        "narHash": "sha256-j4/1fAKhLS31Ex5FvAXpeZxb34b/Mfn/55atuEUwsBo=",
+        "owner": "DataEraserC",
+        "repo": "dsh-bas-remote",
+        "rev": "e2ff5c89168f4cf9bfaf9ffb68672e0c9f9dd628",
+        "type": "github"
+      },
+      "original": {
+        "owner": "DataEraserC",
+        "repo": "dsh-bas-remote",
+        "type": "github"
+      }
+    },
+    "dsh-bas-remote_2": {
+      "inputs": {
+        "deepseek-harness": [
+          "nur-DataEraserC-not-follow",
+          "deepseek-harness"
+        ],
+        "nixpkgs": [
+          "nur-DataEraserC-not-follow",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1792514248,
+        "narHash": "sha256-j4/1fAKhLS31Ex5FvAXpeZxb34b/Mfn/55atuEUwsBo=",
+        "owner": "DataEraserC",
+        "repo": "dsh-bas-remote",
+        "rev": "e2ff5c89168f4cf9bfaf9ffb68672e0c9f9dd628",
+        "type": "github"
+      },
+      "original": {
+        "owner": "DataEraserC",
+        "repo": "dsh-bas-remote",
         "type": "github"
       }
     },
@@ -6360,11 +6410,11 @@
     },
     "nixpkgs_22": {
       "locked": {
-        "lastModified": 1792094642,
-        "narHash": "sha256-zp8ToDMnqZcu4o4IH9pdwXFXGp7yLm/M0dEnNWnyd7I=",
+        "lastModified": 1792210252,
+        "narHash": "sha256-Mh0PUaIv4nFY+8wAGonaEh8iBzwsmdNlwjVHmFg1Biw=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "fe13242281a67641c0102cdb1087f0ebe586c7df",
+        "rev": "09063bd1f2b36fd9fd793c36dfade7bd40a93dfc",
         "type": "github"
       },
       "original": {
@@ -6748,6 +6798,7 @@
           "deepseek-harness"
         ],
         "devshell": "devshell_2",
+        "dsh-bas-remote": "dsh-bas-remote",
         "flake-parts": "flake-parts_17",
         "nix-cachyos-kernel": "nix-cachyos-kernel",
         "nix-index-database": "nix-index-database_2",
@@ -6759,11 +6810,11 @@
         "treefmt-nix": "treefmt-nix_6"
       },
       "locked": {
-        "lastModified": 1792402921,
-        "narHash": "sha256-FzcXXdFif7BSIGJ6dEx3zs0AlUB8p7g1c66GRezUmEM=",
+        "lastModified": 1792519492,
+        "narHash": "sha256-B8Vz4+GhamdDwz/fDrvgC8yo2sigmo/lBP95jHDiaaU=",
         "owner": "DataEraserC",
         "repo": "nur-packages",
-        "rev": "1886696e4cd0dff0d1fa374826c53da9cab9fc20",
+        "rev": "55dd080071535b74415c1ca26f79c7c655681b2d",
         "type": "github"
       },
       "original": {
@@ -6810,6 +6861,7 @@
         "android-attestation-keybox-generator": "android-attestation-keybox-generator_3",
         "deepseek-harness": "deepseek-harness_3",
         "devshell": "devshell_4",
+        "dsh-bas-remote": "dsh-bas-remote_2",
         "flake-parts": "flake-parts_21",
         "nix-cachyos-kernel": "nix-cachyos-kernel_3",
         "nix-index-database": "nix-index-database_4",
@@ -6819,11 +6871,11 @@
         "treefmt-nix": "treefmt-nix_10"
       },
       "locked": {
-        "lastModified": 1792402921,
-        "narHash": "sha256-FzcXXdFif7BSIGJ6dEx3zs0AlUB8p7g1c66GRezUmEM=",
+        "lastModified": 1792519492,
+        "narHash": "sha256-B8Vz4+GhamdDwz/fDrvgC8yo2sigmo/lBP95jHDiaaU=",
         "owner": "DataEraserC",
         "repo": "nur-packages",
-        "rev": "1886696e4cd0dff0d1fa374826c53da9cab9fc20",
+        "rev": "55dd080071535b74415c1ca26f79c7c655681b2d",
         "type": "github"
       },
       "original": {
