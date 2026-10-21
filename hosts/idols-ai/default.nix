@@ -272,13 +272,13 @@ rec {
   # Route CLI traffic through the local / LAN SOCKS proxies.
   modules.proxychains.enable = true;
 
-  # CodeBuddy, CodeArts and WorkBuddy agent tools (packages from nur-DataEraserC).
-  # Built and smoke-tested on this host (2.169.0 / 26.9.26 / 5.6.2.40046327); the
-  # switches are parked commented out until one is wanted. Their ~/.codebuddy,
-  # ~/.codeartsdoer, ~/.workbuddy and ~/.local/share/CodeBuddyExtension state is
-  # persisted unconditionally in preservation-downstream.nix, so re-enabling one
-  # keeps whatever login and history already exists.
-  # See modules/nixos/base/custom/ai/{codebuddy,codearts,workbuddy,lobsterai}.nix.
+  # Agent tools and AI IDEs from nur-DataEraserC: CodeBuddy, WorkBuddy, LobsterAI,
+  # Trae CN and Trae International are on, CodeArts stays parked. Their state
+  # (~/.codebuddy, ~/.codeartsdoer, ~/.workbuddy, ~/.local/share/CodeBuddyExtension,
+  # ~/.config/LobsterAI, ~/lobsterai, ~/.trae-cn, ~/.trae, ~/.config/Trae CN,
+  # ~/.config/Trae) is persisted unconditionally in preservation-downstream.nix,
+  # so re-enabling one keeps the login and history already on disk.
+  # See modules/nixos/base/custom/ai/{codebuddy,codearts,workbuddy,lobsterai,trae-cn,trae-intl}.nix.
   modules.codebuddy.enable = true;
   # modules.codearts.enable = true;
   modules.workbuddy.enable = true;

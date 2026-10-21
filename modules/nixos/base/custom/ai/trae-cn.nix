@@ -4,14 +4,16 @@
 #
 # The derivation lives in nur-DataEraserC (pkgs/uncategorized-DataEraserC/
 # trae-cn) together with its update script; this file only wires it up.
+# nur-DataEraserC exports no nixosModule for it, so the enable option below is
+# the only switch (there is no upstream module to import).
 #
-# State lives in ~/.trae-cn (CLI config, sessions) and
-# ~/.config/Trae CN/User (app user data, rules, MCP configs).
-# Hosts with a tmpfs root should carry both across boots from their own
-# preservation file.
+# State lives in ~/.trae-cn (extension storage; the app's `dataFolderName`) and
+# ~/.config/Trae CN/User (app user data, rules, MCP configs, sessions). Hosts
+# with a tmpfs root should carry both across boots from their own preservation
+# file.
 #
 # Check
-#   trae_cn --version
+#   trae-cn --version   # VS Code base version, not the Trae build number
 # ===============================================================================
 {
   config,

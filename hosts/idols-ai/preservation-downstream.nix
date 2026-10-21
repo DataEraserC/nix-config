@@ -130,9 +130,9 @@ in
         ".pi"
 
         # Agent tools (modules/nixos/base/custom/ai/{codebuddy,codearts,workbuddy}.nix).
-        # Unconditional on purpose: the modules are commented out in default.nix,
-        # but a re-enable must not lose the logins, sessions and plugin state
-        # already on disk. Owner-only - they hold credentials and history.
+        # Unconditional on purpose: these must keep the logins, sessions and plugin
+        # state already on disk whether the module is enabled or not. Owner-only -
+        # they hold credentials and history.
         {
           directory = ".codebuddy";
           mode = "0700";
@@ -148,6 +148,28 @@ in
         # OAuth tokens shared by codebuddy and workbuddy
         {
           directory = ".local/share/CodeBuddyExtension";
+          mode = "0700";
+        }
+
+        # LobsterAI and the Trae apps
+        # (modules/nixos/base/custom/ai/{lobsterai,trae-cn,trae-intl}.nix).
+        # `lobsterai` is the project workspace; the rest is app profile state.
+        {
+          directory = ".config/LobsterAI";
+          mode = "0700";
+        }
+        "lobsterai"
+        # `dataFolderName`: argv.json, installed extensions and the toolhost.
+        ".trae-cn"
+        ".trae"
+        # VS Code profile per app: `Cookies` and `Session Storage` hold the login,
+        # `User/` the settings, workspace history and global storage.
+        {
+          directory = ".config/Trae CN";
+          mode = "0700";
+        }
+        {
+          directory = ".config/Trae";
           mode = "0700";
         }
         ".config/lutris"
