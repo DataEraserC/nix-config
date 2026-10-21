@@ -289,10 +289,10 @@ rec {
   # directory per account; see modules/nixos/base/custom/ai/agent-accounts.nix.
   modules.agent-accounts.enable = true;
   modules.agent-accounts.desktopAccounts = {
-    trae-cn = [
-      "1"
-      "2"
-    ];
+    workbuddy = 6;
+    lobsterai = 2;
+    trae-cn = 2;
+    trae = 4;
   };
 
   # WARP tunnel + its root CA cert, replaces the connection between this

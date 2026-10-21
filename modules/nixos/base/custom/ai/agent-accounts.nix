@@ -143,6 +143,10 @@ let
     };
   };
 
+  # A number means that many accounts, named "1".."N"; a list names them
+  # explicitly, for accounts that are not just numbered.
+  accountNames = value: if builtins.isInt value then map toString (lib.range 1 value) else value;
+
   mkLauncher =
     app: account:
     let
@@ -168,18 +172,26 @@ in
     '';
 
     desktopAccounts = lib.mkOption {
-      type = lib.types.attrsOf (lib.types.listOf lib.types.str);
+      type = lib.types.attrsOf (
+        lib.types.oneOf [
+          lib.types.ints.positive
+          (lib.types.listOf lib.types.str)
+        ]
+      );
       default = { };
       example = {
+        workbuddy = 6;
+        lobsterai = 2;
         trae-cn = [
-          "1"
-          "2"
+          "work"
+          "home"
         ];
       };
       description = ''
-        Accounts to create a desktop launcher for, keyed by app. Each account
-        gets one entry labelled "<app> <account>" that starts the app through
-        `agent-acct` in its own state directory. Only the GUI apps are
+        Accounts to create a desktop launcher for, keyed by app. A number means
+        that many accounts, named "1".."N"; a list names them explicitly. Each
+        account gets one entry labelled "<app> <account>" that starts the app
+        through `agent-acct` in its own state directory. Only the GUI apps are
         accepted: workbuddy, lobsterai, trae-cn, trae.
       '';
     };
@@ -197,7 +209,7 @@ in
       agent-acct
     ]
     ++ lib.concatLists (
-      lib.mapAttrsToList (app: accounts: map (mkLauncher app) accounts) cfg.desktopAccounts
+      lib.mapAttrsToList (app: value: map (mkLauncher app) (accountNames value)) cfg.desktopAccounts
     );
   };
 }
