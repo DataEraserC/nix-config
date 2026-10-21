@@ -8,8 +8,8 @@
 # the only switch (there is no upstream module to import).
 #
 # State lives in ~/.trae (extension storage; the app's `dataFolderName`) and
-# ~/.config/Trae/User (app user data, rules, MCP configs, sessions). Hosts with
-# a tmpfs root should carry both across boots from their own preservation file.
+# ~/.config/Trae/User (app user data, rules, MCP configs, sessions). On a tmpfs
+# root, modules.agent-accounts preserves both.
 #
 # Check
 #   trae --version   # VS Code base version, not the Trae build number

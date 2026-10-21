@@ -1,22 +1,16 @@
 # ===============================================================================
 #
-# Agent accounts - run each AI agent / IDE under bubblewrap with a per-account
-# state directory.
+# Agent accounts - run each AI agent / IDE with one state directory per account.
 #
-# All six apps keep their state in a path hardcoded under $HOME, and no single
-# upstream switch covers them; the exact paths are listed in agent-acct.sh.
-# Mounting a per-account directory over each of those paths with bubblewrap
-# redirects all of them the same way, without patching or wrapping any package.
-#
-# The sandbox remaps paths; it is not a confinement boundary. $HOME stays
-# writable at its real path, so absolute work-directory paths, git config and
-# build caches behave exactly as before. Only those state paths are replaced,
-# and the account store itself is hidden from the app (tmpfs).
+# The mechanism lives in modules/multi-instance: every app below keeps its state
+# in a path hardcoded under $HOME, and no single upstream switch covers them, so
+# each account gets a directory bind-mounted over each path. Nothing here
+# patches or wraps a package.
 #
 # Usage
-#   agent-acct <app> <account> [args...]
-#   agent-acct codebuddy work
-#   agent-acct trae-cn 1
+#   multi-instance <app> <account> [args...]
+#   multi-instance codebuddy work
+#   multi-instance trae-cn 1
 #
 # An account always starts empty. Nothing is copied out of the app's existing
 # state under $HOME, so a plain `trae-cn` keeps its own login untouched and an
@@ -26,73 +20,135 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }:
 let
   cfg = config.modules.agent-accounts;
 
-  # bubblewrap and coreutils are the only inputs this launcher takes from nix;
-  # the logic itself lives in agent-acct.sh, next to this file.
-  agent-acct = pkgs.writeShellApplication {
-    name = "agent-acct";
-    runtimeInputs = [
-      pkgs.bubblewrap
-      pkgs.coreutils
-    ];
-    text = builtins.readFile ./agent-acct.sh;
-  };
-  # Launcher metadata for the GUI apps. Names, icons and window classes match
-  # the .desktop files the packages ship, so an account window is recognised by
-  # the same icon as the app.
-  guiApps = {
+  # The one table: where each app keeps its state, which of those paths survive a
+  # tmpfs root, and how an account window is recognised by the desktop. An
+  # account is added by changing `desktopAccounts`, not this table.
+  apps = {
+    codebuddy = {
+      paths = [
+        ".codebuddy"
+        ".local/share/CodeBuddyExtension"
+      ];
+      persist = [
+        {
+          directory = ".codebuddy";
+          mode = "0700";
+        }
+        {
+          directory = ".local/share/CodeBuddyExtension";
+          mode = "0700";
+        }
+      ];
+    };
+
+    # Its launcher exports these paths unconditionally.
+    codearts = {
+      paths = [ ".codeartsdoer" ];
+      persist = [
+        {
+          directory = ".codeartsdoer";
+          mode = "0700";
+        }
+      ];
+    };
+
+    # The shared Tencent auth (codebuddy + workbuddy) is built from os.homedir(),
+    # so no environment variable reaches it; mounting over each path redirects
+    # all of them the same way. ~/.sheetagent holds logs only and ~/WorkBuddy is
+    # an empty scaffold, so neither is preserved.
     workbuddy = {
-      label = "WorkBuddy";
-      icon = "workbuddy";
-      wmclass = "workbuddy";
+      paths = [
+        ".workbuddy"
+        ".sheetagent"
+        "WorkBuddy"
+        ".local/share/CodeBuddyExtension"
+      ];
+      persist = [
+        {
+          directory = ".workbuddy";
+          mode = "0700";
+        }
+        {
+          directory = ".local/share/CodeBuddyExtension";
+          mode = "0700";
+        }
+      ];
+      desktop = {
+        label = "WorkBuddy";
+        icon = "workbuddy";
+        wmclass = "workbuddy";
+      };
     };
+
+    # It overwrites --user-data-dir, so ~/.config/LobsterAI is the only profile
+    # path; ~/lobsterai is the default working directory it creates at startup.
     lobsterai = {
-      label = "LobsterAI";
-      icon = "lobsterai";
-      wmclass = "LobsterAI";
+      paths = [
+        ".config/LobsterAI"
+        "lobsterai"
+      ];
+      persist = [
+        {
+          directory = ".config/LobsterAI";
+          mode = "0700";
+        }
+        "lobsterai"
+      ];
+      desktop = {
+        label = "LobsterAI";
+        icon = "lobsterai";
+        wmclass = "LobsterAI";
+      };
     };
+
     trae-cn = {
-      label = "Trae CN";
-      icon = "trae-cn";
-      wmclass = "Trae CN";
+      paths = [
+        ".trae-cn"
+        ".config/Trae CN"
+      ];
+      persist = [
+        ".trae-cn"
+        {
+          directory = ".config/Trae CN";
+          mode = "0700";
+        }
+      ];
+      desktop = {
+        label = "Trae CN";
+        icon = "trae-cn";
+        wmclass = "Trae CN";
+      };
     };
+
     trae = {
-      label = "Trae";
-      icon = "trae";
-      wmclass = "Trae";
+      paths = [
+        ".trae"
+        ".config/Trae"
+      ];
+      persist = [
+        ".trae"
+        {
+          directory = ".config/Trae";
+          mode = "0700";
+        }
+      ];
+      desktop = {
+        label = "Trae";
+        icon = "trae";
+        wmclass = "Trae";
+      };
     };
   };
-
-  # A number means that many accounts, named "1".."N"; a list names them
-  # explicitly, for accounts that are not just numbered.
-  accountNames = value: if builtins.isInt value then map toString (lib.range 1 value) else value;
-
-  mkLauncher =
-    app: account:
-    let
-      meta = guiApps.${app};
-    in
-    pkgs.makeDesktopItem {
-      name = "agent-acct-${app}-${account}";
-      desktopName = "${meta.label} ${account}";
-      genericName = meta.label;
-      comment = "${meta.label}, account ${account}, with its own state directory";
-      icon = meta.icon;
-      exec = "${agent-acct}/bin/agent-acct ${app} ${account} %F";
-      categories = [ "Development" ];
-      startupWMClass = meta.wmclass;
-      startupNotify = true;
-    };
 in
 {
   options.modules.agent-accounts = {
     enable = lib.mkEnableOption ''
-      the `agent-acct` launcher that runs the AI agents and IDEs above under
+      the `multi-instance` launcher that runs the AI agents and IDEs above under
       bubblewrap with one state directory per account
     '';
 
@@ -116,25 +172,18 @@ in
         Accounts to create a desktop launcher for, keyed by app. A number means
         that many accounts, named "1".."N"; a list names them explicitly. Each
         account gets one entry labelled "<app> <account>" that starts the app
-        through `agent-acct` in its own state directory. Only the GUI apps are
-        accepted: workbuddy, lobsterai, trae-cn, trae.
+        through `multi-instance` in its own state directory. Only the GUI apps
+        have a launcher: workbuddy, lobsterai, trae-cn, trae.
       '';
     };
   };
 
-  config = lib.mkIf cfg.enable {
-    assertions = [
-      {
-        assertion = lib.all (app: builtins.hasAttr app guiApps) (builtins.attrNames cfg.desktopAccounts);
-        message = "modules.agent-accounts.desktopAccounts: only the GUI apps workbuddy, lobsterai, trae-cn and trae can have a launcher";
-      }
-    ];
-
-    environment.systemPackages = [
-      agent-acct
-    ]
-    ++ lib.concatLists (
-      lib.mapAttrsToList (app: value: map (mkLauncher app) (accountNames value)) cfg.desktopAccounts
-    );
+  # Declared whether or not the launcher is enabled: the paths are facts about
+  # the apps, and their logins must survive a host that stops enabling this
+  # module.
+  config = {
+    modules.multi-instance.apps = apps;
+    modules.multi-instance.enable = cfg.enable;
+    modules.multi-instance.instances = cfg.desktopAccounts;
   };
 }

@@ -3,7 +3,7 @@
 # The sibling `preservation.nix` keeps the base list; these additions live here
 # so base-list changes never conflict with them. Both modules set the same list
 # options and the module system concatenates them.
-{ myvars, ... }:
+{ config, myvars, ... }:
 let
   inherit (myvars) username;
 in
@@ -129,56 +129,6 @@ in
         # pi coding agent (sessions under ~/.pi/agent/sessions)
         ".pi"
 
-        # Agent tools (modules/nixos/base/custom/ai/{codebuddy,codearts,workbuddy}.nix).
-        # Unconditional on purpose: these must keep the logins, sessions and plugin
-        # state already on disk whether the module is enabled or not. Owner-only -
-        # they hold credentials and history.
-        {
-          directory = ".codebuddy";
-          mode = "0700";
-        }
-        {
-          directory = ".codeartsdoer";
-          mode = "0700";
-        }
-        {
-          directory = ".workbuddy";
-          mode = "0700";
-        }
-        # OAuth tokens shared by codebuddy and workbuddy
-        {
-          directory = ".local/share/CodeBuddyExtension";
-          mode = "0700";
-        }
-        # Per-account copies of the same state, created by `agent-acct`
-        # (modules/nixos/base/custom/ai/agent-accounts.nix). Owner-only: each
-        # account holds its own credentials and history.
-        {
-          directory = ".local/state/agent-accounts";
-          mode = "0700";
-        }
-
-        # LobsterAI and the Trae apps
-        # (modules/nixos/base/custom/ai/{lobsterai,trae-cn,trae-intl}.nix).
-        # `lobsterai` is the project workspace; the rest is app profile state.
-        {
-          directory = ".config/LobsterAI";
-          mode = "0700";
-        }
-        "lobsterai"
-        # `dataFolderName`: argv.json, installed extensions and the toolhost.
-        ".trae-cn"
-        ".trae"
-        # VS Code profile per app: `Cookies` and `Session Storage` hold the login,
-        # `User/` the settings, workspace history and global storage.
-        {
-          directory = ".config/Trae CN";
-          mode = "0700";
-        }
-        {
-          directory = ".config/Trae";
-          mode = "0700";
-        }
         ".config/lutris"
         ".local/share/lutris"
         ".local/share/wine/drive_c/users/${username}"
@@ -357,7 +307,11 @@ in
 
         # Trash Bin
         ".Trash-1000"
-      ];
+      ]
+      # The multi-instance store and every app's state paths come from the one
+      # table in modules/nixos/base/custom/multi-instance, so a program added
+      # there is preserved here too.
+      ++ config.modules.multi-instance.preserveDirectories;
     };
   };
 }

@@ -10,8 +10,8 @@
 #
 # State lives in ~/.config/LobsterAI (Electron userData: lobsterai.sqlite with
 # sessions, SKILLs, dsh/ and openclaw/ runtimes, logs) and ~/lobsterai/project
-# (default working directory, created at startup). Hosts with a tmpfs root
-# should carry both across boots from their own preservation file.
+# (default working directory, created at startup). On a tmpfs root,
+# modules.agent-accounts preserves both.
 #
 # Check
 #   command -v lobsterai   # GUI app, there is no --version CLI

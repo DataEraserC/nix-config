@@ -6,8 +6,8 @@
 # codearts) together with its update script; this file only wires it up.
 #
 # State lives in ~/.codeartsdoer (settings, opencode.db, permission storage,
-# generative-ui); hosts with a tmpfs root carry it across boots from their own
-# preservation file. ~/.codebase-cli is deliberately left out - it is a
+# generative-ui); on a tmpfs root, modules.agent-accounts preserves it.
+# ~/.codebase-cli is deliberately left out - it is a
 # self-updating CLI cache the tool re-downloads on demand.
 #
 # Check

@@ -6,8 +6,8 @@
 # codebuddy) together with its update script; this file only wires it up.
 #
 # State lives in ~/.codebuddy (sessions, plugins, credentials, history) and
-# ~/.local/share/CodeBuddyExtension (auth shared with workbuddy); hosts with a
-# tmpfs root carry both across boots from their own preservation file.
+# ~/.local/share/CodeBuddyExtension (auth shared with workbuddy); on a tmpfs
+# root, modules.agent-accounts preserves both.
 #
 # Check
 #   codebuddy --version
