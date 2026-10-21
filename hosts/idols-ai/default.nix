@@ -283,6 +283,8 @@ rec {
   # modules.codearts.enable = true;
   modules.workbuddy.enable = true;
   modules.lobsterai.enable = true;
+  modules.trae-cn.enable = true;
+  modules.trae-intl.enable = true;
 
   # WARP tunnel + its root CA cert, replaces the connection between this
   # device and the Internet. Download:
