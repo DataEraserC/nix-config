@@ -7585,11 +7585,11 @@
     "qq-bridge-fork": {
       "flake": false,
       "locked": {
-        "lastModified": 1792517463,
-        "narHash": "sha256-M3NK9WJcidx3+mFoAdwbye+FNuInunJg5UrsvR7Yu8I=",
+        "lastModified": 1792563788,
+        "narHash": "sha256-hWdqsN3sgM9ghSHqV1j5kdbl5MzonNfNSGRxaWuRIMo=",
         "owner": "DataEraserC",
         "repo": "qq-bridge",
-        "rev": "9f60980b90174264c9e2f2f2ba4a7639d9030e47",
+        "rev": "1d652e58ac61182d4dcf55f773b22f58c12d6234",
         "type": "github"
       },
       "original": {
