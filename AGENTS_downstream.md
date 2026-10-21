@@ -19,7 +19,9 @@ next merge. Push work outward, in this order, before writing it down here.
 1. **Fix it upstream first.** A bug, a missing option, or a wrong default belongs in
    ryan4yin/nix-config or the upstream package. Report or patch it there; a local workaround costs a
    merge conflict every sync. When a workaround is unavoidable, it goes in
-   [WORKAROUNDS.md](./WORKAROUNDS.md) with a removal condition, not buried in a module.
+   [WORKAROUNDS_downstream.md](./WORKAROUNDS_downstream.md) with a removal condition, not buried in
+   a module. Upstream's [WORKAROUNDS.md](./WORKAROUNDS.md) stays identical to upstream and only
+   points at that file, so row edits never collide.
 2. **Put packages in `nur-DataEraserC`, not here.** Derivations, `release.json` data and update
    scripts live in the NUR input ([flake.nix](./flake.nix)); this repository only consumes
    `nur-DataEraserC.packages.${system}.<name>`. That keeps `nix-update`, the auto-update workflow
