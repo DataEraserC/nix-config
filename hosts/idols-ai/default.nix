@@ -285,6 +285,15 @@ rec {
   modules.lobsterai.enable = true;
   modules.trae-cn.enable = true;
   modules.trae-intl.enable = true;
+  # `agent-acct <app> <account>`: the same apps under bubblewrap with one state
+  # directory per account; see modules/nixos/base/custom/ai/agent-accounts.nix.
+  modules.agent-accounts.enable = true;
+  modules.agent-accounts.desktopAccounts = {
+    trae-cn = [
+      "1"
+      "2"
+    ];
+  };
 
   # WARP tunnel + its root CA cert, replaces the connection between this
   # device and the Internet. Download:

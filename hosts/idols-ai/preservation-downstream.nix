@@ -150,6 +150,13 @@ in
           directory = ".local/share/CodeBuddyExtension";
           mode = "0700";
         }
+        # Per-account copies of the same state, created by `agent-acct`
+        # (modules/nixos/base/custom/ai/agent-accounts.nix). Owner-only: each
+        # account holds its own credentials and history.
+        {
+          directory = ".local/state/agent-accounts";
+          mode = "0700";
+        }
 
         # LobsterAI and the Trae apps
         # (modules/nixos/base/custom/ai/{lobsterai,trae-cn,trae-intl}.nix).
