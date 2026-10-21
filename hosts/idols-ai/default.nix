@@ -278,10 +278,11 @@ rec {
   # ~/.codeartsdoer, ~/.workbuddy and ~/.local/share/CodeBuddyExtension state is
   # persisted unconditionally in preservation-downstream.nix, so re-enabling one
   # keeps whatever login and history already exists.
-  # See modules/nixos/base/custom/ai/{codebuddy,codearts,workbuddy}.nix.
-  # modules.codebuddy.enable = true;
+  # See modules/nixos/base/custom/ai/{codebuddy,codearts,workbuddy,lobsterai}.nix.
+  modules.codebuddy.enable = true;
   # modules.codearts.enable = true;
-  # modules.workbuddy.enable = true;
+  modules.workbuddy.enable = true;
+  modules.lobsterai.enable = true;
 
   # WARP tunnel + its root CA cert, replaces the connection between this
   # device and the Internet. Download:
