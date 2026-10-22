@@ -369,6 +369,17 @@ let
     # execution, so the group-chat surface keeps it hidden while web/tui
     # sessions see the full tool set.
     nur-DataEraserC.packages.${pkgs.system}.dsh-headless-display
+    # Computer use through the Cua Driver: mounts the harness's experimental
+    # cua-driver-mcp provider (the model sees `mcp__cua-driver-mcp__*` tools)
+    # and pins the Nix-built cua-driver onto the dsh launcher PATH, which is
+    # how `command: cua-driver` resolves. Server-only — no dsh.client half —
+    # so tui and web profiles both get it. On Linux the spawned
+    # `cua-driver mcp` owns a direct runtime (no daemon socket) and inherits
+    # DISPLAY / WAYLAND_DISPLAY from the dsh process, so capture and input
+    # reach the desktop when dsh runs from the graphical session. The
+    # version-matching skill pack is linked into $DSH_HOME/skills/cua-driver
+    # by the dsh-home activation script below.
+    nur-DataEraserC.packages.${pkgs.system}.dsh-cua-driver
     # Zero-setup free-model roster: the bundle's cordis patch is a single
     # insert row (id our-free-model), so it never overrides another bundle's
     # rows and order here is irrelevant; the browser half rides the
@@ -849,7 +860,16 @@ in
     # copies that path — its `validate_owned_file` would die on a symlink —
     # so the link survives every `dsh` launch, while the boot loader follows
     # it with a plain YAML read (comments allowed) and applies the rows.
-    system.activationScripts.dsh-cordis-patch = {
+    #
+    # The same script owns the rest of the Nix-managed entries under
+    # `$DSH_HOME`: `skills/cua-driver` is dsh's user-level skill root (rank
+    # 400 in the skill-filesystem provider) and points at the cua-driver
+    # package's version-matched skill pack — the same package the
+    # dsh-cua-driver bundle pins onto the dsh launcher PATH, so the skill's
+    # `cua-driver` CLI examples resolve inside dsh. The home-side agent
+    # config (rules, cross-tool skills, agent CLIs) deliberately stays in
+    # home/base/tui/agents; only $DSH_HOME itself is laid out here.
+    system.activationScripts.dsh-home = {
       deps = [ "users" ];
       text = ''
         dshHome="/home/${myvars.username}/.dsh"
@@ -857,6 +877,18 @@ in
           install -d -m 755 -o ${myvars.username} -g users "$dshHome"
         fi
         ln -sfnT ${mylib.mklinkRelativeToRoot config "modules/nixos/base/custom/ai/dsh/common.yml"} "$dshHome/cordis.patch.yml"
+
+        # cua-driver skill pack, version-pinned to the binary by the release
+        # asset name. `ln -sfnT` swaps a stale generation's link on every
+        # switch; the parent is created first because a fresh $DSH_HOME has
+        # no skills/ yet. The package is referenced through the NUR input
+        # (not the global `cua-driver` overlay alias, which serves the i3
+        # computer-use hosts from nur-ryan4yin's prebuilt build) so the skill
+        # and the dsh-cua-driver bundle's runtimeDeps pin the same store path.
+        install -d -m 755 -o ${myvars.username} -g users "$dshHome/skills"
+        ln -sfnT ${
+          nur-DataEraserC.packages.${pkgs.system}.cua-driver
+        }/share/cua-driver-skills "$dshHome/skills/cua-driver"
       '';
     };
 

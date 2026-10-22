@@ -4,8 +4,11 @@
   homePatchDisabled = true;
   # provider 行只引用 .credentials.yaml 中的环境变量，不落明文
   ymlHasNoInlineKey = true;
-  # activationScripts.dsh-cordis-patch 用 ln -sfnT 链接 home 级文件
+  # activationScripts.dsh-home 用 ln -sfnT 链接 home 级文件
   activationSymlinksHomePatch = true;
+  # dsh-home 同时把 cua-driver 的版本匹配 skill 包链接到
+  # $DSH_HOME/skills/cua-driver（dsh 用户级 skill 根，NUR 构建直连）
+  skillsSymlinksCuaDriver = true;
   # mklinkRelativeToRoot 产出的 store 链接以 cordis.patch.yml 结尾
   homeLinkTargetsCordisPatch = true;
 }
