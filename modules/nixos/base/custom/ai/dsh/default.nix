@@ -357,18 +357,18 @@ let
     # pkgs.dsh.bundles.better-sidebar stays off — the floating observe ball
     # is the fallback.
     nur-DataEraserC.packages.${pkgs.system}.dsh-ego-browser
-    # Isolated virtual X display for GUI automation and games (iso_display_*
-    # tools + web panel): Xvfb by default, sway/Xwayland when sway is present
-    # (DRI3 → Vulkan/GL passthrough), VNC pop-out on demand, and a per-display
-    # PulseAudio null sink so nothing is heard. runtimeDeps pins every backend
-    # binary (Xvfb, sway, Xwayland, grim, xdotool, ImageMagick, x11vnc,
-    # tigervnc's vncviewer, wayvnc, procps, pactl) onto the dsh launcher PATH —
-    # the plugin only resolves them by name. Linux-only; the sway backend also
-    # needs the user in `render` to open /dev/dri/renderD*. Deliberately NOT in
-    # the qq-agent-presets allow list: iso_display_run is arbitrary command
-    # execution, so the group-chat surface keeps it hidden while web/tui
-    # sessions see the full tool set.
-    nur-DataEraserC.packages.${pkgs.system}.dsh-headless-display
+    # # Isolated virtual X display for GUI automation and games (iso_display_*
+    # # tools + web panel): Xvfb by default, sway/Xwayland when sway is present
+    # # (DRI3 → Vulkan/GL passthrough), VNC pop-out on demand, and a per-display
+    # # PulseAudio null sink so nothing is heard. runtimeDeps pins every backend
+    # # binary (Xvfb, sway, Xwayland, grim, xdotool, ImageMagick, x11vnc,
+    # # tigervnc's vncviewer, wayvnc, procps, pactl) onto the dsh launcher PATH —
+    # # the plugin only resolves them by name. Linux-only; the sway backend also
+    # # needs the user in `render` to open /dev/dri/renderD*. Deliberately NOT in
+    # # the qq-agent-presets allow list: iso_display_run is arbitrary command
+    # # execution, so the group-chat surface keeps it hidden while web/tui
+    # # sessions see the full tool set.
+    # nur-DataEraserC.packages.${pkgs.system}.dsh-headless-display
     # Computer use through the Cua Driver: mounts the harness's experimental
     # cua-driver-mcp provider (the model sees `mcp__cua-driver-mcp__*` tools)
     # and pins the Nix-built cua-driver onto the dsh launcher PATH, which is
