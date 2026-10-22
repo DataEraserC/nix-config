@@ -292,7 +292,7 @@ rec {
   modules.agent-accounts.enable = true;
   modules.agent-accounts.desktopAccounts = {
     workbuddy = 2;
-    workbuddy-ai = 4;
+    workbuddy-ai = 6;
     lobsterai = 2;
     trae-cn = 2;
     trae = 4;
