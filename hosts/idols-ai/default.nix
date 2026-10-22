@@ -272,16 +272,18 @@ rec {
   # Route CLI traffic through the local / LAN SOCKS proxies.
   modules.proxychains.enable = true;
 
-  # Agent tools and AI IDEs from nur-DataEraserC: CodeBuddy, WorkBuddy, LobsterAI,
-  # Trae CN and Trae International are on, CodeArts stays parked. Their state
-  # (~/.codebuddy, ~/.codeartsdoer, ~/.workbuddy, ~/.local/share/CodeBuddyExtension,
-  # ~/.config/LobsterAI, ~/lobsterai, ~/.trae-cn, ~/.trae, ~/.config/Trae CN,
-  # ~/.config/Trae) is persisted unconditionally in preservation-downstream.nix,
-  # so re-enabling one keeps the login and history already on disk.
-  # See modules/nixos/base/custom/ai/{codebuddy,codearts,workbuddy,lobsterai,trae-cn,trae-intl}.nix.
+  # Agent tools and AI IDEs from nur-DataEraserC: CodeBuddy, WorkBuddy, WorkBuddy
+  # International, LobsterAI, Trae CN and Trae International are on, CodeArts
+  # stays parked. Their state (~/.codebuddy, ~/.codeartsdoer, ~/.workbuddy,
+  # ~/.workbuddy-ai, ~/.local/share/CodeBuddyExtension, ~/.config/LobsterAI,
+  # ~/lobsterai, ~/.trae-cn, ~/.trae, ~/.config/Trae CN, ~/.config/Trae) is
+  # persisted unconditionally in preservation-downstream.nix, so re-enabling one
+  # keeps the login and history already on disk.
+  # See modules/nixos/base/custom/ai/{codebuddy,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl}.nix.
   modules.codebuddy.enable = true;
   # modules.codearts.enable = true;
   modules.workbuddy.enable = true;
+  modules.workbuddy-ai.enable = true;
   modules.lobsterai.enable = true;
   modules.trae-cn.enable = true;
   modules.trae-intl.enable = true;
@@ -289,7 +291,8 @@ rec {
   # state directory per account; see modules/nixos/base/custom/ai/agent-accounts.nix.
   modules.agent-accounts.enable = true;
   modules.agent-accounts.desktopAccounts = {
-    workbuddy = 6;
+    workbuddy = 2;
+    workbuddy-ai = 4;
     lobsterai = 2;
     trae-cn = 2;
     trae = 4;

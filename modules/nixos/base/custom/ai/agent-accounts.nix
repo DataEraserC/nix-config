@@ -85,6 +85,42 @@ let
       };
     };
 
+    # The international build of the same app (nur-DataEraserC.workbuddy-ai). Its
+    # `dataFolderName` moves the main state to ~/.workbuddy-ai, but it still
+    # writes a device id and startup logs to ~/.workbuddy and reaches auth through
+    # ~/.local/share/CodeBuddyExtension as the CN build does, so all three are
+    # per-instance: an international account must not share state with a CN one.
+    workbuddy-ai = {
+      paths = [
+        ".workbuddy-ai"
+        ".workbuddy"
+        ".sheetagent"
+        "WorkBuddy"
+        ".local/share/CodeBuddyExtension"
+      ];
+      persist = [
+        {
+          directory = ".workbuddy-ai";
+          mode = "0700";
+        }
+        {
+          directory = ".workbuddy";
+          mode = "0700";
+        }
+        {
+          directory = ".local/share/CodeBuddyExtension";
+          mode = "0700";
+        }
+      ];
+      desktop = {
+        label = "WorkBuddy International";
+        icon = "workbuddy-ai";
+        # The window class comes from the app's own name, which the package's
+        # rename does not change, so both builds report "workbuddy".
+        wmclass = "workbuddy";
+      };
+    };
+
     # It overwrites --user-data-dir, so ~/.config/LobsterAI is the only profile
     # path; ~/lobsterai is the default working directory it creates at startup.
     lobsterai = {
