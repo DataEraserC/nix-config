@@ -9,6 +9,13 @@
   # dsh-home 同时把 cua-driver 的版本匹配 skill 包链接到
   # $DSH_HOME/skills/cua-driver（dsh 用户级 skill 根，NUR 构建直连）
   skillsSymlinksCuaDriver = true;
+  # dsh-home 把 cua-cli 的两个 skill（cua-sandboxes / gui-automation）链接到
+  # $DSH_HOME/skills/，服务 mcp__cua-mcp__* 沙盒工具面（NUR cua-cli 直连）
+  skillsSymlinksCuaSandbox = true;
+  # rootless podman + 用户级 API socket：cua-vmm 的引擎入口
+  podmanEngineEnabled = true;
+  # dsh-cua-sandbox bundle 在 tui profile 的 bundle 列表里
+  sandboxBundleInProfile = true;
   # mklinkRelativeToRoot 产出的 store 链接以 cordis.patch.yml 结尾
   homeLinkTargetsCordisPatch = true;
 }

@@ -380,6 +380,24 @@ let
     # version-matching skill pack is linked into $DSH_HOME/skills/cua-driver
     # by the dsh-home activation script below.
     nur-DataEraserC.packages.${pkgs.system}.dsh-cua-driver
+    # Sandboxed desktop control through the `cua` CLI's MCP server: the model
+    # gets mcp__cua-mcp__* tools — sandbox_* lifecycle (create / list / get /
+    # start / stop / restart / suspend / delete / view / vnc / open_browser)
+    # plus computer_* desktop control (screenshot, click, type, key, shell,
+    # file IO, windows, accessibility) with the target sandbox named per call.
+    # Every call lands inside a container "computer" run by cua-vmm (Podman /
+    # Docker + gVisor/runc, QEMU, Lume) — NOT this machine's session. That
+    # split is the point: dsh-cua-driver above already owns the local desktop
+    # through the computerUse exclusive slot, so a risky experiment gets a
+    # disposable sandbox instead of the user's session. The bundle inserts the
+    # kernel's own mcp-client plugin (no wrapper JS, no pinned hashes — the
+    # pair is version-matched to the kernel by construction) and pins the
+    # Nix-built cua-cli onto the launcher PATH for `command: cua`. `cua mcp`
+    # starts without the engine, so a missing Podman socket only fails
+    # individual calls; Podman plus the rootless engine socket are enabled at
+    # the bottom of this module, and the matching skills are linked into
+    # $DSH_HOME/skills by the dsh-home activation script below.
+    nur-DataEraserC.packages.${pkgs.system}.dsh-cua-sandbox
     # Zero-setup free-model roster: the bundle's cordis patch is a single
     # insert row (id our-free-model), so it never overrides another bundle's
     # rows and order here is irrelevant; the browser half rides the
@@ -889,7 +907,55 @@ in
         ln -sfnT ${
           nur-DataEraserC.packages.${pkgs.system}.cua-driver
         }/share/cua-driver-skills "$dshHome/skills/cua-driver"
+
+        # cua sandbox skills for the mcp__cua-mcp__* surface (dsh-cua-sandbox):
+        # the workflow knowledge the MCP tool list cannot carry — how to pick
+        # an image, create a sandbox, wait for boot, then drive it. Same
+        # package the bundle pins onto the launcher PATH, so the `cua` CLI
+        # examples in the skill resolve inside dsh. Upstream's own
+        # `cua skills install` agent list has no dsh entry, hence the manual
+        # links (same reason as cua-driver above).
+        ln -sfnT ${
+          nur-DataEraserC.packages.${pkgs.system}.cua-cli
+        }/share/cua-skills/cua-sandboxes "$dshHome/skills/cua-sandboxes"
+        ln -sfnT ${
+          nur-DataEraserC.packages.${pkgs.system}.cua-cli
+        }/share/cua-skills/gui-automation "$dshHome/skills/gui-automation"
       '';
+    };
+
+    # Container engine for the cua sandbox surface (dsh-cua-sandbox above):
+    # cua-vmm talks to Podman over its docker-compatible API socket, and
+    # nixpkgs' podman module only wires the *system* socket
+    # (virtualisation.podman.dockerSocket, /run/podman/podman.sock) — the
+    # rootless one at $XDG_RUNTIME_DIR/podman/podman.sock, which is what
+    # cua-vmm probes among its well-known candidates, is not covered and
+    # upstream podman ships no units of its own in nixpkgs. So the pair is
+    # declared here, following upstream contrib/systemd (socket-activated:
+    # nothing idles until a `cua mcp` tool call connects). Subordinate
+    # uid/gid ranges are auto-allocated for normal users (autoSubUidGidRange),
+    # which is all rootless podman needs. A host that must not run containers
+    # can set virtualisation.podman.enable = false — dsh then starts with the
+    # sandbox tools present but per-call errors only.
+    virtualisation.podman.enable = lib.mkDefault true;
+
+    systemd.user.sockets.podman = {
+      description = "Podman API Socket (rootless, cua sandbox engine)";
+      wantedBy = [ "sockets.target" ];
+      socketConfig = {
+        ListenStream = "%t/podman/podman.sock";
+        SocketMode = "0660";
+      };
+    };
+
+    systemd.user.services.podman = {
+      description = "Podman API Service (rootless, cua sandbox engine)";
+      requires = [ "podman.socket" ];
+      after = [ "podman.socket" ];
+      serviceConfig = {
+        Type = "exec";
+        ExecStart = "${pkgs.podman}/bin/podman system service unix://%t/podman/podman.sock";
+      };
     };
 
     # QQ presets (qq-chat / qq-chat-v2) now ship with the qq-bridge-dsh

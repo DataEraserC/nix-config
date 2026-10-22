@@ -10,8 +10,10 @@ let
   yml = builtins.readFile ../../../../modules/nixos/base/custom/ai/dsh/common.yml;
   activation = cfg.system.activationScripts.dsh-home.text;
   homeLink = mylib.mklinkRelativeToRoot cfg "modules/nixos/base/custom/ai/dsh/common.yml";
-  # NUR 侧 cua-driver 源构建（overlays/cua-driverNUR.nix 覆写的目标）
+  # NUR 侧 cua-driver 源构建（dsh 模块直连 nur-DataEraserC 的包）
   nurCuaDriver = inputs.nur-DataEraserC.packages.x86_64-linux.cua-driver;
+  # NUR 侧 cua-cli 预编译包（二进制 + skills）
+  nurCuaCli = inputs.nur-DataEraserC.packages.x86_64-linux.cua-cli;
 in
 {
   # patch 必须保持 null：seed 脚本只在声明了 home patch（homePatchFile != null）
@@ -39,6 +41,38 @@ in
       captured = lib.match ".*(/nix/store/[a-z0-9]+-cua-driver-[0-9.]+)/share/cua-driver-skills.*" activation;
     in
     captured != null && builtins.head captured == nurCuaDriver.outPath;
+  # dsh-cua-sandbox 的两个 skill（cua-sandboxes 工作流 + gui-automation 命令
+  # 参考）同样钉在 NUR cua-cli 的 outPath 上：技能与 bundle 的 runtimeDeps
+  # 钉同一个 store 路径，版本切换时两边一起换，不会出现"技能讲 0.6、二进制
+  # 是 0.7"的漂移。断言方式同上：正则里不出现带 context 的插值。
+  skillsSymlinksCuaSandbox =
+    let
+      capturedSandboxes = lib.match ".*(/nix/store/[a-z0-9]+-cua-cli-[0-9.]+)/share/cua-skills/cua-sandboxes.*" activation;
+      capturedGui = lib.match ".*(/nix/store/[a-z0-9]+-cua-cli-[0-9.]+)/share/cua-skills/gui-automation.*" activation;
+    in
+    capturedSandboxes != null
+    && builtins.head capturedSandboxes == nurCuaCli.outPath
+    && capturedGui != null
+    && builtins.head capturedGui == nurCuaCli.outPath;
+  # cua 沙盒引擎：cua-vmm 走 Podman 的 docker 兼容 API socket，nixpkgs 的
+  # podman 模块只接系统 socket，rootless 的这对用户单元（socket 激活，ListenStream
+  # 在 $XDG_RUNTIME_DIR/podman/podman.sock —— cua-vmm 的 well-known 候选之一）
+  # 由 dsh 模块自己声明。少任何一半，sandbox_create 都会在调用时报"找不到引擎"。
+  podmanEngineEnabled =
+    let
+      socket = cfg.systemd.user.sockets.podman;
+      service = cfg.systemd.user.services.podman;
+    in
+    cfg.virtualisation.podman.enable
+    && lib.hasInfix "podman/podman.sock" (toString socket.socketConfig.ListenStream)
+    && lib.hasInfix "podman system service" (toString service.serviceConfig.ExecStart);
+  # dsh-cua-sandbox 必须落在 tui profile 的 bundle 列表里（mcp__cua-mcp__*
+  # 工具面的载体）：模型看得见沙盒工具，才谈得上"操持 podman sandbox"。
+  sandboxBundleInProfile =
+    let
+      names = map (b: b.name or "") cfg.programs.dsh.profiles.tui.bundles;
+    in
+    lib.any (n: lib.hasInfix "dsh-cua-sandbox" n) names;
   # mkOutOfStoreSymlink 的 toString 是 store 路径，其名字 = 源文件 basename
   homeLinkTargetsCordisPatch = lib.hasSuffix "common.yml" (toString homeLink);
 }
