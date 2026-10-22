@@ -3,6 +3,16 @@
 This file holds rules specific to the DataEraserC fork that do not exist upstream in
 ryan4yin/nix-config; keeping them separate minimizes merge conflicts when syncing from upstream.
 
+## AI contribution disclosure
+
+Upstream [AI Disclosure](./AGENTS.md#ai-disclosure) and the Nixpkgs Automation/AI policy it cites
+stay authoritative: keep upstream's `Assisted-by:` trailer, its scope, and its "record the actual
+identifiers" rule instead of introducing a second scheme. Downstream only pins what that trailer
+must never lose: the harness that produced the change (`DeepSeek Harness`, `WorkBuddy`, `CodeBuddy`,
+or similar) together with the model it actually ran, in upstream's form -
+`Assisted-by: WorkBuddy (<model>)`. Dropping either half - a bare `Assisted-by: AI`, a harness with
+no model, or a guessed model - violates the upstream rule rather than being a formatting preference.
+
 ## Concurrent edits: prefer worktrees
 
 Several agents may modify this repository at the same time. To avoid commit conflicts or a corrupted

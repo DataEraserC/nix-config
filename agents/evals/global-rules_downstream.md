@@ -6,12 +6,13 @@ upstream.
 
 ## AI Contribution Attribution
 
-When an agent materially contributes to a commit (authoring or editing code, configuration, scripts,
-or documentation), that commit MUST carry an `Assisted-by` trailer in the form
-`Assisted-by: <agent>:<model>`, for example `Assisted-by: dsh:deepseek-v4-flash`. Agents MUST NOT
-claim a model they did not run; when the model is unknown, `Assisted-by: <agent>` alone is
-acceptable. Agents MUST NOT use `Co-authored-by` to attribute AI involvement, or record it in fields
-whose semantics are ownership, accountability, or contact.
+Upstream [AI Disclosure](../../AGENTS.md#ai-disclosure) and the Nixpkgs Automation/AI policy it
+cites apply unchanged and take precedence; this file does not restate or weaken them. It only pins
+what the `Assisted-by:` trailer must never lose: both halves of the identity, in upstream's form -
+the harness that produced the change and the model that harness actually ran, e.g.
+`Assisted-by: WorkBuddy (<model>)`. A trailer with no model, a model the agent did not run, or a
+guessed identifier violates the upstream rule. `Co-authored-by` and fields whose semantics are
+ownership, accountability, or contact never carry AI attribution.
 
 ## Concurrent edits: prefer worktrees
 
