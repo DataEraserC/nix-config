@@ -123,6 +123,8 @@ let
 
     # It overwrites --user-data-dir, so ~/.config/LobsterAI is the only profile
     # path; ~/lobsterai is the default working directory it creates at startup.
+    # Its OpenClaw gateway keeps a startup-migration lock and state database under
+    # /tmp, which is private per instance, so no further entry is needed here.
     lobsterai = {
       paths = [
         ".config/LobsterAI"

@@ -5,9 +5,10 @@
 #
 # A program's state paths are listed once, in `apps.<name>.paths`. Each instance
 # gets a directory under `stateRoot`, bind-mounted over every one of those paths
-# with bubblewrap, so no package is patched or wrapped. The instance store
-# itself is replaced by a tmpfs inside the sandbox, so one instance never sees
-# the others.
+# with bubblewrap, so no package is patched or wrapped. Each instance also gets
+# a private /tmp, because a program that derives a lock name from a state path
+# sees the same path in every instance. The instance store itself is replaced by
+# a tmpfs inside the sandbox, so one instance never sees the others.
 #
 # The sandbox remaps paths; it is not a confinement boundary. $HOME stays
 # writable at its real path, so absolute work-directory paths, git config and

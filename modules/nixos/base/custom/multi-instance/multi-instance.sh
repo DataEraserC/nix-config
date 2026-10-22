@@ -21,6 +21,12 @@
 # under a per-instance path and passed as --user-data-dir, so the name differs
 # while the data does not.
 #
+# /tmp is a fresh tmpfs per instance, not the host's: a program that derives a
+# lock or socket name from a state path gets the same name in every instance —
+# the path is redirected, not rewritten — so on a shared /tmp the second instance
+# finds the first instance's lock and refuses to start. The X11 and X session
+# manager sockets belong to the desktop session and are mounted back in.
+#
 # Usage
 #   multi-instance <app> <instance> [args...]
 set -euo pipefail
@@ -121,6 +127,15 @@ if [ -d "/run/user/$(id -u)" ]; then
   runtime=(--bind "/run/user/$(id -u)" "/run/user/$(id -u)")
 fi
 
+# /tmp starts empty in the sandbox; see the header. A socket directory the
+# desktop session owns is mounted back so the program can still reach its display.
+tmp=(--tmpfs /tmp)
+for sock in /tmp/.X11-unix /tmp/.ICE-unix; do
+  if [ -d "$sock" ]; then
+    tmp+=(--bind "$sock" "$sock")
+  fi
+done
+
 # A bind of a parent directory hides every mount made under it, so $PWD is bound
 # only when it is outside $HOME: started from $HOME (a plain shell, or a desktop
 # entry, which both run in $HOME), binding it again after the instance mounts
@@ -142,7 +157,7 @@ exec bwrap \
   --proc /proc \
   --dev-bind /dev /dev \
   --bind "$HOME" "$HOME" \
-  --bind /tmp /tmp \
+  "${tmp[@]}" \
   "${cwd[@]}" \
   "${mounts[@]}" \
   --tmpfs "$root" \
