@@ -12,6 +12,15 @@
 # switch to move it, so the instance's directory is bind-mounted over each one.
 # Mounting redirects all of them without patching or wrapping the program.
 #
+# One field may be prefixed with @: the program's user data directory, for
+# programs whose single-instance lock is named after it. Chromium derives the
+# lock socket "<sha256 of that path>-<version>-main.sock" from the string, and
+# every instance sees the same string, so a second instance finds the first
+# instance's socket, hands its command line over and exits, and the window that
+# appears belongs to the first instance. That directory is mounted a second time
+# under a per-instance path and passed as --user-data-dir, so the name differs
+# while the data does not.
+#
 # Usage
 #   multi-instance <app> <instance> [args...]
 set -euo pipefail
@@ -72,7 +81,14 @@ if [ -z "$line" ]; then
 fi
 
 IFS='|' read -r -a fields <<<"$line"
-paths=("${fields[@]:1}")
+data=
+paths=()
+for field in "${fields[@]:1}"; do
+  case $field in
+    @*) data=${field#@} ;;
+    *) paths+=("$field") ;;
+  esac
+done
 
 bin=$(command -v "$app" || true)
 if [ -z "$bin" ]; then
@@ -89,6 +105,16 @@ for rel in "${paths[@]}"; do
   mkdir -p "$dir/$rel"
   mounts+=(--bind "$dir/$rel" "$HOME/$rel")
 done
+
+# The same directory under a per-instance path, for the user data directory
+# whose name the program's single-instance lock is derived from; see the header.
+# It is created inside the tmpfs below, so it exists nowhere on the host.
+data_mounts=()
+data_args=()
+if [ -n "$data" ]; then
+  data_mounts=(--dir "$dir/data" --bind "$dir/$data" "$dir/data")
+  data_args=(--user-data-dir="$dir/data")
+fi
 
 runtime=()
 if [ -d "/run/user/$(id -u)" ]; then
@@ -120,7 +146,8 @@ exec bwrap \
   "${cwd[@]}" \
   "${mounts[@]}" \
   --tmpfs "$root" \
+  "${data_mounts[@]}" \
   --chdir "$PWD" \
   --setenv MULTI_INSTANCE "$app/$instance" \
   "${runtime[@]}" \
-  -- "$bin" "$@"
+  -- "$bin" "${data_args[@]}" "$@"

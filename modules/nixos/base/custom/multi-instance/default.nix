@@ -43,6 +43,19 @@ let
         '';
       };
 
+      userDataDir = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = ''
+          One of `paths`: the program's user data directory, for programs whose
+          single-instance lock is named after it. Chromium and Electron derive
+          the lock socket from that path, which every instance sees unchanged, so
+          a second instance hands its window to the first. Set this and the
+          directory is mounted a second time under a per-instance path passed as
+          `--user-data-dir`, so the lock name differs while the data does not.
+        '';
+      };
+
       persist = lib.mkOption {
         type = lib.types.listOf lib.types.unspecified;
         default = [ ];
@@ -83,11 +96,17 @@ let
   };
 
   # The spec is the only thing the launcher reads at runtime: one line per
-  # program, then its state paths. Keeping it a file, not shell arguments, means
-  # a path with a space (`Trae CN`) never goes through desktop-entry quoting.
+  # program, then its state paths, then an @-prefixed user data directory when it
+  # has one. Keeping it a file, not shell arguments, means a path with a space
+  # (`Trae CN`) never goes through desktop-entry quoting.
   spec = pkgs.writeText "multi-instance.spec" (
     lib.concatStringsSep "\n" (
-      lib.mapAttrsToList (name: app: lib.concatStringsSep "|" ([ name ] ++ app.paths)) cfg.apps
+      lib.mapAttrsToList (
+        name: app:
+        lib.concatStringsSep "|" (
+          [ name ] ++ app.paths ++ lib.optional (app.userDataDir != null) "@${app.userDataDir}"
+        )
+      ) cfg.apps
     )
     + "\n"
   );
@@ -215,6 +234,12 @@ in
             lib.attrValues cfg.apps
           );
           message = "modules.multi-instance.apps: `paths` are relative to $HOME, so they cannot start with /";
+        }
+        {
+          assertion = lib.all (app: app.userDataDir == null || lib.elem app.userDataDir app.paths) (
+            lib.attrValues cfg.apps
+          );
+          message = "modules.multi-instance.apps: `userDataDir` must also be one of `paths`, so the instance has a directory to mount it from";
         }
       ];
     }

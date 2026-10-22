@@ -106,11 +106,14 @@ let
       };
     };
 
+    # Its single-instance lock is named after the user data directory, so two
+    # accounts would share one window without `userDataDir`.
     trae-cn = {
       paths = [
         ".trae-cn"
         ".config/Trae CN"
       ];
+      userDataDir = ".config/Trae CN";
       persist = [
         ".trae-cn"
         {
@@ -130,6 +133,7 @@ let
         ".trae"
         ".config/Trae"
       ];
+      userDataDir = ".config/Trae";
       persist = [
         ".trae"
         {
