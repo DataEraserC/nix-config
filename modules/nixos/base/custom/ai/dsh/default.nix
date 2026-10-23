@@ -369,27 +369,27 @@ let
     # # execution, so the group-chat surface keeps it hidden while web/tui
     # # sessions see the full tool set.
     # nur-DataEraserC.packages.${pkgs.system}.dsh-headless-display
-    # Computer use through the Cua Driver: mounts the harness's experimental
-    # cua-driver-mcp provider (the model sees `mcp__cua-driver-mcp__*` tools)
-    # and pins the Nix-built cua-driver onto the dsh launcher PATH, which is
-    # how `command: cua-driver` resolves. Server-only — no dsh.client half —
-    # so tui and web profiles both get it. On Linux the spawned
-    # `cua-driver mcp` owns a direct runtime (no daemon socket) and inherits
-    # DISPLAY / WAYLAND_DISPLAY from the dsh process, so capture and input
-    # reach the desktop when dsh runs from the graphical session. The
-    # version-matching skill pack is linked into $DSH_HOME/skills/cua-driver
-    # by the dsh-home activation script below.
-    nur-DataEraserC.packages.${pkgs.system}.dsh-cua-driver
+    # Local-desktop computer use (`mcp__cua-driver-mcp__*`) is DISABLED — see
+    # DS-012 in WORKAROUNDS_downstream.md. The spawned `cua-driver mcp`
+    # advertises itself as a screen reader at startup, which flips
+    # `org.a11y.Status.IsEnabled` and makes GNOME launch Orca on this host for
+    # as long as dsh runs. The bundle also pinned the Nix-built cua-driver
+    # onto the dsh launcher PATH and its version-matched skill pack into
+    # `$DSH_HOME/skills/cua-driver` (activation script below); both are off
+    # together, so re-enabling means restoring this line AND that link.
+    # Sandboxed desktop control (`dsh-cua-sandbox` below) is unaffected and
+    # keeps the `mcp__cua-mcp__*` tool surface.
+    # nur-DataEraserC.packages.${pkgs.system}.dsh-cua-driver
     # Sandboxed desktop control through the `cua` CLI's MCP server: the model
     # gets mcp__cua-mcp__* tools — sandbox_* lifecycle (create / list / get /
     # start / stop / restart / suspend / delete / view / vnc / open_browser)
     # plus computer_* desktop control (screenshot, click, type, key, shell,
     # file IO, windows, accessibility) with the target sandbox named per call.
     # Every call lands inside a container "computer" run by cua-vmm (Podman /
-    # Docker + gVisor/runc, QEMU, Lume) — NOT this machine's session. That
-    # split is the point: dsh-cua-driver above already owns the local desktop
-    # through the computerUse exclusive slot, so a risky experiment gets a
-    # disposable sandbox instead of the user's session. The bundle inserts the
+    # Docker + gVisor/runc, QEMU, Lume) — NOT this machine's session. With the
+    # local-desktop driver above disabled this is the only desktop-control
+    # surface, so a risky experiment gets a disposable sandbox instead of the
+    # user's session. The bundle inserts the
     # kernel's own mcp-client plugin (no wrapper JS, no pinned hashes — the
     # pair is version-matched to the kernel by construction) and pins the
     # Nix-built cua-cli onto the launcher PATH for `command: cua`. `cua mcp`
@@ -880,13 +880,12 @@ in
     # it with a plain YAML read (comments allowed) and applies the rows.
     #
     # The same script owns the rest of the Nix-managed entries under
-    # `$DSH_HOME`: `skills/cua-driver` is dsh's user-level skill root (rank
-    # 400 in the skill-filesystem provider) and points at the cua-driver
-    # package's version-matched skill pack — the same package the
-    # dsh-cua-driver bundle pins onto the dsh launcher PATH, so the skill's
-    # `cua-driver` CLI examples resolve inside dsh. The home-side agent
-    # config (rules, cross-tool skills, agent CLIs) deliberately stays in
-    # home/base/tui/agents; only $DSH_HOME itself is laid out here.
+    # `$DSH_HOME`: `skills/` is dsh's user-level skill root (rank 400 in the
+    # skill-filesystem provider) and today holds only the cua sandbox skills.
+    # The cua-driver skill pack that used to live there is gone with its
+    # bundle (DS-012). The home-side agent config (rules, cross-tool skills,
+    # agent CLIs) deliberately stays in home/base/tui/agents; only $DSH_HOME
+    # itself is laid out here.
     system.activationScripts.dsh-home = {
       deps = [ "users" ];
       text = ''
@@ -896,17 +895,15 @@ in
         fi
         ln -sfnT ${mylib.mklinkRelativeToRoot config "modules/nixos/base/custom/ai/dsh/common.yml"} "$dshHome/cordis.patch.yml"
 
-        # cua-driver skill pack, version-pinned to the binary by the release
-        # asset name. `ln -sfnT` swaps a stale generation's link on every
-        # switch; the parent is created first because a fresh $DSH_HOME has
-        # no skills/ yet. The package is referenced through the NUR input
-        # (not the global `cua-driver` overlay alias, which serves the i3
-        # computer-use hosts from nur-ryan4yin's prebuilt build) so the skill
-        # and the dsh-cua-driver bundle's runtimeDeps pin the same store path.
         install -d -m 755 -o ${myvars.username} -g users "$dshHome/skills"
-        ln -sfnT ${
-          nur-DataEraserC.packages.${pkgs.system}.cua-driver
-        }/share/cua-driver-skills "$dshHome/skills/cua-driver"
+
+        # The local-desktop skill pack is DISABLED with its bundle (DS-012).
+        # Drop the link an earlier generation left behind — activation never
+        # cleans $DSH_HOME on its own, so without this the disabled surface
+        # would linger until gc. `-L` keeps a real directory a user put there.
+        if [ -L "$dshHome/skills/cua-driver" ]; then
+          rm -f "$dshHome/skills/cua-driver"
+        fi
 
         # cua sandbox skills for the mcp__cua-mcp__* surface (dsh-cua-sandbox):
         # the workflow knowledge the MCP tool list cannot carry — how to pick
@@ -914,7 +911,7 @@ in
         # package the bundle pins onto the launcher PATH, so the `cua` CLI
         # examples in the skill resolve inside dsh. Upstream's own
         # `cua skills install` agent list has no dsh entry, hence the manual
-        # links (same reason as cua-driver above).
+        # links.
         ln -sfnT ${
           nur-DataEraserC.packages.${pkgs.system}.cua-cli
         }/share/cua-skills/cua-sandboxes "$dshHome/skills/cua-sandboxes"
