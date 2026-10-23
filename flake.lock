@@ -482,11 +482,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1792778593,
-        "narHash": "sha256-NMne5hnTJFRy0NFKoIt/SWAWKSJ5NAGq48UyjNgbWJM=",
+        "lastModified": 1792787735,
+        "narHash": "sha256-nGjE2m5l3S6LupMV3LtQhYhsogV2/tPBn036ZjqnFi0=",
         "owner": "DataEraserC",
         "repo": "bas-remote",
-        "rev": "57134e776dea9bb84786ae2b90288cb47627e787",
+        "rev": "f2027040588d051378e69d431571df2651594b85",
         "type": "github"
       },
       "original": {
@@ -6810,11 +6810,11 @@
         "treefmt-nix": "treefmt-nix_6"
       },
       "locked": {
-        "lastModified": 1792779275,
-        "narHash": "sha256-R+gGY+7pEMZZwLdoMQIMaJ3t5hYwTpJE5ukv3miXiLI=",
+        "lastModified": 1792787847,
+        "narHash": "sha256-VXFRfSdHyPreoGe3wnUkXjRvnjXT5H9XyNtUDgwUfD4=",
         "owner": "DataEraserC",
         "repo": "nur-packages",
-        "rev": "91b313cb8d36a5e24d6d4d1b1f05d63845e20e17",
+        "rev": "ed54b394448a946ff761128494db1dccba66d669",
         "type": "github"
       },
       "original": {
