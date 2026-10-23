@@ -273,13 +273,14 @@ rec {
   modules.proxychains.enable = true;
 
   # Agent tools and AI IDEs from nur-DataEraserC: CodeBuddy, WorkBuddy, WorkBuddy
-  # International, LobsterAI, Trae CN and Trae International are on, CodeArts
-  # stays parked. Their state (~/.codebuddy, ~/.codeartsdoer, ~/.workbuddy,
-  # ~/.workbuddy-ai, ~/.local/share/CodeBuddyExtension, ~/.config/LobsterAI,
-  # ~/lobsterai, ~/.trae-cn, ~/.trae, ~/.config/Trae CN, ~/.config/Trae) is
-  # persisted unconditionally in preservation-downstream.nix, so re-enabling one
-  # keeps the login and history already on disk.
-  # See modules/nixos/base/custom/ai/{codebuddy,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl}.nix.
+  # International, LobsterAI, Trae CN, Trae International, ZCode CN and ZCode
+  # International are on, CodeArts stays parked. Their state (~/.codebuddy,
+  # ~/.codeartsdoer, ~/.workbuddy, ~/.workbuddy-ai,
+  # ~/.local/share/CodeBuddyExtension, ~/.config/LobsterAI, ~/lobsterai,
+  # ~/.trae-cn, ~/.trae, ~/.config/Trae CN, ~/.config/Trae, ~/.zcode,
+  # ~/.config/ZCode) is persisted unconditionally in preservation-downstream.nix,
+  # so re-enabling one keeps the login and history already on disk.
+  # See modules/nixos/base/custom/ai/{codebuddy,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl,zcode-cn,zcode-intl}.nix.
   modules.codebuddy.enable = true;
   # modules.codearts.enable = true;
   modules.workbuddy.enable = true;
@@ -287,6 +288,8 @@ rec {
   modules.lobsterai.enable = true;
   modules.trae-cn.enable = true;
   modules.trae-intl.enable = true;
+  modules.zcode-cn.enable = true;
+  modules.zcode-intl.enable = true;
   # `multi-instance <app> <account>`: the same apps under bubblewrap with one
   # state directory per account; see modules/nixos/base/custom/ai/agent-accounts.nix.
   modules.agent-accounts.enable = true;
@@ -296,6 +299,8 @@ rec {
     lobsterai = 2;
     trae-cn = 2;
     trae = 4;
+    zcode-cn = 2;
+    zcode = 6;
   };
 
   # WARP tunnel + its root CA cert, replaces the connection between this

@@ -185,6 +185,51 @@ let
         wmclass = "Trae";
       };
     };
+
+    # Both the CN and international builds carry productName "ZCode" and no
+    # dataFolderName, so they share the same state paths: ~/.zcode holds CLI
+    # sessions, wiki and agent runtimes; ~/.config/ZCode is the Electron user
+    # data directory. Its single-instance lock is named after the user data
+    # directory, so two accounts would share one window without userDataDir.
+    zcode-cn = {
+      paths = [
+        ".zcode"
+        ".config/ZCode"
+      ];
+      userDataDir = ".config/ZCode";
+      persist = [
+        ".zcode"
+        {
+          directory = ".config/ZCode";
+          mode = "0700";
+        }
+      ];
+      desktop = {
+        label = "ZCode CN";
+        icon = "zcode-cn";
+        wmclass = "ZCode";
+      };
+    };
+
+    zcode = {
+      paths = [
+        ".zcode"
+        ".config/ZCode"
+      ];
+      userDataDir = ".config/ZCode";
+      persist = [
+        ".zcode"
+        {
+          directory = ".config/ZCode";
+          mode = "0700";
+        }
+      ];
+      desktop = {
+        label = "ZCode";
+        icon = "zcode-intl";
+        wmclass = "ZCode";
+      };
+    };
   };
 in
 {
@@ -215,7 +260,7 @@ in
         that many accounts, named "1".."N"; a list names them explicitly. Each
         account gets one entry labelled "<app> <account>" that starts the app
         through `multi-instance` in its own state directory. Only the GUI apps
-        have a launcher: workbuddy, lobsterai, trae-cn, trae.
+        have a launcher: workbuddy, lobsterai, trae-cn, trae, zcode-cn, zcode.
       '';
     };
   };
