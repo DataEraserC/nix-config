@@ -298,7 +298,7 @@ rec {
     workbuddy-ai = 6;
     lobsterai = 2;
     trae-cn = 2;
-    trae = 4;
+    trae = 6;
     zcode-cn = 2;
     zcode = 6;
   };
