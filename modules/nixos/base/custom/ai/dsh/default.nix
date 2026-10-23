@@ -925,38 +925,29 @@ in
     };
 
     # Container engine for the cua sandbox surface (dsh-cua-sandbox above):
-    # cua-vmm talks to Podman over its docker-compatible API socket, and
-    # nixpkgs' podman module only wires the *system* socket
-    # (virtualisation.podman.dockerSocket, /run/podman/podman.sock) — the
-    # rootless one at $XDG_RUNTIME_DIR/podman/podman.sock, which is what
-    # cua-vmm probes among its well-known candidates, is not covered and
-    # upstream podman ships no units of its own in nixpkgs. So the pair is
-    # declared here, following upstream contrib/systemd (socket-activated:
-    # nothing idles until a `cua mcp` tool call connects). Subordinate
-    # uid/gid ranges are auto-allocated for normal users (autoSubUidGidRange),
-    # which is all rootless podman needs. A host that must not run containers
-    # can set virtualisation.podman.enable = false — dsh then starts with the
-    # sandbox tools present but per-call errors only.
+    # cua-vmm talks to Podman over the rootless docker-compatible API socket
+    # at $XDG_RUNTIME_DIR/podman/podman.sock. nixpkgs already delivers that:
+    # virtualisation.podman installs the package's OWN user units through
+    # `systemd.packages = [ cfg.package ]` — podman.socket listens on
+    # %t/podman/podman.sock and podman.service runs `podman system service`,
+    # which discovers that socket through systemd socket activation
+    # (LISTEN_FDS), so nothing idles until a `cua mcp` tool call connects —
+    # and enables it with `systemd.user.sockets.podman.wantedBy =
+    # [ "sockets.target" ]`. Subordinate uid/gid ranges are auto-allocated
+    # for normal users (autoSubUidGidRange), which is all rootless podman
+    # needs.
+    #
+    # Do NOT redeclare those two units here. Both the package unit and the
+    # NixOS-generated drop-in carry an `ExecStart=`, and systemd rejects a
+    # service that ends up with two ("more than one ExecStart= setting,
+    # which is only allowed for Type=oneshot services"), which is exactly
+    # how the earlier hand-written pair killed the socket at boot. Only the
+    # enable flag belongs in this module.
+    #
+    # A host that must not run containers overrides this with
+    # `lib.mkForce false` — dsh still starts, the sandbox tools are present
+    # and each call fails on its own.
     virtualisation.podman.enable = lib.mkDefault true;
-
-    systemd.user.sockets.podman = {
-      description = "Podman API Socket (rootless, cua sandbox engine)";
-      wantedBy = [ "sockets.target" ];
-      socketConfig = {
-        ListenStream = "%t/podman/podman.sock";
-        SocketMode = "0660";
-      };
-    };
-
-    systemd.user.services.podman = {
-      description = "Podman API Service (rootless, cua sandbox engine)";
-      requires = [ "podman.socket" ];
-      after = [ "podman.socket" ];
-      serviceConfig = {
-        Type = "exec";
-        ExecStart = "${pkgs.podman}/bin/podman system service unix://%t/podman/podman.sock";
-      };
-    };
 
     # QQ presets (qq-chat / qq-chat-v2) now ship with the qq-bridge-dsh
     # bundle: nur generates the `@deepseek-ai/dsh-agent-preset` declarations

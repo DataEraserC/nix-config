@@ -54,18 +54,41 @@ in
     && builtins.head capturedSandboxes == nurCuaCli.outPath
     && capturedGui != null
     && builtins.head capturedGui == nurCuaCli.outPath;
-  # cua 沙盒引擎：cua-vmm 走 Podman 的 docker 兼容 API socket，nixpkgs 的
-  # podman 模块只接系统 socket，rootless 的这对用户单元（socket 激活，ListenStream
-  # 在 $XDG_RUNTIME_DIR/podman/podman.sock —— cua-vmm 的 well-known 候选之一）
-  # 由 dsh 模块自己声明。少任何一半，sandbox_create 都会在调用时报"找不到引擎"。
+  # cua 沙盒引擎：cua-vmm 走 Podman 的 docker 兼容 API socket，
+  # $XDG_RUNTIME_DIR/podman/podman.sock 是它的 well-known 候选之一。
+  #
+  # 这对 rootless 用户单元由 nixpkgs 的 podman 模块交付，不是 dsh 模块：
+  # virtualisation.podman 用 `systemd.packages = [ cfg.package ]` 装 podman 自带的
+  # podman.socket / podman.service，又用 systemd.user.sockets.podman.wantedBy 在
+  # sockets.target 下启用。所以这里断言的是"模块开关打开后用到的引擎可用"，
+  # 而不是"dsh 模块自己拼了 unit 字符串"——后者曾是错的实现，见下。
+  #
+  # 真正会炸的是 ExecStart 重复：nixpkgs 的生成器会把 services.podman 渲染成
+  # podman.service.d/overrides.conf 这个 drop-in，一旦它也带 ExecStart，包自带的
+  # service 加上它就有两条，systemd 直接拒绝启动（"Service has more than one
+  # ExecStart= setting, which is only allowed for Type=oneshot services"）。
+  # 断言因此钉住两件事：包自带的两个 unit 确实存在（引擎真的可用），且模块
+  # 这一侧既不补 ExecStart 也不补 ListenStream（不会叠出第二条）。
   podmanEngineEnabled =
     let
-      socket = cfg.systemd.user.sockets.podman;
+      podmanPkg = cfg.virtualisation.podman.package;
       service = cfg.systemd.user.services.podman;
+      socket = cfg.systemd.user.sockets.podman;
+      # 包自带的两个 unit（rootless socket + socket-activated service）。
+      pkgUnits = [
+        "${podmanPkg}/lib/systemd/user/podman.socket"
+        "${podmanPkg}/lib/systemd/user/podman.service"
+      ];
+      # 模块这一侧不得再补 ExecStart/ListenStream：nixpkgs 会把
+      # systemd.user.services.<name> 渲染成 drop-in，与包自带 unit 相加就有两条。
+      noExecStart = (service.serviceConfig.ExecStart or null) == null;
+      noListenStream = (socket.socketConfig.ListenStream or null) == null;
     in
     cfg.virtualisation.podman.enable
-    && lib.hasInfix "podman/podman.sock" (toString socket.socketConfig.ListenStream)
-    && lib.hasInfix "podman system service" (toString service.serviceConfig.ExecStart);
+    && lib.all lib.pathExists pkgUnits
+    && noExecStart
+    && noListenStream
+    && socket.wantedBy == [ "sockets.target" ];
   # dsh-cua-sandbox 必须落在 tui profile 的 bundle 列表里（mcp__cua-mcp__*
   # 工具面的载体）：模型看得见沙盒工具，才谈得上"操持 podman sandbox"。
   sandboxBundleInProfile =
