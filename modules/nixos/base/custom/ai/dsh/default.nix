@@ -527,6 +527,77 @@ let
         "ego_wait_for_response"
         "ego_wait_for_selector"
         "ego_wait_for_url"
+        # dsh-cua-sandbox's mcp__cua-mcp__* surface splits the same way the
+        # ego_* pair did, but along a sharper line: INSIDE the disposable
+        # sandbox vs OUTSIDE it. cua's MCP server registers 138 tools, not the
+        # two families its cordis row advertises, and their reach is wildly
+        # uneven — `space_bash`/`computer_shell` run in the container (harmless
+        # there: `sandbox_create` itself takes an entrypoint command, so the
+        # container is where arbitrary execution is by design), while
+        # `teleport_*` imports the user's real browser cookies and
+        # `volume_*`/`cloud_*` reach the account's persistent drive and billed
+        # cloud accounts. Denying shell inside the sandbox would constrain
+        # nothing and break the surface; admitting the rest would hand a group
+        # chat the host's credentials through a different door.
+        #
+        # 45 allowed: sandbox lifecycle + the container's own desktop, files,
+        # clipboard and shell. `sandbox_open_browser` is included because it is
+        # the documented way to get a driven browser (a self-launched Chromium
+        # cannot be attached); the throwaway-profile browser lives inside the
+        # sandbox like everything else here.
+        #
+        # 93 denied — hidden from the schema AND rejected at execution (both
+        # lists are consulted: restrict hides, guard rejects). Grouped by why:
+        # sandbox 生命周期
+        "mcp__cua-mcp__sandbox_create"
+        "mcp__cua-mcp__sandbox_list"
+        "mcp__cua-mcp__sandbox_get"
+        "mcp__cua-mcp__sandbox_start"
+        "mcp__cua-mcp__sandbox_stop"
+        "mcp__cua-mcp__sandbox_restart"
+        "mcp__cua-mcp__sandbox_suspend"
+        "mcp__cua-mcp__sandbox_delete"
+        "mcp__cua-mcp__sandbox_open_browser"
+        # 镜像目录（挑镜像用）
+        "mcp__cua-mcp__images_list"
+        # 沙盒内执行与文件（沙盒是一次性容器，打不到宿主）
+        "mcp__cua-mcp__computer_shell"
+        "mcp__cua-mcp__computer_file_read"
+        "mcp__cua-mcp__computer_file_write"
+        "mcp__cua-mcp__computer_file_list"
+        # 沙盒桌面控制
+        "mcp__cua-mcp__computer_screenshot"
+        "mcp__cua-mcp__computer_click"
+        "mcp__cua-mcp__computer_double_click"
+        "mcp__cua-mcp__computer_drag"
+        "mcp__cua-mcp__computer_type"
+        "mcp__cua-mcp__computer_key"
+        "mcp__cua-mcp__computer_hotkey"
+        "mcp__cua-mcp__computer_key_down"
+        "mcp__cua-mcp__computer_key_up"
+        "mcp__cua-mcp__computer_mouse_down"
+        "mcp__cua-mcp__computer_mouse_up"
+        "mcp__cua-mcp__computer_move_cursor"
+        "mcp__cua-mcp__computer_scroll"
+        "mcp__cua-mcp__computer_get_screen_size"
+        "mcp__cua-mcp__computer_get_cursor_position"
+        "mcp__cua-mcp__computer_get_current_window"
+        "mcp__cua-mcp__computer_window_list"
+        "mcp__cua-mcp__computer_window_get_info"
+        "mcp__cua-mcp__computer_window_focus"
+        "mcp__cua-mcp__computer_window_close"
+        "mcp__cua-mcp__computer_window_move"
+        "mcp__cua-mcp__computer_window_resize"
+        "mcp__cua-mcp__computer_window_maximize"
+        "mcp__cua-mcp__computer_window_minimize"
+        "mcp__cua-mcp__computer_window_unfocus"
+        "mcp__cua-mcp__computer_window_open"
+        "mcp__cua-mcp__computer_launch"
+        # 剪贴板与无障碍树
+        "mcp__cua-mcp__computer_clipboard_get"
+        "mcp__cua-mcp__computer_clipboard_set"
+        "mcp__cua-mcp__computer_get_accessibility_tree"
+        "mcp__cua-mcp__computer_accessibility_act"
       ];
       extraRestrictedTools = [
         "ego_auth_flush"
@@ -538,6 +609,109 @@ let
         "ego_script"
         "ego_status"
         "ego_upload"
+        # 空间（Space）注册表与宿主侧入口（23）：cua 有两套注册表，
+        # sandbox_create 建的容器在 sandbox_* 里，space_* 只认 add_space 注册的
+        # Space —— 两侧互不可见（实测 space_bash 对 sandbox_create 的沙盒报
+        # "Space not found"）。add_space 被拒 ⇒ space_bash/space_write 在这里
+        # 什么也做不了，放行只会给模型一个永远失败的工具，故一并拒掉。
+        "mcp__cua-mcp__add_space"
+        "mcp__cua-mcp__space_bash"
+        "mcp__cua-mcp__space_write"
+        "mcp__cua-mcp__remove_space"
+        "mcp__cua-mcp__create_space"
+        "mcp__cua-mcp__delete_space"
+        "mcp__cua-mcp__start_space"
+        "mcp__cua-mcp__stop_space"
+        "mcp__cua-mcp__list_spaces"
+        "mcp__cua-mcp__list_space_windows"
+        "mcp__cua-mcp__space_shares"
+        "mcp__cua-mcp__stream_endpoint"
+        "mcp__cua-mcp__stream_space_window"
+        "mcp__cua-mcp__open_space_viewer"
+        "mcp__cua-mcp__show_space_pip"
+        "mcp__cua-mcp__hide_space_pip"
+        "mcp__cua-mcp__send_file"
+        "mcp__cua-mcp__upload"
+        "mcp__cua-mcp__download"
+        "mcp__cua-mcp__sandbox_view"
+        "mcp__cua-mcp__sandbox_vnc"
+        "mcp__cua-mcp__list_tools"
+        "mcp__cua-mcp__call_tool"
+        # 把本机凭据搬进沙盒（Cua Keyvault）（4）
+        "mcp__cua-mcp__teleport_app"
+        "mcp__cua-mcp__teleport_browser_session"
+        "mcp__cua-mcp__teleport_manifest"
+        "mcp__cua-mcp__request_site_login"
+        # 持久卷 / 云端账单 / 别人的算力与网络（37）
+        "mcp__cua-mcp__volume_approve"
+        "mcp__cua-mcp__volume_audit"
+        "mcp__cua-mcp__volume_cache_clear"
+        "mcp__cua-mcp__volume_cache_set"
+        "mcp__cua-mcp__volume_cache_stats"
+        "mcp__cua-mcp__volume_delete"
+        "mcp__cua-mcp__volume_deny"
+        "mcp__cua-mcp__volume_grant"
+        "mcp__cua-mcp__volume_grants"
+        "mcp__cua-mcp__volume_history"
+        "mcp__cua-mcp__volume_ls"
+        "mcp__cua-mcp__volume_mount"
+        "mcp__cua-mcp__volume_mount_status"
+        "mcp__cua-mcp__volume_read"
+        "mcp__cua-mcp__volume_request_access"
+        "mcp__cua-mcp__volume_requests"
+        "mcp__cua-mcp__volume_restore"
+        "mcp__cua-mcp__volume_revoke"
+        "mcp__cua-mcp__volume_storage"
+        "mcp__cua-mcp__volume_storage_set"
+        "mcp__cua-mcp__volume_sync_events"
+        "mcp__cua-mcp__volume_sync_resolve"
+        "mcp__cua-mcp__volume_sync_status"
+        "mcp__cua-mcp__volume_unmount"
+        "mcp__cua-mcp__volume_write"
+        "mcp__cua-mcp__cloud_connect"
+        "mcp__cua-mcp__cloud_disconnect"
+        "mcp__cua-mcp__cloud_status"
+        "mcp__cua-mcp__cloud_sweep"
+        "mcp__cua-mcp__cloud_test"
+        "mcp__cua-mcp__share_space"
+        "mcp__cua-mcp__unshare_space"
+        "mcp__cua-mcp__relay_register_space"
+        "mcp__cua-mcp__relay_unregister_space"
+        "mcp__cua-mcp__hotspot_start"
+        "mcp__cua-mcp__hotspot_status"
+        "mcp__cua-mcp__hotspot_stop"
+        # 无人值守的自我调度与自我派生（19）
+        "mcp__cua-mcp__agent_capabilities"
+        "mcp__cua-mcp__agent_events"
+        "mcp__cua-mcp__agent_interrupt"
+        "mcp__cua-mcp__agent_list"
+        "mcp__cua-mcp__agent_message"
+        "mcp__cua-mcp__agent_pause"
+        "mcp__cua-mcp__agent_resume"
+        "mcp__cua-mcp__agent_start"
+        "mcp__cua-mcp__agent_status"
+        "mcp__cua-mcp__agent_stop"
+        "mcp__cua-mcp__persistent_agent_create"
+        "mcp__cua-mcp__persistent_agent_list"
+        "mcp__cua-mcp__persistent_agent_remove"
+        "mcp__cua-mcp__persistent_agent_save"
+        "mcp__cua-mcp__persistent_agent_send"
+        "mcp__cua-mcp__routine_add"
+        "mcp__cua-mcp__routine_list"
+        "mcp__cua-mcp__routine_remove"
+        "mcp__cua-mcp__routine_set_enabled"
+        # 用户的真机授权（这台机器的桌面/其他设备）（3）
+        "mcp__cua-mcp__computer_access_grant"
+        "mcp__cua-mcp__computer_access_list"
+        "mcp__cua-mcp__computer_access_revoke"
+        # 通知与技能库写入（7）
+        "mcp__cua-mcp__notify_user"
+        "mcp__cua-mcp__notifications_ack"
+        "mcp__cua-mcp__notifications_list"
+        "mcp__cua-mcp__skills_delete"
+        "mcp__cua-mcp__skills_list"
+        "mcp__cua-mcp__skills_read"
+        "mcp__cua-mcp__skills_record"
       ];
       # presets 的 src 跟随 unwrapped.src
       unwrapped = qqBridgeForkUnwrapped;
