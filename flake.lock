@@ -470,6 +470,31 @@
         "type": "github"
       }
     },
+    "bas-remote": {
+      "inputs": {
+        "deepseek-harness": [
+          "nur-DataEraserC",
+          "deepseek-harness"
+        ],
+        "nixpkgs": [
+          "nur-DataEraserC",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1792778593,
+        "narHash": "sha256-NMne5hnTJFRy0NFKoIt/SWAWKSJ5NAGq48UyjNgbWJM=",
+        "owner": "DataEraserC",
+        "repo": "bas-remote",
+        "rev": "57134e776dea9bb84786ae2b90288cb47627e787",
+        "type": "github"
+      },
+      "original": {
+        "owner": "DataEraserC",
+        "repo": "bas-remote",
+        "type": "github"
+      }
+    },
     "browser-previews": {
       "inputs": {
         "flake-utils": "flake-utils_4",
@@ -1164,31 +1189,6 @@
       }
     },
     "dsh-bas-remote": {
-      "inputs": {
-        "deepseek-harness": [
-          "nur-DataEraserC",
-          "deepseek-harness"
-        ],
-        "nixpkgs": [
-          "nur-DataEraserC",
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1792776991,
-        "narHash": "sha256-NPmRaPZa9YVrCgPAFSEWAQp7MsOfaUhF0SMEjAUkf/o=",
-        "owner": "DataEraserC",
-        "repo": "dsh-bas-remote",
-        "rev": "85b4dbe60d5d13ba06282d73f6e9e34de390aa68",
-        "type": "github"
-      },
-      "original": {
-        "owner": "DataEraserC",
-        "repo": "dsh-bas-remote",
-        "type": "github"
-      }
-    },
-    "dsh-bas-remote_2": {
       "inputs": {
         "deepseek-harness": [
           "nur-DataEraserC-not-follow",
@@ -6794,11 +6794,11 @@
         "LaphaeL-aicmd": "LaphaeL-aicmd_3",
         "ZeroBot-Plugin": "ZeroBot-Plugin",
         "android-attestation-keybox-generator": "android-attestation-keybox-generator",
+        "bas-remote": "bas-remote",
         "deepseek-harness": [
           "deepseek-harness"
         ],
         "devshell": "devshell_2",
-        "dsh-bas-remote": "dsh-bas-remote",
         "flake-parts": "flake-parts_17",
         "nix-cachyos-kernel": "nix-cachyos-kernel",
         "nix-index-database": "nix-index-database_2",
@@ -6810,11 +6810,11 @@
         "treefmt-nix": "treefmt-nix_6"
       },
       "locked": {
-        "lastModified": 1792777339,
-        "narHash": "sha256-W/tumDKqlFLU2BXodSUSxbXpAqSxWBLZlUj2xHt8NrE=",
+        "lastModified": 1792779275,
+        "narHash": "sha256-R+gGY+7pEMZZwLdoMQIMaJ3t5hYwTpJE5ukv3miXiLI=",
         "owner": "DataEraserC",
         "repo": "nur-packages",
-        "rev": "973e2a6f165769838780a9aa5d06830f1294ba05",
+        "rev": "91b313cb8d36a5e24d6d4d1b1f05d63845e20e17",
         "type": "github"
       },
       "original": {
@@ -6861,7 +6861,7 @@
         "android-attestation-keybox-generator": "android-attestation-keybox-generator_3",
         "deepseek-harness": "deepseek-harness_3",
         "devshell": "devshell_4",
-        "dsh-bas-remote": "dsh-bas-remote_2",
+        "dsh-bas-remote": "dsh-bas-remote",
         "flake-parts": "flake-parts_21",
         "nix-cachyos-kernel": "nix-cachyos-kernel_3",
         "nix-index-database": "nix-index-database_4",

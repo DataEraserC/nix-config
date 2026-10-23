@@ -333,7 +333,7 @@ let
     # Archived: dsh ships a built-in navbar implementation now.
     # pkgs.dsh.bundles.navbar
     opencode2dsh
-    nur-DataEraserC.packages.${pkgs.system}.dsh-bas-remote
+    nur-DataEraserC.packages.${pkgs.system}.bas-remote
     # nur-DataEraserC.packages.${pkgs.system}.dsh-git-worktree
     nur-DataEraserC.packages.${pkgs.system}.dsh-worktree
     modlensPatched
