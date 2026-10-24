@@ -6,6 +6,8 @@ result*
 result*/
 .direnv/
 .worktrees/
+# the editor's workspace data, not a disposable cache: see AGENTS.md
+.workbuddy/
 .DS_Store
 .pre-commit-config.yaml
 logs/
