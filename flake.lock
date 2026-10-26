@@ -4534,10 +4534,10 @@
     "mysecrets": {
       "flake": false,
       "locked": {
-        "lastModified": 1792585589,
-        "narHash": "sha256-WTEosgu0+f5jZFewFc8l41zjWtO/+n/a6qTjJwzAnYQ=",
+        "lastModified": 1792979974,
+        "narHash": "sha256-yAaQyhvq65kuyUth/2bpABgQsT2wCgH7L3M6ApEiW+Y=",
         "ref": "refs/heads/master",
-        "rev": "e66985599bc3cd2de2bd05f672f71c75d181d868",
+        "rev": "b2fa56c3df06438195cb5b72658457cffa0813db",
         "shallow": true,
         "type": "git",
         "url": "file:////home/nixos/nix-config/secrets"
