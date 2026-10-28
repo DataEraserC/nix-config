@@ -230,6 +230,29 @@ in
       '';
     };
 
+    user = lib.mkOption {
+      type = lib.types.str;
+      default = "astrbot";
+      description = ''
+        Account astrbot.service and astrbot-venv.service run as. This module
+        only creates the default `astrbot` account; any other value is assumed
+        to exist already (a normal user, or one declared elsewhere), so no
+        account is generated for it. Switching after the first start needs the
+        state directory handed over: `chown -R <user>:<group> /var/lib/astrbot`.
+      '';
+    };
+
+    group = lib.mkOption {
+      type = lib.types.str;
+      default = "astrbot";
+      description = ''
+        Primary group of the service account. Created by this module only when
+        left at the default name; otherwise it must already exist. Keep it
+        group-readable if other accounts need to read the venv or the WebUI
+        bundle: StateDirectoryMode gives the group r-x.
+      '';
+    };
+
     python = lib.mkOption {
       type = lib.types.package;
       default = pkgs.python312;
@@ -287,13 +310,20 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    users.users.astrbot = {
-      isSystemUser = true;
-      group = "astrbot";
-      home = dataDir;
-      description = "AstrBot chatbot service";
+    # Both are created only for the default names: a custom user/group is
+    # expected to come from the rest of the configuration, and managing it here
+    # would reset its attributes (isSystemUser, home, ...).
+    users.groups = lib.mkIf (cfg.group == "astrbot") {
+      astrbot = { };
     };
-    users.groups.astrbot = { };
+    users.users = lib.mkIf (cfg.user == "astrbot") {
+      ${cfg.user} = {
+        isSystemUser = true;
+        inherit (cfg) group;
+        home = dataDir;
+        description = "AstrBot chatbot service";
+      };
+    };
 
     systemd.services.astrbot-venv = {
       description = "Provision the AstrBot virtualenv from the pinned source";
@@ -302,8 +332,8 @@ in
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
-        User = "astrbot";
-        Group = "astrbot";
+        User = cfg.user;
+        Group = cfg.group;
         StateDirectory = "astrbot";
         StateDirectoryMode = "0750";
         WorkingDirectory = dataDir;
@@ -345,8 +375,8 @@ in
 
       serviceConfig = {
         Type = "simple";
-        User = "astrbot";
-        Group = "astrbot";
+        User = cfg.user;
+        Group = cfg.group;
         StateDirectory = "astrbot";
         StateDirectoryMode = "0750";
         WorkingDirectory = dataDir;
