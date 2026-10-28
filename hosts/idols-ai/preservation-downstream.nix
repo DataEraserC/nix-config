@@ -69,6 +69,12 @@ in
         mode = "0700";
       }
 
+      # astrbot (venv, uv cache, cmd_config.json, plugins, plugin_data,
+      # knowledge base, WebUI dist). Keeping the venv here means an AstrBot
+      # upgrade only re-resolves the wheels instead of reinstalling ~1GB; delete
+      # it (and .nix-source) to force a clean rebuild.
+      "/var/lib/astrbot"
+
       # ccache
       "/var/cache/ccache"
 

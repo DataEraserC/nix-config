@@ -263,6 +263,13 @@ rec {
   modules.alist.port = myvars.networking.services.alist.hosts.idols-ai.port;
   modules.alist.s3Port = myvars.networking.services.alist.hosts.idols-ai.s3Port;
 
+  # AstrBot chatbot + WebUI, bound to 0.0.0.0:6185 (shared modules.astrbot).
+  # Native deployment: the pinned upstream source runs on Nix's python312 with a
+  # uv-provisioned venv under /var/lib/astrbot (see the module header); the
+  # first start downloads the wheel set, so give it a few minutes.
+  modules.astrbot.enable = myvars.networking.services.astrbot.hosts.idols-ai.enable;
+  modules.astrbot.port = myvars.networking.services.astrbot.hosts.idols-ai.port;
+
   # Clash Verge Rev GUI client (shared modules/nixos/base/custom/network/clash-verge.nix,
   # nixpkgs programs.clash-verge with the package from nixpkgs-master). Service
   # mode runs the mihomo core as a root systemd unit; autoStart and TUN stay off

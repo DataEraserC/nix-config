@@ -378,6 +378,17 @@ rec {
         };
       };
     };
+    # AstrBot chatbot + WebUI (base/custom/ai/astrbot.nix). Keeps upstream's
+    # default 6185 instead of a 11xx slot so the URL matches AstrBot's docs.
+    astrbot = {
+      hosts = {
+        idols-ai = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 6185;
+        };
+      };
+    };
 
     # --- Our Free Model standalone gateway (base/custom/ai/our-free-model-standalone) ---
     # Not part of the 1100 series: the gateway hard-binds 127.0.0.1 (the
