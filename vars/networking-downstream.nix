@@ -10,25 +10,11 @@ rec {
   proxyGateway = "192.168.0.178";
 
   hostsAddr = rec {
-    # ============================================
-    # Homelab's Physical Machines (KubeVirt Nodes)
-    # ============================================
-    kubevirt-shoryu = {
-      iface = "eno1";
-      ipv4 = "192.168.5.181";
-    };
-    kubevirt-shushou = {
-      iface = "eno1";
-      ipv4 = "192.168.5.182";
-    };
-    kubevirt-youko = {
-      iface = "eno1";
-      ipv4 = "192.168.5.183";
-    };
-
-    # ============================================
-    # Other VMs and Physical Machines
-    # ============================================
+    # Only the downstream-only machines are listed here; everything upstream
+    # knows (the VM hosts `shoryu` / `shushou` / `youko` on 192.168.5.181-183
+    # included) is merged in from vars/networking.nix - do not restate it, or
+    # the copy goes stale the next time upstream renames something (a stale
+    # `kubevirt-shoryu` duplicate lived here for exactly that reason).
     y9000p2025 = {
       # Laptop - physical home network interface
       iface = "wlp130s0";
