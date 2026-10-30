@@ -54,6 +54,13 @@
 # started at all: that is how a listener is retired without deleting its
 # declaration - or the port another host's `chainUpstream` points at.
 #
+# Instance keys are `<destination-host>-<protocol>` - idols-ai-socks5,
+# idols-ai-http, wsl-work-http - naming the host whose network the entry point
+# resolves on plus the protocol the client speaks. The same key therefore means
+# the same destination on every machine (direct on that host, chained through
+# it elsewhere), and it is the gost service/chain name that shows up in the
+# journal.
+#
 # Exposure: instances bind address (default 0.0.0.0) and rely on the host
 # firewall's trustedInterfaces (easytier/tailscale/zerotier) for reachability;
 # openFirewall additionally allows the port on EVERY interface (e. the campus
@@ -277,14 +284,16 @@ in
       type = lib.types.attrsOf (lib.types.submodule instanceModule);
       default = { };
       example = {
-        proxy = {
+        # the local host's own entry points ...
+        wsl-work-socks5 = {
           port = 1080;
         };
-        http = {
+        wsl-work-http = {
           port = 1081;
           protocol = "http";
         };
-        idols-ai = {
+        # ... plus one chained through another host's listener
+        idols-ai-socks5 = {
           port = 31080;
           chainUpstream = "10.126.126.150:1080";
         };
@@ -296,6 +305,13 @@ in
         turns it into a forwarder to another host's proxy, and `enable = false`
         retires a listener while keeping its declaration. Without any instance
         the enable flag is a configuration bug and fails the eval.
+
+        Name an instance `<destination-host>-<protocol>` - `idols-ai-socks5`,
+        `idols-ai-http`, `wsl-work-http` - where the host is the one whose
+        network the entry point resolves on. The same name then means the same
+        destination and protocol on every host (directly on that host, chained
+        through it elsewhere), and gost's own service/chain names in the
+        journal stay self-describing.
       '';
     };
   };
@@ -308,7 +324,7 @@ in
     assertions = [
       {
         assertion = lib.length (lib.attrNames cfg.instances) > 0;
-        message = "modules.gost-proxy.enable requires at least one entry in modules.gost-proxy.instances (e. instances.proxy.port = 1080)";
+        message = "modules.gost-proxy.enable requires at least one entry in modules.gost-proxy.instances (e. instances.idols-ai-socks5.port = 1080)";
       }
       {
         assertion = lib.length listenAddrs == lib.length (lib.unique listenAddrs);

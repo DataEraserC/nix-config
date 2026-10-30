@@ -217,19 +217,20 @@ rec {
   # interfaces (easytier/tailscale/zerotier) and openFirewall stays off, so the
   # campus LAN cannot connect - proxy credentials are clear text there.
   # Credentials come from the agenix secret gost-proxy.auth.
-  #   - 1080 SOCKS5: for curl / ssh / proxychains. This is also the chained
-  #     upstream of wsl-work:31080 (and 31081), whose clients reach this host's
+  #   - idols-ai-socks5 (1080): for curl / ssh / proxychains. This is also the
+  #     chained upstream of wsl-work's idols-ai-socks5 (31080) and
+  #     idols-ai-http (31081) entry points, whose clients reach this host's
   #     loopback (dsh GUI on 127.0.0.1:9900) through it.
-  #   - 1081 HTTP: the same proxy for browsers, which cannot send SOCKS5
-  #     credentials (Chromium not at all, Firefox only via about:config).
+  #   - idols-ai-http (1081): the same proxy for browsers, which cannot send
+  #     SOCKS5 credentials (Chromium not at all, Firefox only via about:config).
   # They are independent instances, so either one can be retired later with
   # `instances.<name>.enable = false` without touching the other.
   modules.gost-proxy = {
     enable = myvars.networking.services.gost-proxy.hosts.idols-ai.enable;
     instances = {
-      proxy.port = myvars.networking.services.gost-proxy.hosts.idols-ai.ports.proxy;
-      http = {
-        port = myvars.networking.services.gost-proxy.hosts.idols-ai.ports.http;
+      idols-ai-socks5.port = myvars.networking.services.gost-proxy.hosts.idols-ai.ports.idols-ai-socks5;
+      idols-ai-http = {
+        port = myvars.networking.services.gost-proxy.hosts.idols-ai.ports.idols-ai-http;
         protocol = "http";
       };
     };
