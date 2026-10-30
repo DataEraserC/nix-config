@@ -414,6 +414,7 @@ let
         "nix-web-lan"
         "nix-web-qq"
         "nix-web-qq-lan"
+        "nix-web-acb"
       ];
     })
     # Free web search with smart engine routing (ddg/bing/searxng… plus a
@@ -988,6 +989,15 @@ in
         web = {
           bundles = webBundles;
           patch = repoPatch "web";
+        };
+
+        # Same composition as `web` (entry + base + extras, including
+        # dsh-comfyui), but a separate key so the acb bridge can drive its
+        # own surface without disturbing the plain web profile.
+        #   dsh --profile nix-web-acb
+        web-acb = {
+          bundles = webBundles;
+          patch = repoPatch "web-acb";
         };
 
         # Minimal fallback for the plain surfaces: entry + shared base only.
