@@ -432,29 +432,37 @@ rec {
       };
     };
 
-    # --- authenticated SOCKS5 proxy (modules/nixos/base/custom/network/gost-proxy.nix)
+    # --- authenticated SOCKS5 + HTTP proxy (modules/nixos/base/custom/network/gost-proxy.nix)
     # The same instance names are used on several hosts, so each row lists
     # the instances that machine declares; ports, not enablement, live here.
+    # Every host gets the pair `proxy` (SOCKS5, for curl/ssh/proxychains) and
+    # `http` (the same proxy over HTTP, because browsers cannot send SOCKS5
+    # credentials); `idols-ai` / `idols-ai-http` are wsl-work-only chained
+    # twins that resolve destinations on the laptop.
     gost-proxy = rec {
       hosts = {
         idols-ai = {
           enable = true;
           host = "0.0.0.0";
           ports = {
-            proxy = 1080; # direct listener; also wsl-work's chained hop
+            proxy = 1080; # direct SOCKS5 listener; also wsl-work's chained hop
+            http = 1081; # direct HTTP listener (browser-facing twin)
           };
         };
         wsl-work = {
           enable = true;
           host = "0.0.0.0";
           ports = {
-            proxy = 1080; # direct listener, same number as idols-ai today
+            proxy = 1080; # direct SOCKS5 listener, same number as idols-ai today
+            http = 1081; # direct HTTP listener, same number as idols-ai today
             idols-ai = 31080; # wsl-work only: chains through idols-ai's proxy
+            idols-ai-http = 31081; # ... its HTTP twin, same chain target
           };
         };
       };
-      # upstream of the `idols-ai` instance, derived instead of restated so
-      # the two ports can never drift apart
+      # upstream of the `idols-ai*` instances, derived instead of restated so
+      # the two ports can never drift apart; the hop is SOCKS5 (the default
+      # chainProtocol), so one value serves both chained instances
       chainUpstream = "${endpoints.y9000p2025.easytier}:${toString hosts.idols-ai.ports.proxy}";
     };
 

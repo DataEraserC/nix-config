@@ -72,20 +72,34 @@ rec {
   # EasyTier decentralized P2P VPN
   modules.easytier.enable = true;
 
-  # Authenticated SOCKS5 proxies (shared modules/nixos/base/custom/network/gost-proxy.nix):
-  # - 1080: direct proxy for reaching intranet/overlay resources via this host;
-  # - 31080: chained through idols-ai's 1080 (easytier 10.126.126.150), so a
-  #   client of 31080 resolves destinations ON idols-ai - notably its loopback
-  #   127.0.0.1:9900 where the dsh GUI listens. Same agenix credentials
-  #   (gost-proxy.auth) on both hosts, so one client config fits both ports.
-  # The host firewall is disabled here, so both ports are reachable wherever
-  # this host is (easytier mesh, WSL localhost forwarding from Windows).
+  # Authenticated SOCKS5 + HTTP proxies (shared
+  # modules/nixos/base/custom/network/gost-proxy.nix):
+  # - 1080 / 1081: direct proxy for reaching intranet/overlay resources via
+  #   this host (SOCKS5 for curl & co, HTTP for browsers);
+  # - 31080 / 31081: chained through idols-ai's 1080 (easytier
+  #   10.126.126.150), so a client of them resolves destinations ON idols-ai -
+  #   notably its loopback 127.0.0.1:9900 where the dsh GUI listens, which is a
+  #   browser-only service, hence the HTTP twin on 31081. Same agenix
+  #   credentials (gost-proxy.auth) on both hosts, so one client config fits
+  #   every port.
+  # The host firewall is disabled here, so all four ports are reachable
+  # wherever this host is (easytier mesh, WSL localhost forwarding from
+  # Windows).
   modules.gost-proxy = {
     enable = myvars.networking.services.gost-proxy.hosts.wsl-work.enable;
     instances = {
       proxy.port = myvars.networking.services.gost-proxy.hosts.wsl-work.ports.proxy;
+      http = {
+        port = myvars.networking.services.gost-proxy.hosts.wsl-work.ports.http;
+        protocol = "http";
+      };
       idols-ai = {
         port = myvars.networking.services.gost-proxy.hosts.wsl-work.ports.idols-ai;
+        chainUpstream = myvars.networking.services.gost-proxy.chainUpstream;
+      };
+      idols-ai-http = {
+        port = myvars.networking.services.gost-proxy.hosts.wsl-work.ports.idols-ai-http;
+        protocol = "http";
         chainUpstream = myvars.networking.services.gost-proxy.chainUpstream;
       };
     };

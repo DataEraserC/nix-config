@@ -211,16 +211,28 @@ rec {
   # EasyTier decentralized P2P VPN
   modules.easytier.enable = true;
 
-  # Authenticated SOCKS5 proxy (shared modules/nixos/base/custom/network/gost-proxy.nix).
-  # Listens on 1080 for every interface, but the firewall only trusts the
-  # overlay interfaces (easytier/tailscale/zerotier) and openFirewall stays off,
-  # so the campus LAN cannot connect - SOCKS5 credentials are clear text there.
-  # Credentials come from the agenix secret gost-proxy.auth. This instance is
-  # also the chained upstream of wsl-work:31080, whose clients reach this
-  # host's loopback (dsh GUI on 127.0.0.1:9900) through it.
+  # Authenticated SOCKS5 + HTTP proxy (shared
+  # modules/nixos/base/custom/network/gost-proxy.nix).
+  # Two listeners on every interface, but the firewall only trusts the overlay
+  # interfaces (easytier/tailscale/zerotier) and openFirewall stays off, so the
+  # campus LAN cannot connect - proxy credentials are clear text there.
+  # Credentials come from the agenix secret gost-proxy.auth.
+  #   - 1080 SOCKS5: for curl / ssh / proxychains. This is also the chained
+  #     upstream of wsl-work:31080 (and 31081), whose clients reach this host's
+  #     loopback (dsh GUI on 127.0.0.1:9900) through it.
+  #   - 1081 HTTP: the same proxy for browsers, which cannot send SOCKS5
+  #     credentials (Chromium not at all, Firefox only via about:config).
+  # They are independent instances, so either one can be retired later with
+  # `instances.<name>.enable = false` without touching the other.
   modules.gost-proxy = {
     enable = myvars.networking.services.gost-proxy.hosts.idols-ai.enable;
-    instances.proxy.port = myvars.networking.services.gost-proxy.hosts.idols-ai.ports.proxy;
+    instances = {
+      proxy.port = myvars.networking.services.gost-proxy.hosts.idols-ai.ports.proxy;
+      http = {
+        port = myvars.networking.services.gost-proxy.hosts.idols-ai.ports.http;
+        protocol = "http";
+      };
+    };
   };
 
   # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:1105.
