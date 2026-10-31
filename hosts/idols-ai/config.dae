@@ -203,15 +203,16 @@ group {
         policy: min_moving_avg
     }
     lajichang {
-        filter: subtag(lajichang)
+        filter: subtag(lajichang_1)
+        filter: subtag(lajichang_2)
         policy: min_moving_avg
     }
     xxmad {
-        filter: subtag(xxmad)
+        filter: subtag(xxmad_1)
         policy: min_moving_avg
     }
     mojie {
-        filter: subtag(mojie)
+        filter: subtag(mojie_1)
         policy: min_moving_avg
     }
 
@@ -289,7 +290,8 @@ group {
 
     steam {
         # Filter nodes from the global node pool defined by the subscription and node section above.
-        filter: subtag(lajichang) && !name(keyword: 'ExpireAt:')
+        filter: subtag(lajichang_1) && !name(keyword: 'ExpireAt:')
+        filter: subtag(lajichang_2) && !name(keyword: 'ExpireAt:')
         filter: subtag(ikuuu_2) && !name(keyword: 'ExpireAt:')
         filter: subtag(ikuuu_1) && !name(keyword: 'ExpireAt:')
         filter: name(clash)
@@ -311,7 +313,8 @@ group {
     # --- ryan4yin rules ---#
 
     media {
-        filter: subtag(lajichang)
+        filter: subtag(lajichang_1)
+        filter: subtag(lajichang_2)
         filter: name(keyword: 'Hong Kong')
         filter: name(keyword: '香港')
         filter: name(keyword: 'Singapore')
@@ -327,7 +330,8 @@ group {
     }
 
     ssh-proxy {
-        filter: subtag(lajichang)
+        filter: subtag(lajichang_1)
+        filter: subtag(lajichang_2)
         filter: name(keyword: 'Hong Kong')
         filter: name(keyword: '香港')
         filter: name(keyword: 'USA') [add_latency: -500ms]
@@ -339,7 +343,8 @@ group {
     }
 
     proxy-avoid-rate-limits {
-        filter: subtag(lajichang)
+        filter: subtag(lajichang_1)
+        filter: subtag(lajichang_2)
         filter: name(keyword: 'UK')
         filter: name(keyword: '英国')
         filter: name(keyword: 'USA') [add_latency: -500ms]
