@@ -588,10 +588,16 @@ rec {
     # rdp / opencode / the LAN proxy on the laptop are not driven by a NixOS
     # module, so they stay unregistered (registry scope) and carry literals.
     {
-      name = "rdp";
+      name = "rdp_rd";
       localPort = 30000 + 3389;
       remoteHost = endpoints.y9000p2025.easytier;
       remotePort = 3389;
+    }
+    {
+      name = "rdp_rc";
+      localPort = 30000 + 3390;
+      remoteHost = endpoints.y9000p2025.easytier;
+      remotePort = 3390;
     }
     {
       name = "ssh";
