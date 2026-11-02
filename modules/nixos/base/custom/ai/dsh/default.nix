@@ -4,6 +4,7 @@
   nur-DataEraserC,
   # qq-bridge fork 源码的 path input（详见 flake.nix 的 qq-bridge-fork）
   qq-bridge-fork,
+  acb,
   config,
   myvars,
   lib,
@@ -751,37 +752,12 @@ let
   webQQBundles = lib.unique (webBundles ++ qqBundles);
   webQQFailsafeBundles = webFailsafeBundles ++ qqBundles;
 
-  # ACB 的 preset 不手写在 web-acb.yml 里：按 acbSessions 列表生成一个
-  # `acb-presets` bundle，每条会话一个 preset + 自己的 MCP client。YAML 正文在
-  # 同目录的模板文件里，这里只做占位符替换，避免在 Nix 里拼大段字符串。
-  acbPresetRows = lib.concatMapStringsSep "\n" (
-    session:
-    lib.replaceStrings [ "@PRESET@" "@PORT@" ] [ session.preset (toString session.port) ] (
-      builtins.readFile ./acb-preset-row.yml.tmpl
-    )
-  ) cfg.acbSessions;
-  acbPresetPatch = pkgs.writeText "acb-presets.patch.yml" (
-    lib.replaceStrings [ "@ROWS@" ] [ acbPresetRows ] (builtins.readFile ./acb-presets.patch.yml.tmpl)
-  );
-  acbPresets =
-    (pkgs.runCommand "acb-presets-0.1.0" { } ''
-      pkg=$out/lib/node_modules/acb-presets
-      mkdir -p $out/nix-support "$pkg/presets"
-      cp ${acbPresetPatch} "$pkg/presets/acb.patch.yml"
-      cp ${./acb-presets-package.json} "$pkg/package.json"
-      sed "s|@PKG@|$pkg|" ${./acb-presets-bundle.json} > $out/nix-support/dsh-bundles.json
-    '')
-    // {
-      # dsh 的 composition 检查只认这个标记（参见 nur 的 qq-bridge-dsh）。
-      passthru = {
-        dshBundle = true;
-        dshBundleHelper = "buildDshBundle";
-      };
-    };
-
-  # web-acb = web 的 composition + 生成的 ACB preset bundle。没有 ACB 会话时
-  # 不加，避免给别的 host 塞一个空 bundle。
-  webAcbBundles = webBundles ++ lib.optional (cfg.acbSessions != [ ]) acbPresets;
+  # ACB 的 preset bundle 随 ACB 仓库打包（nix/dsh-bundle）；这里只把部署侧的
+  # 会话列表 override 进去。没有 ACB 会话时不加，避免给别的 host 塞空 bundle。
+  acbBundle = acb.packages.${pkgs.system}.dsh-bundle.override {
+    sessions = cfg.acbSessions;
+  };
+  webAcbBundles = webBundles ++ lib.optional (cfg.acbSessions != [ ]) acbBundle;
 
   # The LAN profiles deliberately declare NO webserver row. The web-app bundle
   # already ships one, whose bind host is the launcher provider:
@@ -847,7 +823,7 @@ let
     let
       injectedManifests = map (bundle: "${bundle}/nix-support/dsh-bundles.json") (
         lib.unique (
-          extraBundles ++ baseBundles ++ qqBundles ++ lib.optional (cfg.acbSessions != [ ]) acbPresets
+          extraBundles ++ baseBundles ++ qqBundles ++ lib.optional (cfg.acbSessions != [ ]) acbBundle
         )
       );
       targetNames = map (spec: spec.targetName) (lib.attrValues artifacts.profileSpecs);
