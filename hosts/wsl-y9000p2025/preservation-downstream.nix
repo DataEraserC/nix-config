@@ -3,7 +3,7 @@
 # The sibling `preservation.nix` keeps the base list; these additions live here
 # so base-list changes never conflict with them. Both modules set the same list
 # options and the module system concatenates them.
-{ myvars, ... }:
+{ config, myvars, ... }:
 let
   inherit (myvars) username;
 in
@@ -63,11 +63,24 @@ in
         mode = "0700";
       }
 
+      # agent2api (SQLite database with accounts and API keys, credential
+      # encryption key, request logs)
+      {
+        directory = "/var/lib/agent2api";
+        mode = "0700";
+      }
+
       # our-free-model-standalone (account pool, credentials, settings, API key)
       {
         directory = "/var/lib/our-free-model-standalone";
         mode = "0700";
       }
+
+      # astrbot (venv, uv cache, cmd_config.json, plugins, plugin_data,
+      # knowledge base, WebUI dist). Keeping the venv here means an AstrBot
+      # upgrade only re-resolves the wheels instead of reinstalling ~1GB; delete
+      # it (and .nix-source) to force a clean rebuild.
+      "/var/lib/astrbot"
 
       # ccache
       "/var/cache/ccache"
@@ -128,6 +141,7 @@ in
 
         # pi coding agent (sessions under ~/.pi/agent/sessions)
         ".pi"
+
         ".config/lutris"
         ".local/share/lutris"
         ".local/share/wine/drive_c/users/${username}"
@@ -306,7 +320,11 @@ in
 
         # Trash Bin
         ".Trash-1000"
-      ];
+      ]
+      # The multi-instance store and every app's state paths come from the one
+      # table in modules/nixos/base/custom/multi-instance, so a program added
+      # there is preserved here too.
+      ++ config.modules.multi-instance.preserveDirectories;
     };
   };
 }
