@@ -35,6 +35,11 @@
 # Caveat: launching the browser from a terminal exports GPG_TTY into it, so the
 # extension's prompts go to that terminal as well. Starting it from the desktop
 # launcher - the normal case - leaves the variable unset.
+# The first pattern is mandatory: `overlays/default.nix` does
+# `import <file> args`, so every overlay here is `args: final: prev:` - a plain
+# `final: prev:` gets its `final` eaten by the import and nixpkgs then calls the
+# resulting attrset as a function.
+{ ... }:
 _final: prev:
 let
   inherit (prev)
