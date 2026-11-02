@@ -44,7 +44,9 @@
   # `pinentry-dispatch` (overlays/pinentry-dispatch.nix) picks the flavour per
   # caller: a terminal client (pass, gpg, git signing) gets the curses prompt in
   # that terminal, a GUI client (a browser's pass extension) gets the Qt dialog.
-  # Pointing `pinentryPackage` at a single flavour cannot do both.
+  # Pointing `pinentryPackage` at a single flavour cannot do both. The WSL
+  # module (modules/nixos/wsl/gpg.nix) opts into the same package, since WSLg
+  # creates the same split there.
   # A running agent keeps the old flavour until `gpgconf --reload gpg-agent`
   # (or the next login) picks up the rewritten gpg-agent.conf.
   programs.gnupg.agent = {
