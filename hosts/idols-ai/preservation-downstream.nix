@@ -63,6 +63,13 @@ in
         mode = "0700";
       }
 
+      # agent2api (SQLite database with accounts and API keys, credential
+      # encryption key, request logs)
+      {
+        directory = "/var/lib/agent2api";
+        mode = "0700";
+      }
+
       # our-free-model-standalone (account pool, credentials, settings, API key)
       {
         directory = "/var/lib/our-free-model-standalone";

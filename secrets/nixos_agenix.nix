@@ -232,6 +232,12 @@ in
           owner = "opencode2api";
           group = "opencode2api";
         };
+        "agent2api-admin-password" = mkIf config.modules.agent2api.enable {
+          file = "${mysecrets}/agent2api-admin-password.age";
+          mode = "0600";
+          owner = "agent2api";
+          group = "agent2api";
+        };
         "new-api-session-secret" = {
           file = "${mysecrets}/new-api-session-secret.age";
           mode = "0600";

@@ -305,6 +305,23 @@ rec {
         };
       };
     };
+    # the API and the management panel share one port; `panelPort` in
+    # modules/nixos/base/custom/ai/agent2api.nix splits them when a host wants
+    # only the API reachable
+    agent2api = {
+      hosts = {
+        idols-ai = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1108;
+        };
+        wsl-work = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1108;
+        };
+      };
+    };
     cliproxyapi = {
       hosts = {
         idols-ai = {
@@ -529,6 +546,12 @@ rec {
       localPort = 30000 + services.m365-copilot2api.hosts.idols-ai.port;
       remoteHost = endpoints.y9000p2025.easytier;
       remotePort = services.m365-copilot2api.hosts.idols-ai.port;
+    }
+    {
+      name = "Agent2API";
+      localPort = 30000 + services.agent2api.hosts.idols-ai.port;
+      remoteHost = endpoints.y9000p2025.easytier;
+      remotePort = services.agent2api.hosts.idols-ai.port;
     }
     {
       name = "cliproxyapimanagementcenter";

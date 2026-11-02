@@ -244,6 +244,10 @@ rec {
   modules.m365-copilot2api.enable = myvars.networking.services.m365-copilot2api.hosts.idols-ai.enable;
   modules.m365-copilot2api.port = myvars.networking.services.m365-copilot2api.hosts.idols-ai.port;
 
+  # Agent2API gateway, bound to 0.0.0.0:1108 (API and management panel).
+  modules.agent2api.enable = myvars.networking.services.agent2api.hosts.idols-ai.enable;
+  modules.agent2api.port = myvars.networking.services.agent2api.hosts.idols-ai.port;
+
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
   modules.opencode2api.enable = myvars.networking.services.opencode2api.hosts.idols-ai.enable;
   modules.opencode2api.port = myvars.networking.services.opencode2api.hosts.idols-ai.port;
