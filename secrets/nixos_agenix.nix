@@ -182,6 +182,14 @@ in
           owner = myvars.username;
           group = myvars.username;
         };
+        # ACB 的静态密钥：模型网关 key、控制台/snowluma token、opencode 密码。
+        # 只给运行用户读；config.toml 里写 ${...} 占位符。
+        "acb.env" = {
+          file = "${mysecrets}/acb.env.age";
+          mode = "0400";
+          owner = myvars.username;
+          group = myvars.username;
+        };
         "alist-jwt" = {
           file = "${mysecrets}/alist-jwt.age";
         }
