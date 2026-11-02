@@ -147,6 +147,7 @@ in
         ".local/share/wine/drive_c/users/${username}"
         ".local/share/tiled"
         ".local/share/qq-bridge"
+        ".local/share/acb"
 
         # ======================================
         # Instant Messaging

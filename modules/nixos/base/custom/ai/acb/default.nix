@@ -1,0 +1,314 @@
+{
+  config,
+  lib,
+  pkgs,
+  acb,
+  llm-agents,
+  myvars,
+  ...
+}:
+# ACB（AgentChatBridge）：dsh-acb、桥、dsh 驱动、opencode serve。
+#
+# 模块开关、端口和会话列表都来自 vars/networking 的 services.acb 注册表；
+# 四个单元是 systemd --user、默认不自启：`acb-up` 按组件拉起，`acb-down`
+# 按组件停止，`acb-status` 看状态，`acb-logs` 跟日志。
+#
+# 数据在 ~/.local/share/acb；源码通过 modules.outOfStoreSymlink 的
+# agentChatBridge 根做可写软链（没配置就退回 flake store）。
+let
+  cfg = config.modules.acb;
+
+  home = "/home/${myvars.username}";
+  dataDir = cfg.dataDir;
+  configFile = "${dataDir}/config/config.toml";
+  logDir = "${home}/.local/state/acb";
+
+  acbSrc = acb.outPath;
+  acbPkg = acb.packages.${pkgs.system}.acb-bridge;
+  opencode2 = "${llm-agents.packages.${pkgs.system}.opencode2}/bin/opencode2";
+
+  driver = "${acbSrc}/harnesses/dsh/src/driver.mjs";
+  sourceRoot = config.modules.outOfStoreSymlink.paths.agentChatBridge or null;
+  harnessesSource = if sourceRoot != null then "${sourceRoot}/harnesses" else "${acbSrc}/harnesses";
+  luaSource = if sourceRoot != null then "${sourceRoot}/examples/lua" else "${acbSrc}/examples/lua";
+
+  # 脚本正文都在同目录的 *.sh 里，这里只替换 @NAME@ 占位符。
+  render =
+    template: values:
+    lib.replaceStrings (map (name: "@${name}@") (lib.attrNames values)) (map (
+      name: toString values.${name}
+    ) (lib.attrNames values)) (builtins.readFile template);
+
+  driverSessionBlocks = lib.concatMapStringsSep "\n" (
+    item:
+    render ./driver-session.sh {
+      ID = item.id;
+      PRESET = item.preset;
+      PORT = item.port;
+      ENDPOINT = "${cfg.host}:${toString cfg.endpointPort}";
+      DSH_URL = "http://${cfg.host}:${toString cfg.dshPort}";
+      DRIVER = driver;
+    }
+  ) cfg.sessions;
+
+  driverScript = pkgs.writeShellApplication {
+    name = "acb-drivers";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.nodejs
+      pkgs.gnugrep
+      pkgs.gawk
+    ];
+    text = render ./drivers.sh {
+      CONFIG = configFile;
+      WORKSPACE = cfg.workspaceDir;
+      TITLE = cfg.workspaceTitle;
+      SESSIONS = driverSessionBlocks;
+    };
+  };
+
+  acbUp = pkgs.writeShellApplication {
+    name = "acb-up";
+    runtimeInputs = [
+      pkgs.systemd
+      pkgs.coreutils
+      pkgs.iproute2
+      pkgs.curl
+      pkgs.gnugrep
+    ];
+    text = render ./up.sh {
+      DATA = dataDir;
+      LOGS = logDir;
+      HARNESSES = harnessesSource;
+      LUA = luaSource;
+      DSH_PORT = cfg.dshPort;
+      ENDPOINT_PORT = cfg.endpointPort;
+      OPENCODE_PORT = cfg.opencodePort;
+    };
+  };
+
+  acbDown = pkgs.writeShellApplication {
+    name = "acb-down";
+    runtimeInputs = [ pkgs.systemd ];
+    text = builtins.readFile ./down.sh;
+  };
+
+  acbStatus = pkgs.writeShellApplication {
+    name = "acb-status";
+    runtimeInputs = [
+      pkgs.systemd
+      pkgs.coreutils
+      pkgs.iproute2
+      pkgs.gnugrep
+      pkgs.gawk
+      pkgs.curl
+    ];
+    text = render ./status.sh {
+      DATA = dataDir;
+      LOG_DIR = logDir;
+      CONFIG = configFile;
+      DSH_PORT = cfg.dshPort;
+      ENDPOINT_PORT = cfg.endpointPort;
+      CONSOLE_PORT = cfg.consolePort;
+      OPENCODE_PORT = cfg.opencodePort;
+      RELAY_PORT = cfg.relayPort;
+      SNOWLUMA_PORT = cfg.snowlumaPort;
+    };
+  };
+
+  acbLogs = pkgs.writeShellApplication {
+    name = "acb-logs";
+    runtimeInputs = [ pkgs.coreutils ];
+    text = render ./logs.sh { LOG_DIR = logDir; };
+  };
+in
+{
+  options.modules.acb = {
+    enable = lib.mkEnableOption "ACB 全链路（dsh-acb + 桥 + 驱动 + opencode）";
+
+    host = lib.mkOption {
+      type = lib.types.str;
+      description = "dsh / 桥 / opencode 的监听地址（来自 services.acb 注册表）。";
+    };
+
+    dshPort = lib.mkOption {
+      type = lib.types.port;
+      description = "dsh-acb 的 Web UI 端口。";
+    };
+
+    endpointPort = lib.mkOption {
+      type = lib.types.port;
+      description = "桥的 harness 接入端口。";
+    };
+
+    consolePort = lib.mkOption {
+      type = lib.types.port;
+      description = "桥的控制台端口。";
+    };
+
+    opencodePort = lib.mkOption {
+      type = lib.types.port;
+      description = "ACB 专用 opencode serve 端口。";
+    };
+
+    relayPort = lib.mkOption {
+      type = lib.types.port;
+      description = "文件中继端口。";
+    };
+
+    snowlumaPort = lib.mkOption {
+      type = lib.types.port;
+      description = "snowluma 的 OneBot WS 端口；acb-status 用它判断容器在不在。";
+    };
+
+    profile = lib.mkOption {
+      type = lib.types.str;
+      default = "nix-web-acb";
+      description = "dsh 使用的 profile。";
+    };
+
+    dataDir = lib.mkOption {
+      type = lib.types.str;
+      default = "${home}/.local/share/acb";
+      description = "ACB 的配置、状态库、agent workspace 和 opencode 状态目录。";
+    };
+
+    workspaceDir = lib.mkOption {
+      type = lib.types.str;
+      default = "${dataDir}/agents";
+      description = "dsh 会话的 cwd（Workspaces 分组）。";
+    };
+
+    workspaceTitle = lib.mkOption {
+      type = lib.types.str;
+      default = "ACB";
+      description = "dsh Workspaces 里这个目录的显示标题。";
+    };
+
+    sessions = lib.mkOption {
+      type = lib.types.listOf (
+        lib.types.submodule {
+          options = {
+            id = lib.mkOption { type = lib.types.str; };
+            preset = lib.mkOption { type = lib.types.str; };
+            port = lib.mkOption { type = lib.types.port; };
+          };
+        }
+      );
+      default = [ ];
+      description = "每个 ACB 会话一个 dsh 驱动：会话 id、preset 名、本地 MCP 端口。";
+    };
+
+    secretsFile = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "EnvironmentFile（600），给配置里的 \${...} 占位符提供密钥；接 agenix 后指向 secret 路径。";
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
+    environment.systemPackages = [
+      acbPkg
+      acbUp
+      acbDown
+      acbStatus
+      acbLogs
+    ];
+
+    systemd.user.services = {
+      "dsh-acb" = {
+        Unit = {
+          Description = "ACB dsh (${cfg.profile})";
+          After = [ "network.target" ];
+        };
+        Service = {
+          Type = "simple";
+          WorkingDirectory = home;
+          Environment = [
+            "PATH=/run/current-system/sw/bin:/etc/profiles/per-user/nixos/bin:/run/wrappers/bin"
+          ];
+          EnvironmentFile = lib.optional (cfg.secretsFile != null) "-${cfg.secretsFile}";
+          ExecStart = "${pkgs.writeShellScript "acb-dsh-exec" ''
+            set -e
+            mkdir -p ${lib.escapeShellArg logDir}
+            exec dsh --profile ${lib.escapeShellArg cfg.profile} --host ${lib.escapeShellArg cfg.host} --no-open --port ${toString cfg.dshPort}
+          ''}";
+          Restart = "always";
+          RestartSec = 5;
+          StandardOutput = "append:${logDir}/dsh.log";
+          StandardError = "append:${logDir}/dsh.log";
+        };
+      };
+
+      "acb-bridge" = {
+        Unit = {
+          Description = "ACB bridge";
+          After = [ "network.target" ];
+        };
+        Service = {
+          Type = "simple";
+          WorkingDirectory = dataDir;
+          Environment = [
+            "PATH=/run/current-system/sw/bin:/etc/profiles/per-user/nixos/bin:/run/wrappers/bin"
+            "ACB_ENDPOINT_LISTEN=${cfg.host}:${toString cfg.endpointPort}"
+            "ACB_CONSOLE_LISTEN=${cfg.host}:${toString cfg.consolePort}"
+            "ACB_RELAY_LISTEN=0.0.0.0:${toString cfg.relayPort}"
+            "ACB_LUA_DIR=${dataDir}/lua"
+          ];
+          EnvironmentFile = lib.optional (cfg.secretsFile != null) "-${cfg.secretsFile}";
+          ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p ${lib.escapeShellArg dataDir} ${lib.escapeShellArg logDir}";
+          ExecStart = "${acbPkg}/bin/acb-bridge --config ${lib.escapeShellArg configFile}";
+          Restart = "always";
+          RestartSec = 5;
+          StandardOutput = "append:${logDir}/bridge.log";
+          StandardError = "append:${logDir}/bridge.log";
+        };
+      };
+
+      "acb-drivers" = {
+        Unit = {
+          Description = "ACB dsh drivers";
+          After = [
+            "network.target"
+            "dsh-acb.service"
+            "acb-bridge.service"
+          ];
+          Requires = [ "acb-bridge.service" ];
+        };
+        Service = {
+          Type = "simple";
+          EnvironmentFile = lib.optional (cfg.secretsFile != null) "-${cfg.secretsFile}";
+          ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p ${lib.escapeShellArg logDir}";
+          ExecStart = "${driverScript}/bin/acb-drivers";
+          Restart = "always";
+          RestartSec = 5;
+          StandardOutput = "append:${logDir}/drivers.log";
+          StandardError = "append:${logDir}/drivers.log";
+        };
+      };
+
+      "acb-opencode-serve" = {
+        Unit = {
+          Description = "ACB opencode serve";
+          After = [ "network.target" ];
+        };
+        Service = {
+          Type = "simple";
+          Environment = [
+            "PATH=/run/current-system/sw/bin:/etc/profiles/per-user/nixos/bin:/run/wrappers/bin"
+            "ACB_OPENCODE_DIR=${dataDir}/opencode"
+            "ACB_OPENCODE_PORT=${toString cfg.opencodePort}"
+            "ACB_OPENCODE_BIN=${opencode2}"
+          ];
+          EnvironmentFile = lib.optional (cfg.secretsFile != null) "-${cfg.secretsFile}";
+          ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p ${lib.escapeShellArg logDir}";
+          ExecStart = "${pkgs.bash}/bin/bash ${acbSrc}/deploy/opencode-serve.sh";
+          Restart = "always";
+          RestartSec = 5;
+          StandardOutput = "append:${logDir}/opencode.log";
+          StandardError = "append:${logDir}/opencode.log";
+        };
+      };
+    };
+  };
+}

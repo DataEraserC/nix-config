@@ -231,6 +231,27 @@
         "type": "github"
       }
     },
+    "acb": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1793639555,
+        "narHash": "sha256-DUjOYYs1vKm+zaiLif/xN4tJRXjyiEjpOxZbSfWMMII=",
+        "owner": "DataEraserC",
+        "repo": "AgentChatBridge",
+        "rev": "d360f6817f8364dedaa5163011b62a9af48b0799",
+        "type": "github"
+      },
+      "original": {
+        "owner": "DataEraserC",
+        "ref": "dev_20261025",
+        "repo": "AgentChatBridge",
+        "type": "github"
+      }
+    },
     "agenix": {
       "inputs": {
         "darwin": [
@@ -7605,6 +7626,7 @@
         "LaphaeL-aicmd": "LaphaeL-aicmd",
         "Snowpkgs": "Snowpkgs",
         "aagl": "aagl",
+        "acb": "acb",
         "agenix": "agenix",
         "android-nixpkgs": "android-nixpkgs",
         "appcast": "appcast",

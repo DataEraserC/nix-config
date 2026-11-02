@@ -48,6 +48,9 @@ let
               configPath = "/home/nixos/nix-config";
               wallpaperPath = "/home/nixos/Documents/code/wallpapers";
               passwordStorePath = "/home/nixos/nix-config/secrets/PasswordStore";
+              # ACB 的 harnesses / Lua 示例：可写，改完重启对应单元生效；
+              # 指向当前开发 worktree，而不是只读的 flake store。
+              agentChatBridge = "/home/nixos/Documents/code/qq-bridge-fork/.agents/worktrees/qqab-arch";
             };
           };
         }

@@ -123,6 +123,23 @@ rec {
     };
   };
 
+  # ACB：开关、绑定地址、端口和会话列表全部读 services.acb 注册表。
+  modules.acb = {
+    enable = (svc "acb").enable;
+    host = (svc "acb").host;
+    dshPort = (svc "acb").ports.dsh;
+    endpointPort = (svc "acb").ports.endpoint;
+    consolePort = (svc "acb").ports.console;
+    opencodePort = (svc "acb").ports.opencode;
+    relayPort = (svc "acb").ports.relay;
+    snowlumaPort = (svc "acb").ports.snowluma;
+    sessions = (svc "acb").sessions;
+    secretsFile = config.age.secrets."acb.env".path;
+  };
+
+  # ACB 的 dsh preset 列表：每条生成一个 agent preset + 自己的 MCP client。
+  modules.dsh.acbSessions = (svc "acb").sessions;
+
   # Zram consumes physical memory for compression, which can cause a deadlock and system hang if the model size approaches the physical memory limit.
   # Disable the whole module (zram device + its swappiness=180 sysctl tunings); this host uses a disk swapfile instead.
   modules.zram.enable = false;

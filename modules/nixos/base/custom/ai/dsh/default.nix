@@ -751,6 +751,30 @@ let
   webQQBundles = lib.unique (webBundles ++ qqBundles);
   webQQFailsafeBundles = webFailsafeBundles ++ qqBundles;
 
+  # ACB 的 preset 不手写在 web-acb.yml 里：按 acbSessions 列表生成一个
+  # `acb-presets` bundle，每条会话一个 preset + 自己的 MCP client。YAML 正文在
+  # 同目录的模板文件里，这里只做占位符替换，避免在 Nix 里拼大段字符串。
+  acbPresetRows = lib.concatMapStringsSep "\n" (
+    session:
+    lib.replaceStrings [ "@PRESET@" "@PORT@" ] [ session.preset (toString session.port) ] (
+      builtins.readFile ./acb-preset-row.yml.tmpl
+    )
+  ) cfg.acbSessions;
+  acbPresetPatch = pkgs.writeText "acb-presets.patch.yml" (
+    lib.replaceStrings [ "@ROWS@" ] [ acbPresetRows ] (builtins.readFile ./acb-presets.patch.yml.tmpl)
+  );
+  acbPresets = pkgs.runCommand "acb-presets-0.1.0" { } ''
+    pkg=$out/lib/node_modules/acb-presets
+    mkdir -p $out/nix-support "$pkg/presets"
+    cp ${acbPresetPatch} "$pkg/presets/acb.patch.yml"
+    cp ${./acb-presets-package.json} "$pkg/package.json"
+    sed "s|@PKG@|$pkg|" ${./acb-presets-bundle.json} > $out/nix-support/dsh-bundles.json
+  '';
+
+  # web-acb = web 的 composition + 生成的 ACB preset bundle。没有 ACB 会话时
+  # 不加，避免给别的 host 塞一个空 bundle。
+  webAcbBundles = webBundles ++ lib.optional (cfg.acbSessions != [ ]) acbPresets;
+
   # The LAN profiles deliberately declare NO webserver row. The web-app bundle
   # already ships one, whose bind host is the launcher provider:
   #
@@ -814,7 +838,9 @@ let
     artifacts:
     let
       injectedManifests = map (bundle: "${bundle}/nix-support/dsh-bundles.json") (
-        lib.unique (extraBundles ++ baseBundles ++ qqBundles)
+        lib.unique (
+          extraBundles ++ baseBundles ++ qqBundles ++ lib.optional (cfg.acbSessions != [ ]) acbPresets
+        )
       );
       targetNames = map (spec: spec.targetName) (lib.attrValues artifacts.profileSpecs);
       patchedTemplates =
@@ -903,6 +929,20 @@ in
 
   options.modules.dsh = {
     enable = lib.mkEnableOption "DeepSeek Harness (dsh)";
+
+    acbSessions = lib.mkOption {
+      type = lib.types.listOf (
+        lib.types.submodule {
+          options = {
+            id = lib.mkOption { type = lib.types.str; };
+            preset = lib.mkOption { type = lib.types.str; };
+            port = lib.mkOption { type = lib.types.port; };
+          };
+        }
+      );
+      default = [ ];
+      description = "ACB 的 dsh 会话列表；每条生成一个 agent preset（preset 名 + 本地 MCP 端口）。";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -996,7 +1036,7 @@ in
         # own surface without disturbing the plain web profile.
         #   dsh --profile nix-web-acb
         web-acb = {
-          bundles = webBundles;
+          bundles = webAcbBundles;
           patch = repoPatch "web-acb";
         };
 

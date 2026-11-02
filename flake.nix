@@ -537,6 +537,13 @@
       flake = false;
     };
 
+    # ACB（AgentChatBridge，Rust 版）源码。它是 flake：acb-bridge 包、Lua 示例和
+    # dsh 驱动都从这里取。改完 fork 仓库先 push，再 `nix flake update acb`。
+    acb = {
+      url = "github:DataEraserC/AgentChatBridge?ref=dev_20261025";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     nur-DataEraserC-not-follow = {
       url = "github:DataEraserC/nur-packages";
     };

@@ -8,8 +8,8 @@
 # restart dsh. In-place edits (Settings UI or $DSH_HOME/profiles/...) are
 # reverted to the snapshot on the next launch, by design (managed fingerprint).
 #
-# Same composition as `web` (entry + shared base + shared extras, including
-# dsh-comfyui); this is a dedicated copy for the acb bridge use, so the two
-# surfaces can be pointed at different model/patch overlays without
-# disturbing the plain web profile.
+# Deliberately empty: the ACB presets and their MCP clients are a dsh bundle
+# (`acb-presets`), not profile patch rows, so this file stays the plain
+# `web` composition. Model/provider rows belong to the Settings UI / home
+# layer and are not overridden here.
 []

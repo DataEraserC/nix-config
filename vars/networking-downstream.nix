@@ -476,6 +476,39 @@ rec {
       };
     };
 
+    # ACB（AgentChatBridge）：dsh 的 3080 是主端口，其余是桥/驱动/opencode/
+    # 中继的内部端口。sessions 里的 port 指向同一张 ports 表，别另写一份。
+    acb = {
+      hosts = {
+        idols-ai = rec {
+          enable = true;
+          host = "127.0.0.1";
+          ports = {
+            dsh = 3080;
+            endpoint = 7700;
+            console = 3100;
+            driver-dsh = 3101;
+            driver-group2 = 3102;
+            opencode = 4097;
+            relay = 3131;
+            snowluma = 53001;
+          };
+          sessions = [
+            {
+              id = "dsh";
+              preset = "acb-dsh";
+              port = ports.driver-dsh;
+            }
+            {
+              id = "dsh-group2";
+              preset = "acb-dsh-group2";
+              port = ports.driver-group2;
+            }
+          ];
+        };
+      };
+    };
+
     alist = {
       hosts = {
         # the optional S3-mapping listener (settings.s3, off by default)
