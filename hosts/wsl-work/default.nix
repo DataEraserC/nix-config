@@ -20,6 +20,15 @@ let
   ipv4WithMask = "${ipv4}/24";
   ipv6WithMask = "${ipv6}/64";
 
+  # This machine's key in the port registry (myvars.networking.services.*.hosts).
+  # It is the flake host name, which is not `hostName`: the registry keys the
+  # WSL distro as `wsl-work`, while hostsAddr knows the same machine as `work`.
+  serviceHost = "wsl-work";
+  # One service's row on this machine - `svc "new-api"` is
+  # myvars.networking.services.new-api.hosts.wsl-work - so the key above is the
+  # only place it is spelled out.
+  svc = service: myvars.networking.services.${service}.hosts.${serviceHost};
+
 in
 rec {
   imports = [
@@ -55,10 +64,10 @@ rec {
   };
 
   # sshd listens on 8022 instead of the stock 22 - taken from the port
-  # registry (myvars.networking.services.ssh.hosts.wsl-work). The generated
-  # client config (/etc/ssh/ssh_config) reads the same rows, so `ssh work` /
-  # `ssh wsl-work` dial 8022 too.
-  services.openssh.ports = [ myvars.networking.services.ssh.hosts.wsl-work.port ];
+  # registry (this machine's `ssh` row). The generated client config
+  # (/etc/ssh/ssh_config) reads the same rows, so `ssh work` / `ssh wsl-work`
+  # dial 8022 too.
+  services.openssh.ports = [ (svc "ssh").port ];
 
   # ntfy notifications on network up/down events(NM dispatcher, shared script)
   modules.network-event-notify = {
@@ -88,19 +97,19 @@ rec {
   # wherever this host is (easytier mesh, WSL localhost forwarding from
   # Windows).
   modules.gost-proxy = {
-    enable = myvars.networking.services.gost-proxy.hosts.wsl-work.enable;
+    enable = (svc "gost-proxy").enable;
     instances = {
-      wsl-work-socks5.port = myvars.networking.services.gost-proxy.hosts.wsl-work.ports.wsl-work-socks5;
+      wsl-work-socks5.port = (svc "gost-proxy").ports.wsl-work-socks5;
       wsl-work-http = {
-        port = myvars.networking.services.gost-proxy.hosts.wsl-work.ports.wsl-work-http;
+        port = (svc "gost-proxy").ports.wsl-work-http;
         protocol = "http";
       };
       idols-ai-socks5 = {
-        port = myvars.networking.services.gost-proxy.hosts.wsl-work.ports.idols-ai-socks5;
+        port = (svc "gost-proxy").ports.idols-ai-socks5;
         chainUpstream = myvars.networking.services.gost-proxy.upstreams.idols-ai-socks5;
       };
       idols-ai-http = {
-        port = myvars.networking.services.gost-proxy.hosts.wsl-work.ports.idols-ai-http;
+        port = (svc "gost-proxy").ports.idols-ai-http;
         protocol = "http";
         chainUpstream = myvars.networking.services.gost-proxy.upstreams.idols-ai-socks5;
       };
@@ -108,41 +117,39 @@ rec {
   };
 
   # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:1105.
-  modules.cliproxyapi.enable = myvars.networking.services.cliproxyapi.hosts.wsl-work.enable;
-  modules.cliproxyapi.port = myvars.networking.services.cliproxyapi.hosts.wsl-work.port;
+  modules.cliproxyapi.enable = (svc "cliproxyapi").enable;
+  modules.cliproxyapi.port = (svc "cliproxyapi").port;
 
   # M365 Copilot2API gateway, bound to 0.0.0.0:1104.
-  modules.m365-copilot2api.enable = myvars.networking.services.m365-copilot2api.hosts.wsl-work.enable;
-  modules.m365-copilot2api.port = myvars.networking.services.m365-copilot2api.hosts.wsl-work.port;
+  modules.m365-copilot2api.enable = (svc "m365-copilot2api").enable;
+  modules.m365-copilot2api.port = (svc "m365-copilot2api").port;
 
   # Agent2API gateway, bound to 0.0.0.0:1108 (API and management panel).
-  modules.agent2api.enable = myvars.networking.services.agent2api.hosts.wsl-work.enable;
-  modules.agent2api.port = myvars.networking.services.agent2api.hosts.wsl-work.port;
+  modules.agent2api.enable = (svc "agent2api").enable;
+  modules.agent2api.port = (svc "agent2api").port;
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
-  modules.opencode2api.enable = myvars.networking.services.opencode2api.hosts.wsl-work.enable;
-  modules.opencode2api.port = myvars.networking.services.opencode2api.hosts.wsl-work.port;
-  modules.opencode2api.webUiPort = myvars.networking.services.opencode2api.hosts.wsl-work.adminPort;
+  modules.opencode2api.enable = (svc "opencode2api").enable;
+  modules.opencode2api.port = (svc "opencode2api").port;
+  modules.opencode2api.webUiPort = (svc "opencode2api").adminPort;
 
   # mimocode2api gateway, bound to 0.0.0.0:1103.
-  modules.mimocode2api.enable = myvars.networking.services.mimocode2api.hosts.wsl-work.enable;
-  modules.mimocode2api.port = myvars.networking.services.mimocode2api.hosts.wsl-work.port;
+  modules.mimocode2api.enable = (svc "mimocode2api").enable;
+  modules.mimocode2api.port = (svc "mimocode2api").port;
 
   # new-api LLM gateway, port 1100 (upstream listens on all interfaces).
-  modules.new-api.enable = myvars.networking.services.new-api.hosts.wsl-work.enable;
-  modules.new-api.port = myvars.networking.services.new-api.hosts.wsl-work.port;
+  modules.new-api.enable = (svc "new-api").enable;
+  modules.new-api.port = (svc "new-api").port;
 
-  # Our Free Model standalone gateway, 127.0.0.1:18900 (loopback only).
-  modules.our-free-model-standalone.enable =
-    myvars.networking.services.our-free-model-standalone.hosts.wsl-work.enable;
-  modules.our-free-model-standalone.port =
-    myvars.networking.services.our-free-model-standalone.hosts.wsl-work.port;
+  # Our Free Model standalone gateway, 127.0.0.1:1107 (loopback only).
+  modules.our-free-model-standalone.enable = (svc "our-free-model-standalone").enable;
+  modules.our-free-model-standalone.port = (svc "our-free-model-standalone").port;
 
-  # Open WebUI: disabled on every host and no local instance here either;
-  # the `openwebui` entry in myvars.networking.tunnels.work (local 31107 ->
-  # remote 1107) is kept for a future re-enable.
-  modules.open-webui.enable = myvars.networking.services.open-webui.hosts.wsl-work.enable;
-  modules.open-webui.port = myvars.networking.services.open-webui.hosts.wsl-work.port;
+  # Open WebUI: disabled on every host and no local instance here either; the
+  # `openwebui` entry in myvars.networking.tunnels.work is kept for a future
+  # re-enable.
+  modules.open-webui.enable = (svc "open-webui").enable;
+  modules.open-webui.port = (svc "open-webui").port;
 
   # Route CLI traffic through the local / LAN SOCKS proxies.
   modules.proxychains.enable = true;

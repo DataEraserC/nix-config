@@ -184,6 +184,12 @@ rec {
   # The port of such a service is declared once, instead of as a literal
   # scattered over module configs, host tunnel tables and ssh settings.
   #
+  # Order - entries are sorted by primary port ascending (`ssh` leads with its
+  # stock 22, gost-proxy sorts by its lowest listener), and a new service is
+  # inserted at its port position, so the next free slot in a series is obvious
+  # the way `hostsAddr` stays sorted by IPv4. Enable state and secondary
+  # listeners do not move an entry: a disabled row keeps its slot.
+  #
   # Shape - every service is a (service x host) matrix:
   #   hosts.<machine> = { enable, host, port, ... }
   #                 one row per machine that runs (or deliberately does not
@@ -198,10 +204,11 @@ rec {
   #     host        BIND address the service listens on - 0.0.0.0 for a wide
   #                 bind, 127.0.0.1 for loopback - never a machine name.
   #                 Consumed as `modules.<name>.host` where the module has such
-  #                 an option (sub-store), so wiring reads:
+  #                 an option (sub-store). Each host file binds its own key once
+  #                 (`svc` in its let block), so wiring reads:
   #                   modules.sub-store = {
-  #                     enable = myvars.networking.services.sub-store.hosts.idols-ai.enable;
-  #                     host = myvars.networking.services.sub-store.hosts.idols-ai.host;
+  #                     enable = (svc "sub-store").enable;
+  #                     host = (svc "sub-store").host;
   #                   };
   #     port        primary listen port; secondary listeners keep their own key
   #                 (adminPort for the opencode2api WebUI, s3Port for alist,
@@ -225,213 +232,32 @@ rec {
   #     a single source of truth in the registry.
   # ==========================================================================
   services = {
-    # --- LLM gateways (1100..1110); rows per machine that runs them ---
-    new-api = {
-      hosts = {
+    # --- sshd; the per-host listen ports live here, not on hostsAddr ---
+    ssh = {
+      # no `enable` on purpose: modules/nixos/base/ssh.nix turns sshd on for
+      # every NixOS machine (base-wide), so the rows below carry host/port
+      # only
+      # stock sshd port for every hostsAddr machine without its own row below
+      defaultPort = 22;
+      # keyed by hostsAddr key (that is how the ssh_config fold looks rows up):
+      # the work laptop runs sshd on 8022 instead of the stock 22, and
+      # `wsl-work` aliases `work` (same machine), so it reuses that row instead
+      # of restating it; `idols-ai` / `wsl-y9000p2025` pin this laptop's stock
+      # 22 explicitly, the remaining keys (VMs, SBCs) inherit defaultPort.
+      hosts = rec {
         idols-ai = {
-          enable = true;
           host = "0.0.0.0";
-          port = 1100;
+          port = 22;
         };
         wsl-y9000p2025 = {
-          enable = true;
           host = "0.0.0.0";
-          port = 1100;
+          port = 22;
         };
-        wsl-work = {
-          enable = true;
+        work = {
           host = "0.0.0.0";
-          port = 1100;
+          port = 8022;
         };
-      };
-    };
-    opencode2api = {
-      hosts = {
-        idols-ai = {
-          enable = true;
-          host = "0.0.0.0";
-          port = 1101;
-          adminPort = 1102;
-        };
-        wsl-y9000p2025 = {
-          enable = true;
-          host = "0.0.0.0";
-          port = 1101;
-          adminPort = 1102;
-        };
-        wsl-work = {
-          enable = true;
-          host = "0.0.0.0";
-          port = 1101;
-          adminPort = 1102;
-        };
-      };
-    };
-    mimocode2api = {
-      hosts = {
-        idols-ai = {
-          enable = true;
-          host = "0.0.0.0";
-          port = 1103;
-        };
-        wsl-y9000p2025 = {
-          enable = true;
-          host = "0.0.0.0";
-          port = 1103;
-        };
-        wsl-work = {
-          enable = true;
-          host = "0.0.0.0";
-          port = 1103;
-        };
-      };
-    };
-    m365-copilot2api = {
-      hosts = {
-        idols-ai = {
-          enable = true;
-          host = "0.0.0.0";
-          port = 1104;
-        };
-        wsl-y9000p2025 = {
-          enable = true;
-          host = "0.0.0.0";
-          port = 1104;
-        };
-        wsl-work = {
-          enable = true;
-          host = "0.0.0.0";
-          port = 1104;
-        };
-      };
-    };
-    # the API and the management panel share one port; `panelPort` in
-    # modules/nixos/base/custom/ai/agent2api.nix splits them when a host wants
-    # only the API reachable
-    agent2api = {
-      hosts = {
-        idols-ai = {
-          enable = true;
-          host = "0.0.0.0";
-          port = 1108;
-        };
-        wsl-work = {
-          enable = true;
-          host = "0.0.0.0";
-          port = 1108;
-        };
-      };
-    };
-    cliproxyapi = {
-      hosts = {
-        idols-ai = {
-          enable = false;
-          host = "0.0.0.0";
-          port = 1105;
-        };
-        wsl-y9000p2025 = {
-          enable = false;
-          host = "0.0.0.0";
-          port = 1105;
-        };
-        wsl-work = {
-          enable = false;
-          host = "0.0.0.0";
-          port = 1105;
-        };
-      };
-    };
-    omniroute = {
-      hosts = {
-        idols-ai = {
-          enable = true;
-          host = "0.0.0.0";
-          port = 1106;
-        };
-      };
-    };
-    open-webui = {
-      hosts = {
-        idols-ai = {
-          enable = false;
-          host = "0.0.0.0";
-          port = 1120;
-        };
-        wsl-y9000p2025 = {
-          enable = false;
-          host = "0.0.0.0";
-          port = 1120;
-        };
-        wsl-work = {
-          enable = false;
-          host = "0.0.0.0";
-          port = 1120;
-        };
-      };
-    };
-    alist = {
-      hosts = {
-        # the optional S3-mapping listener (settings.s3, off by default)
-        # rides on s3Port
-        idols-ai = {
-          enable = true;
-          host = "0.0.0.0";
-          port = 5244;
-          s3Port = 5246;
-        };
-      };
-    };
-    # AstrBot chatbot + WebUI (base/custom/ai/astrbot.nix). Keeps upstream's
-    # default 6185 instead of a 11xx slot so the URL matches AstrBot's docs.
-    astrbot = {
-      hosts = {
-        idols-ai = {
-          enable = false;
-          host = "0.0.0.0";
-          port = 6185;
-        };
-      };
-    };
-
-    # --- Our Free Model standalone gateway (base/custom/ai/our-free-model-standalone) ---
-    # Not part of the 1100 series: the gateway hard-binds 127.0.0.1 (the
-    # upstream entry point rejects any other address), so nothing tunnels it;
-    # the row documents the port it is told to take and the machines that run
-    # it for the catalog page.
-    our-free-model-standalone = {
-      hosts = {
-        idols-ai = {
-          enable = true;
-          host = "127.0.0.1";
-          port = 1107;
-        };
-        wsl-y9000p2025 = {
-          enable = true;
-          host = "127.0.0.1";
-          port = 1107;
-        };
-        wsl-work = {
-          enable = true;
-          host = "127.0.0.1";
-          port = 1107;
-        };
-      };
-    };
-
-    # --- subscription manager, fronted by Caddy (base/custom/network/sub-store) ---
-    # The one service whose bind address a module option consumes directly
-    # (`modules.sub-store.host`, see the shape notes above); its enable is
-    # wired from the row the same way. port / frontendPort document what
-    # idols-ai deploys for the catalog - the module defaults apply, and dae
-    # pins the backend on 127.0.0.1:24500.
-    sub-store = {
-      hosts = {
-        idols-ai = {
-          enable = true;
-          host = "0.0.0.0";
-          port = 24500;
-          frontendPort = 24501;
-        };
+        wsl-work = work;
       };
     };
 
@@ -473,32 +299,222 @@ rec {
       upstreams.idols-ai-socks5 = "${endpoints.y9000p2025.easytier}:${toString hosts.idols-ai.ports.idols-ai-socks5}";
     };
 
-    # --- sshd; the per-host listen ports live here, not on hostsAddr ---
-    ssh = {
-      # no `enable` on purpose: modules/nixos/base/ssh.nix turns sshd on for
-      # every NixOS machine (base-wide), so the rows below carry host/port
-      # only
-      # stock sshd port for every hostsAddr machine without its own row below
-      defaultPort = 22;
-      # keyed by hostsAddr key (that is how the ssh_config fold looks rows up):
-      # the work laptop runs sshd on 8022 instead of the stock 22, and
-      # `wsl-work` aliases `work` (same machine), so it reuses that row instead
-      # of restating it; `idols-ai` / `wsl-y9000p2025` pin this laptop's stock
-      # 22 explicitly, the remaining keys (VMs, SBCs) inherit defaultPort.
-      hosts = rec {
+    # --- the 11xx block: one slot per LLM-facing gateway, 1100 onwards ---
+    new-api = {
+      hosts = {
         idols-ai = {
+          enable = true;
           host = "0.0.0.0";
-          port = 22;
+          port = 1100;
         };
         wsl-y9000p2025 = {
+          enable = true;
           host = "0.0.0.0";
-          port = 22;
+          port = 1100;
         };
-        work = {
+        wsl-work = {
+          enable = true;
           host = "0.0.0.0";
-          port = 8022;
+          port = 1100;
         };
-        wsl-work = work;
+      };
+    };
+
+    opencode2api = {
+      hosts = {
+        idols-ai = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1101;
+          adminPort = 1102;
+        };
+        wsl-y9000p2025 = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1101;
+          adminPort = 1102;
+        };
+        wsl-work = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1101;
+          adminPort = 1102;
+        };
+      };
+    };
+
+    mimocode2api = {
+      hosts = {
+        idols-ai = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1103;
+        };
+        wsl-y9000p2025 = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1103;
+        };
+        wsl-work = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1103;
+        };
+      };
+    };
+
+    m365-copilot2api = {
+      hosts = {
+        idols-ai = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1104;
+        };
+        wsl-y9000p2025 = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1104;
+        };
+        wsl-work = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1104;
+        };
+      };
+    };
+
+    cliproxyapi = {
+      hosts = {
+        idols-ai = {
+          enable = false;
+          host = "0.0.0.0";
+          port = 1105;
+        };
+        wsl-y9000p2025 = {
+          enable = false;
+          host = "0.0.0.0";
+          port = 1105;
+        };
+        wsl-work = {
+          enable = false;
+          host = "0.0.0.0";
+          port = 1105;
+        };
+      };
+    };
+
+    omniroute = {
+      hosts = {
+        idols-ai = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1106;
+        };
+      };
+    };
+
+    # --- Our Free Model standalone gateway (base/custom/ai/our-free-model-standalone) ---
+    # Takes the 1107 slot like the other gateways but stays loopback-only: the
+    # gateway hard-binds 127.0.0.1 (the upstream entry point rejects any other
+    # address), so nothing tunnels it; the row documents the port it is told to
+    # take and the machines that run it for the catalog page.
+    our-free-model-standalone = {
+      hosts = {
+        idols-ai = {
+          enable = true;
+          host = "127.0.0.1";
+          port = 1107;
+        };
+        wsl-y9000p2025 = {
+          enable = true;
+          host = "127.0.0.1";
+          port = 1107;
+        };
+        wsl-work = {
+          enable = true;
+          host = "127.0.0.1";
+          port = 1107;
+        };
+      };
+    };
+
+    # the API and the management panel share one port; `panelPort` in
+    # modules/nixos/base/custom/ai/agent2api.nix splits them when a host wants
+    # only the API reachable
+    agent2api = {
+      hosts = {
+        idols-ai = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1108;
+        };
+        wsl-work = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1108;
+        };
+      };
+    };
+
+    open-webui = {
+      hosts = {
+        idols-ai = {
+          enable = false;
+          host = "0.0.0.0";
+          port = 1120;
+        };
+        wsl-y9000p2025 = {
+          enable = false;
+          host = "0.0.0.0";
+          port = 1120;
+        };
+        wsl-work = {
+          enable = false;
+          host = "0.0.0.0";
+          port = 1120;
+        };
+      };
+    };
+
+    alist = {
+      hosts = {
+        # the optional S3-mapping listener (settings.s3, off by default)
+        # rides on s3Port
+        idols-ai = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 5244;
+          s3Port = 5246;
+        };
+      };
+    };
+
+    # AstrBot chatbot + WebUI (base/custom/ai/astrbot.nix). Keeps upstream's
+    # default 6185 instead of a 11xx slot so the URL matches AstrBot's docs.
+    astrbot = {
+      hosts = {
+        idols-ai = {
+          enable = false;
+          host = "0.0.0.0";
+          port = 6185;
+        };
+      };
+    };
+
+    # --- subscription manager, fronted by Caddy (base/custom/network/sub-store) ---
+    # The one service whose bind address a module option consumes directly
+    # (`modules.sub-store.host`, see the shape notes above); its enable is
+    # wired from the row the same way. port / frontendPort document what
+    # idols-ai deploys for the catalog - the module defaults apply, and dae
+    # pins the backend on 127.0.0.1:24500.
+    sub-store = {
+      hosts = {
+        idols-ai = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 24500;
+          frontendPort = 24501;
+        };
       };
     };
   };

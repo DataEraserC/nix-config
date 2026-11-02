@@ -32,6 +32,14 @@ let
     '';
   };
 
+  # This machine's key in the port registry (myvars.networking.services.*.hosts):
+  # the flake host name, which is not `hostName` (`ai` here).
+  serviceHost = "idols-ai";
+  # One service's row on this machine - `svc "new-api"` is
+  # myvars.networking.services.new-api.hosts.idols-ai - so the key above is the
+  # only place it is spelled out.
+  svc = service: myvars.networking.services.${service}.hosts.${serviceHost};
+
 in
 rec {
   imports = [
@@ -94,8 +102,8 @@ rec {
   # LAN (asserted to require auth.enable).
   # See modules/nixos/base/custom/network/sub-store/default.nix.
   modules.sub-store = {
-    enable = myvars.networking.services.sub-store.hosts.idols-ai.enable;
-    host = myvars.networking.services.sub-store.hosts.idols-ai.host;
+    enable = (svc "sub-store").enable;
+    host = (svc "sub-store").host;
     auth = {
       enable = true;
       file = config.age.secrets."sub-store.caddy".path;
@@ -226,66 +234,64 @@ rec {
   # They are independent instances, so either one can be retired later with
   # `instances.<name>.enable = false` without touching the other.
   modules.gost-proxy = {
-    enable = myvars.networking.services.gost-proxy.hosts.idols-ai.enable;
+    enable = (svc "gost-proxy").enable;
     instances = {
-      idols-ai-socks5.port = myvars.networking.services.gost-proxy.hosts.idols-ai.ports.idols-ai-socks5;
+      idols-ai-socks5.port = (svc "gost-proxy").ports.idols-ai-socks5;
       idols-ai-http = {
-        port = myvars.networking.services.gost-proxy.hosts.idols-ai.ports.idols-ai-http;
+        port = (svc "gost-proxy").ports.idols-ai-http;
         protocol = "http";
       };
     };
   };
 
   # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:1105.
-  modules.cliproxyapi.enable = myvars.networking.services.cliproxyapi.hosts.idols-ai.enable;
-  modules.cliproxyapi.port = myvars.networking.services.cliproxyapi.hosts.idols-ai.port;
+  modules.cliproxyapi.enable = (svc "cliproxyapi").enable;
+  modules.cliproxyapi.port = (svc "cliproxyapi").port;
 
   # M365 Copilot2API gateway, bound to 0.0.0.0:1104.
-  modules.m365-copilot2api.enable = myvars.networking.services.m365-copilot2api.hosts.idols-ai.enable;
-  modules.m365-copilot2api.port = myvars.networking.services.m365-copilot2api.hosts.idols-ai.port;
+  modules.m365-copilot2api.enable = (svc "m365-copilot2api").enable;
+  modules.m365-copilot2api.port = (svc "m365-copilot2api").port;
 
   # Agent2API gateway, bound to 0.0.0.0:1108 (API and management panel).
-  modules.agent2api.enable = myvars.networking.services.agent2api.hosts.idols-ai.enable;
-  modules.agent2api.port = myvars.networking.services.agent2api.hosts.idols-ai.port;
+  modules.agent2api.enable = (svc "agent2api").enable;
+  modules.agent2api.port = (svc "agent2api").port;
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
-  modules.opencode2api.enable = myvars.networking.services.opencode2api.hosts.idols-ai.enable;
-  modules.opencode2api.port = myvars.networking.services.opencode2api.hosts.idols-ai.port;
-  modules.opencode2api.webUiPort = myvars.networking.services.opencode2api.hosts.idols-ai.adminPort;
+  modules.opencode2api.enable = (svc "opencode2api").enable;
+  modules.opencode2api.port = (svc "opencode2api").port;
+  modules.opencode2api.webUiPort = (svc "opencode2api").adminPort;
 
   # mimocode2api gateway, bound to 0.0.0.0:1103 (VPN interfaces only).
-  modules.mimocode2api.enable = myvars.networking.services.mimocode2api.hosts.idols-ai.enable;
-  modules.mimocode2api.port = myvars.networking.services.mimocode2api.hosts.idols-ai.port;
+  modules.mimocode2api.enable = (svc "mimocode2api").enable;
+  modules.mimocode2api.port = (svc "mimocode2api").port;
 
   # OmniRoute unified LLM gateway, bound to 0.0.0.0:1106.
-  modules.omniroute.enable = myvars.networking.services.omniroute.hosts.idols-ai.enable;
-  modules.omniroute.port = myvars.networking.services.omniroute.hosts.idols-ai.port;
+  modules.omniroute.enable = (svc "omniroute").enable;
+  modules.omniroute.port = (svc "omniroute").port;
 
   # new-api LLM gateway, port 1100 (upstream listens on all interfaces).
-  modules.new-api.enable = myvars.networking.services.new-api.hosts.idols-ai.enable;
-  modules.new-api.port = myvars.networking.services.new-api.hosts.idols-ai.port;
+  modules.new-api.enable = (svc "new-api").enable;
+  modules.new-api.port = (svc "new-api").port;
 
-  # Our Free Model standalone gateway, 127.0.0.1:18900 (loopback only).
-  modules.our-free-model-standalone.enable =
-    myvars.networking.services.our-free-model-standalone.hosts.idols-ai.enable;
-  modules.our-free-model-standalone.port =
-    myvars.networking.services.our-free-model-standalone.hosts.idols-ai.port;
+  # Our Free Model standalone gateway, 127.0.0.1:1107 (loopback only).
+  modules.our-free-model-standalone.enable = (svc "our-free-model-standalone").enable;
+  modules.our-free-model-standalone.port = (svc "our-free-model-standalone").port;
 
-  # Open WebUI chat frontend, 0.0.0.0:1107 (shared modules.open-webui) - disabled.
-  modules.open-webui.enable = myvars.networking.services.open-webui.hosts.idols-ai.enable;
-  modules.open-webui.port = myvars.networking.services.open-webui.hosts.idols-ai.port;
+  # Open WebUI chat frontend, 0.0.0.0:1120 (shared modules.open-webui) - disabled.
+  modules.open-webui.enable = (svc "open-webui").enable;
+  modules.open-webui.port = (svc "open-webui").port;
 
   # alist (openlist) file listing, bound to 0.0.0.0:5244.
-  modules.alist.enable = myvars.networking.services.alist.hosts.idols-ai.enable;
-  modules.alist.port = myvars.networking.services.alist.hosts.idols-ai.port;
-  modules.alist.s3Port = myvars.networking.services.alist.hosts.idols-ai.s3Port;
+  modules.alist.enable = (svc "alist").enable;
+  modules.alist.port = (svc "alist").port;
+  modules.alist.s3Port = (svc "alist").s3Port;
 
   # AstrBot chatbot + WebUI, bound to 0.0.0.0:6185 (shared modules.astrbot).
   # Native deployment: the pinned upstream source runs on Nix's python312 with a
   # uv-provisioned venv under /var/lib/astrbot (see the module header); the
   # first start downloads the wheel set, so give it a few minutes.
-  modules.astrbot.enable = myvars.networking.services.astrbot.hosts.idols-ai.enable;
-  modules.astrbot.port = myvars.networking.services.astrbot.hosts.idols-ai.port;
+  modules.astrbot.enable = (svc "astrbot").enable;
+  modules.astrbot.port = (svc "astrbot").port;
 
   # Clash Verge Rev GUI client (shared modules/nixos/base/custom/network/clash-verge.nix,
   # nixpkgs programs.clash-verge with the package from nixpkgs-master). Service

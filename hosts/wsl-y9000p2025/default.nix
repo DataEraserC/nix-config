@@ -20,6 +20,14 @@ let
   ipv4WithMask = "${ipv4}/24";
   ipv6WithMask = "${ipv6}/64";
 
+  # This machine's key in the port registry (myvars.networking.services.*.hosts):
+  # the flake host name, which is not `hostName` (`y9000p2025` here).
+  serviceHost = "wsl-y9000p2025";
+  # One service's row on this machine - `svc "new-api"` is
+  # myvars.networking.services.new-api.hosts.wsl-y9000p2025 - so the key above
+  # is the only place it is spelled out.
+  svc = service: myvars.networking.services.${service}.hosts.${serviceHost};
+
 in
 rec {
   imports = [
@@ -66,38 +74,33 @@ rec {
   modules.easytier.enable = false;
 
   # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:1105.
-  modules.cliproxyapi.enable = myvars.networking.services.cliproxyapi.hosts.wsl-y9000p2025.enable;
-  modules.cliproxyapi.port = myvars.networking.services.cliproxyapi.hosts.wsl-y9000p2025.port;
+  modules.cliproxyapi.enable = (svc "cliproxyapi").enable;
+  modules.cliproxyapi.port = (svc "cliproxyapi").port;
 
   # M365 Copilot2API gateway, bound to 0.0.0.0:1104.
-  modules.m365-copilot2api.enable =
-    myvars.networking.services.m365-copilot2api.hosts.wsl-y9000p2025.enable;
-  modules.m365-copilot2api.port =
-    myvars.networking.services.m365-copilot2api.hosts.wsl-y9000p2025.port;
+  modules.m365-copilot2api.enable = (svc "m365-copilot2api").enable;
+  modules.m365-copilot2api.port = (svc "m365-copilot2api").port;
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
-  modules.opencode2api.enable = myvars.networking.services.opencode2api.hosts.wsl-y9000p2025.enable;
-  modules.opencode2api.port = myvars.networking.services.opencode2api.hosts.wsl-y9000p2025.port;
-  modules.opencode2api.webUiPort =
-    myvars.networking.services.opencode2api.hosts.wsl-y9000p2025.adminPort;
+  modules.opencode2api.enable = (svc "opencode2api").enable;
+  modules.opencode2api.port = (svc "opencode2api").port;
+  modules.opencode2api.webUiPort = (svc "opencode2api").adminPort;
 
   # mimocode2api gateway, bound to 0.0.0.0:1103 (VPN interfaces only).
-  modules.mimocode2api.enable = myvars.networking.services.mimocode2api.hosts.wsl-y9000p2025.enable;
-  modules.mimocode2api.port = myvars.networking.services.mimocode2api.hosts.wsl-y9000p2025.port;
+  modules.mimocode2api.enable = (svc "mimocode2api").enable;
+  modules.mimocode2api.port = (svc "mimocode2api").port;
 
   # new-api LLM gateway, port 1100 (upstream listens on all interfaces).
-  modules.new-api.enable = myvars.networking.services.new-api.hosts.wsl-y9000p2025.enable;
-  modules.new-api.port = myvars.networking.services.new-api.hosts.wsl-y9000p2025.port;
+  modules.new-api.enable = (svc "new-api").enable;
+  modules.new-api.port = (svc "new-api").port;
 
-  # Our Free Model standalone gateway, 127.0.0.1:18900 (loopback only).
-  modules.our-free-model-standalone.enable =
-    myvars.networking.services.our-free-model-standalone.hosts.wsl-y9000p2025.enable;
-  modules.our-free-model-standalone.port =
-    myvars.networking.services.our-free-model-standalone.hosts.wsl-y9000p2025.port;
+  # Our Free Model standalone gateway, 127.0.0.1:1107 (loopback only).
+  modules.our-free-model-standalone.enable = (svc "our-free-model-standalone").enable;
+  modules.our-free-model-standalone.port = (svc "our-free-model-standalone").port;
 
-  # Open WebUI chat frontend, 0.0.0.0:1107 (shared modules.open-webui) - disabled.
-  modules.open-webui.enable = myvars.networking.services.open-webui.hosts.wsl-y9000p2025.enable;
-  modules.open-webui.port = myvars.networking.services.open-webui.hosts.wsl-y9000p2025.port;
+  # Open WebUI chat frontend, 0.0.0.0:1120 (shared modules.open-webui) - disabled.
+  modules.open-webui.enable = (svc "open-webui").enable;
+  modules.open-webui.port = (svc "open-webui").port;
 
   # Route CLI traffic through the local / LAN SOCKS proxies.
   modules.proxychains.enable = true;
