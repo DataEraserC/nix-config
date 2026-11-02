@@ -217,11 +217,11 @@ in
 
     systemd.user.services = {
       "dsh-acb" = {
-        Unit = {
+        unitConfig = {
           Description = "ACB dsh (${cfg.profile})";
           After = [ "network.target" ];
         };
-        Service = {
+        serviceConfig = {
           Type = "simple";
           WorkingDirectory = home;
           Environment = [
@@ -241,11 +241,11 @@ in
       };
 
       "acb-bridge" = {
-        Unit = {
+        unitConfig = {
           Description = "ACB bridge";
           After = [ "network.target" ];
         };
-        Service = {
+        serviceConfig = {
           Type = "simple";
           WorkingDirectory = dataDir;
           Environment = [
@@ -266,7 +266,7 @@ in
       };
 
       "acb-drivers" = {
-        Unit = {
+        unitConfig = {
           Description = "ACB dsh drivers";
           After = [
             "network.target"
@@ -275,7 +275,7 @@ in
           ];
           Requires = [ "acb-bridge.service" ];
         };
-        Service = {
+        serviceConfig = {
           Type = "simple";
           EnvironmentFile = lib.optional (cfg.secretsFile != null) "-${cfg.secretsFile}";
           ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p ${lib.escapeShellArg logDir}";
@@ -288,11 +288,11 @@ in
       };
 
       "acb-opencode-serve" = {
-        Unit = {
+        unitConfig = {
           Description = "ACB opencode serve";
           After = [ "network.target" ];
         };
-        Service = {
+        serviceConfig = {
           Type = "simple";
           Environment = [
             "PATH=/run/current-system/sw/bin:/etc/profiles/per-user/nixos/bin:/run/wrappers/bin"
