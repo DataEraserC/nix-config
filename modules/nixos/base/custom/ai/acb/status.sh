@@ -4,7 +4,7 @@ for unit in dsh-acb acb-bridge acb-drivers acb-opencode-serve; do
 done
 
 echo "端口："
-ss -tln 2>/dev/null | grep -E ":(("@DSH_PORT@")|("@ENDPOINT_PORT@")|("@CONSOLE_PORT@")|("@OPENCODE_PORT@")|("@RELAY_PORT@")|("@SNOWLUMA_PORT@")) " || echo "  （无）"
+ss -tln 2>/dev/null | grep -E ":(@DSH_PORT@|@ENDPOINT_PORT@|@CONSOLE_PORT@|@OPENCODE_PORT@|@RELAY_PORT@|@SNOWLUMA_PORT@) " || echo "  （无）"
 if ss -tln 2>/dev/null | grep -q ":@SNOWLUMA_PORT@ "; then
   echo "snowluma：在跑（@SNOWLUMA_PORT@）"
 else
