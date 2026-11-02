@@ -21,6 +21,17 @@ history caused by concurrent edits to one working tree, make changes in a dedica
 result back into the main repository, rather than touching the main working tree directly. Editing
 the main working tree directly is acceptable only when no concurrent modification is expected.
 
+## Secrets: the two agenix lists move together
+
+Upstream keeps two agenix module variants side by side: `secrets/nixos.nix`, imported by the older
+hosts, and `secrets/nixos_agenix.nix`, imported by the `ai*` and `wsl*` hosts. Everything from
+`config =` down is meant to be identical between them; they differ only in the header and in where
+`modules.secrets` is declared (inline in `nixos.nix`, from `secrets/options.nix` for the newer
+hosts). So a secret goes into **both** files in the same change, with the same `file`, `mode`,
+`owner` and `mkIf` gate - adding it to one leaves the other host group without the secret and
+nowhere to notice until activation fails. Keep the remaining difference at those two points rather
+than introducing a third.
+
 ## Keep downstream maintenance small
 
 Every line added here is a line upstream will not maintain for us and a conflict to resolve on the
