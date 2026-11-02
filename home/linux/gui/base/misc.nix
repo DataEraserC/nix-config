@@ -78,8 +78,8 @@
     # nur-DataEraserC.packages.${pkgs.system}.llqqnt
     # nur-DataEraserC.packages.${pkgs.system}.bqqnt
 
-    #-- c001apk-flutter
-    # nur-DataEraserC.packages.${pkgs.system}.c001apk-flutter
+    #-- c001apk (Coolapk / 酷安 client)
+    nur-DataEraserC.packages.${pkgs.system}.c001apk
 
     # Translate tool
     translate-shell
