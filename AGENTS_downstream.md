@@ -32,6 +32,27 @@ hosts). So a secret goes into **both** files in the same change, with the same `
 nowhere to notice until activation fails. Keep the remaining difference at those two points rather
 than introducing a third.
 
+## Overlays in `overlays/` take the module args first
+
+`overlays/default.nix` imports each file as `import <file> args` and drops the result straight into
+`nixpkgs.overlays`, so every overlay here is written `{ inputs, ... }: _final: prev: { ... }` - see
+`overlays/computer-use-linux.nix`. A plain `_final: prev:` loses its `final` to the import, leaves a
+`prev: { ... }` function in the overlay list, and nixpkgs then calls the attrset it returns; that
+fails as `attempt to call something which is not a function but a set` inside `lib/fixed-points.nix`
+and takes down **every** NixOS host, because they all import `modules/base/overlays.nix`.
+
+Test an overlay through that path - `nixpkgs.overlays` / a host evaluation - not through
+`pkgs.extend (import ./overlays/<file> <args>)`, which supplies one argument fewer and hides the
+bug.
+
+When a host evaluation fails, `nix eval`/`nix build .#nixosConfigurations.<host>...` reports it as
+`flake ... does not provide attribute ...` and hides the real cause; force the same value from
+inside `--apply` to see it:
+
+```sh
+nix eval --impure --raw '.#nixosConfigurations."<host>"' --apply 'v: v.config.system.stateVersion'
+```
+
 ## Keep downstream maintenance small
 
 Every line added here is a line upstream will not maintain for us and a conflict to resolve on the
