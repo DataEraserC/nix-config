@@ -89,7 +89,7 @@ rec {
   #   browsers);
   # - idols-ai-socks5 / idols-ai-http (31080 / 31081): chained through idols-ai's
   #   1080 (easytier 10.126.126.150), so a client of them resolves destinations
-  #   ON idols-ai - notably its loopback 127.0.0.1:9900 where the dsh GUI
+  #   ON idols-ai - notably its loopback 127.0.0.1:3080 where the dsh GUI
   #   listens, which is a browser-only service, hence the HTTP twin on 31081.
   #   Same agenix credentials (gost-proxy.auth) on both hosts, so one client
   #   config fits every port.

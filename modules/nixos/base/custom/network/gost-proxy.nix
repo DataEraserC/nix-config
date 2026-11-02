@@ -9,12 +9,12 @@
 #     intranet/overlay resources through
 #       --proxy socks5h://<user>:<pass>@<host>:1080   (curl, ssh, proxychains)
 #       --proxy http://<user>:<pass>@<host>:1081      (browsers, npm, git, ...)
-#   - chain one listener through another host's proxy, e. wsl-work:31080/31081
+#   - chain one listener through another host's proxy, e.g. wsl-work:31080/31081
 #     forward through idols-ai:1080, so a client using them reaches idols-ai's
 #     LOOPBACK services (the final hop resolves 127.0.0.1 on idols-ai itself) -
-#     i. the dsh GUI on idols-ai 127.0.0.1:9900:
+#     i.e. the dsh GUI on idols-ai 127.0.0.1:3080:
 #
-#       client -> wsl-work:31081 (auth) -> idols-ai:1080 (auth) -> 127.0.0.1:9900
+#       client -> wsl-work:31081 (auth) -> idols-ai:1080 (auth) -> 127.0.0.1:3080
 #
 # Why an HTTP listener as well: browsers do not speak authenticated SOCKS5 -
 # Chrome/Chromium/Edge/Safari cannot send a SOCKS username/password at all
@@ -169,7 +169,7 @@ let
             client connection to the upstream with the same credentials, and
             the upstream resolves the destination on ITS side - that is how a
             chained instance reaches the upstream host's loopback services
-            (e. wsl-work:31080 -> idols-ai:1080 -> 127.0.0.1:9900 for dsh).
+            (e.g. wsl-work:31080 -> idols-ai:1080 -> 127.0.0.1:3080 for dsh).
             The hop speaks whatever `chainProtocol` says, independent of this
             listener's `protocol` (gost converts between the two), so an HTTP
             listener can chain through the upstream's SOCKS5 port.

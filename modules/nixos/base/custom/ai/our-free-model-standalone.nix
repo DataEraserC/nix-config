@@ -5,11 +5,13 @@
 # This wrapper uses the DataEraserC NUR module, which provides
 # `services.dataEraserc.our-free-model-standalone`.
 #
-# Binds to 127.0.0.1:18900 (loopback only - the upstream entry point rejects
-# any other bind address), so reaching it from other machines means putting a
-# reverse proxy in front. If the port is busy the gateway walks to the next
-# free one and logs the port it actually took; check the management URL in the
-# journal when the port does not respond.
+# Binds to loopback only (the upstream entry point rejects any other bind
+# address) and takes its listen port from the port registry - 1107 on every
+# host today, where 18900 is the NUR module's default that this flake
+# overrides. Reaching it from other machines therefore means putting a reverse
+# proxy in front. If the port is busy the gateway walks to the next free one
+# and logs the port it actually took; check the management URL in the journal
+# when the port does not respond.
 #
 # State lives in /var/lib/our-free-model-standalone (account pool, credentials,
 # settings, API key); each host's preservation-downstream.nix carries it across

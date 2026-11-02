@@ -49,7 +49,7 @@ Defines:
 `services` only holds what is (a) managed by a NixOS module of this flake **and** (b) reachable from
 outside its host (overlay/LAN/`0.0.0.0`), plus the virtual-network registrations
 (`devices`/`endpoints`/`easytier.instances`). Not registered: loopback-only listeners (the dsh GUI
-on `127.0.0.1:9900`, proxychains' local client ports) and services no NixOS module drives (adb, the
+on `127.0.0.1:3080`, proxychains' local client ports) and services no NixOS module drives (adb, the
 LAN proxies, opencode, rdp, termux sshd) - those keep literal ports where they are used.
 
 Consumers:

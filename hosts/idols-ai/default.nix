@@ -228,7 +228,7 @@ rec {
   #   - idols-ai-socks5 (1080): for curl / ssh / proxychains. This is also the
   #     chained upstream of wsl-work's idols-ai-socks5 (31080) and
   #     idols-ai-http (31081) entry points, whose clients reach this host's
-  #     loopback (dsh GUI on 127.0.0.1:9900) through it.
+  #     loopback (dsh GUI on 127.0.0.1:3080) through it.
   #   - idols-ai-http (1081): the same proxy for browsers, which cannot send
   #     SOCKS5 credentials (Chromium not at all, Firefox only via about:config).
   # They are independent instances, so either one can be retired later with

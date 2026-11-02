@@ -3,7 +3,7 @@
 # open-webui - self-hosted web UI for LLMs (ChatGPT-style chat), fronting ollama
 # and the OpenAI-compatible gateways on the same host (new-api 1100,
 # opencode2api 1101/1102, mimocode2api 1103, m365-copilot2api 1104,
-# cliproxyapi 1105, omniroute 1106).
+# cliproxyapi 1105, omniroute 1106, agent2api 1108).
 #
 # Uniform wrapper shared by every host, same pattern as new-api.nix: hosts only
 # toggle `modules.open-webui.enable` and set `modules.open-webui.port` (taken
@@ -12,10 +12,12 @@
 # hosts stay byte-identical. The port is only read under `enable`, so a host that
 # does not run the unit never forces it.
 #
-# Binds to 0.0.0.0:1107 by default - the next free port of the 1100 service series.
-# Currently disabled on every host (modules.open-webui.enable = false); wsl-work
-# runs no copy at all and reaches idols-ai through the `openwebui` port-forward
-# tunnel (local 31107 -> remote 1107), kept for a future re-enable.
+# Binds to 0.0.0.0 and takes its listen port from the port registry (1120 on
+# every host today - the slot after the 1100-1108 gateway block; this module
+# itself has no default port). Currently disabled on every host
+# (modules.open-webui.enable = false); wsl-work runs no copy at all and reaches
+# idols-ai through the `openwebui` port-forward tunnel (local 31120 -> remote
+# 1120, both derived from the registry row), kept for a future re-enable.
 #
 # Mutable state lives in /var/lib/open-webui (the NixOS module default); the
 # legacy ~/.config/open-webui entry kept in preservation.nix only preserves

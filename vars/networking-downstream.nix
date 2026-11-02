@@ -177,7 +177,7 @@ rec {
   # overlay / LAN / 0.0.0.0 - gets an entry here, plus the virtual network
   # registrations further down in this file (`devices`, `endpoints`,
   # `easytier.instances`). Not registered for now: loopback-only listeners (the
-  # dsh GUI on 127.0.0.1:9900, proxychains' local client ports) and services
+  # dsh GUI on 127.0.0.1:3080, proxychains' local client ports) and services
   # no NixOS module drives (adb, the LAN proxies, opencode, rdp, termux sshd)
   # - those keep literal ports where they are used, e.g. in `tunnels.work`.
   #
@@ -275,7 +275,7 @@ rec {
           host = "0.0.0.0";
           ports = {
             idols-ai-socks5 = 1080; # direct SOCKS5 listener (curl/ssh/proxychains)
-            idols-ai-http = 1081; # direct HTTP listener (browser facing; also wsl-work's chain target)
+            idols-ai-http = 1081; # direct HTTP listener (browser facing)
           };
         };
         wsl-work = {
@@ -629,7 +629,7 @@ rec {
     }
     # {
     #   name = "y9000p2025-proxy";
-    #   localPort = 30000 + 7890;
+    #   localPort = 30000 + 7897;
     #   remoteHost = endpoints.y9000p2025.easytier;
     #   remotePort = 7897;
     # }
@@ -650,7 +650,7 @@ rec {
     }
     {
       name = "termux-ssh";
-      localPort = 40000 + 0022;
+      localPort = 40000 + 8022;
       remoteHost = endpoints.infiniti.easytier;
       remotePort = 8022;
     }
