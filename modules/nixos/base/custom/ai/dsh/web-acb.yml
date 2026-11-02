@@ -8,8 +8,13 @@
 # restart dsh. In-place edits (Settings UI or $DSH_HOME/profiles/...) are
 # reverted to the snapshot on the next launch, by design (managed fingerprint).
 #
-# Deliberately empty: the ACB presets and their MCP clients are a dsh bundle
-# (`acb-presets`), not profile patch rows, so this file stays the plain
-# `web` composition. Model/provider rows belong to the Settings UI / home
+# graph-memory is a profile-level plugin: it observes every session in this
+# profile, including the ACB chats. Disabling the row here keeps ACB traffic
+# out of its graph. Only the fields below are replaced; the plugin's own
+# config is left untouched, so re-enabling the row needs no restatement.
+#
+# The ACB presets and their MCP clients are a dsh bundle (`acb-presets`), not
+# profile patch rows. Model/provider rows belong to the Settings UI / home
 # layer and are not overridden here.
-[]
+- id: graph-memory
+  disabled: true
