@@ -763,13 +763,21 @@ let
   acbPresetPatch = pkgs.writeText "acb-presets.patch.yml" (
     lib.replaceStrings [ "@ROWS@" ] [ acbPresetRows ] (builtins.readFile ./acb-presets.patch.yml.tmpl)
   );
-  acbPresets = pkgs.runCommand "acb-presets-0.1.0" { } ''
-    pkg=$out/lib/node_modules/acb-presets
-    mkdir -p $out/nix-support "$pkg/presets"
-    cp ${acbPresetPatch} "$pkg/presets/acb.patch.yml"
-    cp ${./acb-presets-package.json} "$pkg/package.json"
-    sed "s|@PKG@|$pkg|" ${./acb-presets-bundle.json} > $out/nix-support/dsh-bundles.json
-  '';
+  acbPresets =
+    (pkgs.runCommand "acb-presets-0.1.0" { } ''
+      pkg=$out/lib/node_modules/acb-presets
+      mkdir -p $out/nix-support "$pkg/presets"
+      cp ${acbPresetPatch} "$pkg/presets/acb.patch.yml"
+      cp ${./acb-presets-package.json} "$pkg/package.json"
+      sed "s|@PKG@|$pkg|" ${./acb-presets-bundle.json} > $out/nix-support/dsh-bundles.json
+    '')
+    // {
+      # dsh 的 composition 检查只认这个标记（参见 nur 的 qq-bridge-dsh）。
+      passthru = {
+        dshBundle = true;
+        dshBundleHelper = "buildDshBundle";
+      };
+    };
 
   # web-acb = web 的 composition + 生成的 ACB preset bundle。没有 ACB 会话时
   # 不加，避免给别的 host 塞一个空 bundle。
