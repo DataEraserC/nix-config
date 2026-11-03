@@ -568,142 +568,62 @@ rec {
   # the registry; local ports are `work`'s own addressing (3xxxx = forwarded
   # from the laptop, 4xxxx = from infiniti) and belong to this table.
   # ==========================================================================
-  tunnels.work = [
-    # idols-ai / y9000p2025 (10.126.126.150) - 3xxxx range
-    {
-      name = "new-api";
-      localPort = 30000 + services.new-api.hosts.idols-ai.port;
-      remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = services.new-api.hosts.idols-ai.port;
-    }
-    {
-      name = "opencode2api";
-      localPort = 30000 + services.opencode2api.hosts.idols-ai.port;
-      remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = services.opencode2api.hosts.idols-ai.port;
-    }
-    {
-      name = "opencode2api-management-center";
-      localPort = 30000 + services.opencode2api.hosts.idols-ai.adminPort;
-      remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = services.opencode2api.hosts.idols-ai.adminPort;
-    }
-    {
-      name = "mimocode2api";
-      localPort = 30000 + services.mimocode2api.hosts.idols-ai.port;
-      remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = services.mimocode2api.hosts.idols-ai.port;
-    }
-    {
-      name = "M365-Copilot2API";
-      localPort = 30000 + services.m365-copilot2api.hosts.idols-ai.port;
-      remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = services.m365-copilot2api.hosts.idols-ai.port;
-    }
-    {
-      name = "Agent2API";
-      localPort = 30000 + services.agent2api.hosts.idols-ai.port;
-      remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = services.agent2api.hosts.idols-ai.port;
-    }
-    {
-      name = "cliproxyapimanagementcenter";
-      localPort = 30000 + services.cliproxyapi.hosts.idols-ai.port;
-      remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = services.cliproxyapi.hosts.idols-ai.port;
-    }
-    # {
-    #   name = "omniroute";
-    #   localPort = 30000 + services.omniroute.hosts.idols-ai.port;
-    #   remoteHost = endpoints.y9000p2025.easytier;
-    #   remotePort = services.omniroute.hosts.idols-ai.port;
-    # }
-    # {
-    #   name = "our-free-model-standalone";
-    #   localPort = 30000 + services.our-free-model-standalone.hosts.idols-ai.port;
-    #   remoteHost = endpoints.y9000p2025.easytier;
-    #   remotePort = services.our-free-model-standalone.hosts.idols-ai.port;
-    # }
-    {
-      name = "acb-console";
-      localPort = 30000 + services.acb.hosts.idols-ai.ports.console;
-      remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = services.acb.hosts.idols-ai.ports.console;
-    }
-    {
-      name = "acb-opencode";
-      localPort = 30000 + services.acb.hosts.idols-ai.ports.opencode;
-      remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = services.acb.hosts.idols-ai.ports.opencode;
-    }
-    {
-      name = "openwebui";
-      localPort = 30000 + services.open-webui.hosts.idols-ai.port;
-      remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = services.open-webui.hosts.idols-ai.port;
-    }
-    # dsh needs the ssh forward to work at all (its security checks reject
-    # plain TCP), so the tunnel must speak ssh - kept for a future re-enable:
-    # {
-    #   name = "dsh";
-    #   localPort = 30000 + 3080;
-    #   remoteHost = endpoints.y9000p2025.easytier;
-    #   remotePort = 3080;
-    # }
-    # rdp / opencode / the LAN proxy on the laptop are not driven by a NixOS
-    # module, so they stay unregistered (registry scope) and carry literals.
-    {
-      name = "rdp_rd";
-      localPort = 30000 + 3389;
-      remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = 3389;
-    }
-    {
-      name = "rdp_rc";
-      localPort = 30000 + 3390;
-      remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = 3390;
-    }
-    {
-      name = "ssh";
-      localPort = 30000 + services.ssh.hosts.idols-ai.port;
-      remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = services.ssh.hosts.idols-ai.port;
-    }
-    {
-      name = "opencode";
-      localPort = 30000 + 4096;
-      remoteHost = endpoints.y9000p2025.easytier;
-      remotePort = 4096;
-    }
-    # {
-    #   name = "y9000p2025-proxy";
-    #   localPort = 30000 + 7897;
-    #   remoteHost = endpoints.y9000p2025.easytier;
-    #   remotePort = 7897;
-    # }
-    # apatch-infiniti (10.126.126.154) - 4xxxx range; adb, the device's SOCKS
-    # proxy and the Termux sshd run outside this flake, so their ports are
-    # literals until a NixOS module owns them.
-    {
-      name = "adb";
-      localPort = 40000 + 5555;
-      remoteHost = endpoints.infiniti.easytier;
-      remotePort = 5555;
-    }
-    {
-      name = "infiniti-proxy";
-      localPort = 40000 + 2080;
-      remoteHost = endpoints.infiniti.easytier;
-      remotePort = 2080;
-    }
-    {
-      name = "termux-ssh";
-      localPort = 40000 + 8022;
-      remoteHost = endpoints.infiniti.easytier;
-      remotePort = 8022;
-    }
-  ];
+  tunnels.work =
+    let
+      # One forwarding row: `base` selects work's own address range (3xxxx =
+      # forwarded from the laptop, 4xxxx = from infiniti) and the remote port
+      # expression is reused for both ends, so each port is written once.
+      mk = base: remoteHost: name: remotePort: {
+        inherit
+          name
+          remoteHost
+          remotePort
+          ;
+        localPort = base + remotePort;
+      };
+      # Every entry targets the laptop (idols-ai), so fix host and base here.
+      laptop = mk 30000 endpoints.y9000p2025.easytier;
+      infiniti = mk 40000 endpoints.infiniti.easytier;
+      # Registry lookup by host key; `field` is a dotted path into the
+      # service row, e.g. `regAi "new-api" "port"` or `regAi "acb" "ports.console"`.
+      reg =
+        host: name: field:
+        lib.getAttrFromPath (lib.splitString "." field) services.${name}.hosts.${host};
+      # Every entry targets the laptop (idols-ai), so derive the pinned form.
+      regAi = reg "idols-ai";
+    in
+    [
+      # idols-ai / y9000p2025 (10.126.126.150) - 3xxxx range
+      (laptop "new-api" (regAi "new-api" "port"))
+      (laptop "opencode2api" (regAi "opencode2api" "port"))
+      (laptop "opencode2api-management-center" (regAi "opencode2api" "adminPort"))
+      (laptop "mimocode2api" (regAi "mimocode2api" "port"))
+      (laptop "M365-Copilot2API" (regAi "m365-copilot2api" "port"))
+      (laptop "Agent2API" (regAi "agent2api" "port"))
+      (laptop "cliproxyapimanagementcenter" (regAi "cliproxyapi" "port"))
+      # kept for a future re-enable:
+      # (laptop "omniroute" (regAi "omniroute" "port"))
+      # (laptop "our-free-model-standalone" (regAi "our-free-model-standalone" "port"))
+      (laptop "acb-console" (regAi "acb" "ports.console"))
+      (laptop "acb-opencode" (regAi "acb" "ports.opencode"))
+      (laptop "openwebui" (regAi "open-webui" "port"))
+      # dsh needs the ssh forward to work at all (its security checks reject
+      # plain TCP), so the tunnel must speak ssh - kept for a future re-enable:
+      # (laptop "dsh" 3080)
+      # rdp / opencode / the LAN proxy on the laptop are not driven by a NixOS
+      # module, so they stay unregistered (registry scope) and carry literals.
+      (laptop "rdp_rd" 3389)
+      (laptop "rdp_rc" 3390)
+      (laptop "ssh" (regAi "ssh" "port"))
+      (laptop "opencode" 4096)
+      # (laptop "y9000p2025-proxy" 7897)
+      # apatch-infiniti (10.126.126.154) - 4xxxx range; adb, the device's SOCKS
+      # proxy and the Termux sshd run outside this flake, so their ports are
+      # literals until a NixOS module owns them.
+      (infiniti "adb" 5555)
+      (infiniti "infiniti-proxy" 2080)
+      (infiniti "termux-ssh" 8022)
+    ];
 
   # Endpoints of the other devices on the overlay networks, keyed by device
   # name, so hosts can reference them symbolically (e.g. auto-shutdown's
