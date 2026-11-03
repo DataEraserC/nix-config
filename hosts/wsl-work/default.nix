@@ -64,9 +64,9 @@ rec {
   };
 
   # sshd listens on 8022 instead of the stock 22 - taken from the port
-  # registry (this machine's `ssh` row). The generated client config
-  # (/etc/ssh/ssh_config) reads the same rows, so `ssh work` / `ssh wsl-work`
-  # dial 8022 too.
+  # registry (this machine's `ssh` row). No client alias is generated: the
+  # `work` hostsAddr row is `homeOnly` (its LAN address is never configured),
+  # so dial this host through myvars.networking.endpoints.work.easytier.
   services.openssh.ports = [ (svc "ssh").port ];
 
   # ntfy notifications on network up/down events(NM dispatcher, shared script)

@@ -20,6 +20,13 @@ rec {
       iface = "wlp130s0";
       ipv4 = "192.168.2.150";
       ipv6 = "fe80::150"; # Link-local Address
+      # The address above is not configured on this interface: NetworkManager
+      # uses DHCP and the reachable channels are localhost / the overlay
+      # interfaces. Upstream's `homeOnly` makes the monitoring module skip the
+      # LAN-bound exporters (node, smartctl) and the ssh alias for this host;
+      # without it both exporters bind to a nonexistent address and fail at
+      # activation.
+      homeOnly = true;
     };
     idols-ai = y9000p2025;
     ai = y9000p2025;
@@ -29,6 +36,10 @@ rec {
       iface = "wlp130s0";
       ipv4 = "192.168.2.150";
       ipv6 = "fe80::150"; # Link-local Address
+      # Same shape as `y9000p2025`: this WSL host has no such address on its
+      # interface, so upstream's LAN-bound exporters would fail to bind. The
+      # flag also drops the dead `ssh work` / `ssh wsl-work` aliases.
+      homeOnly = true;
     };
     wsl-work = work;
   };
