@@ -627,6 +627,12 @@ rec {
       remotePort = services.acb.hosts.idols-ai.ports.console;
     }
     {
+      name = "acb-opencode";
+      localPort = 30000 + services.acb.hosts.idols-ai.ports.opencode;
+      remoteHost = endpoints.y9000p2025.easytier;
+      remotePort = services.acb.hosts.idols-ai.ports.opencode;
+    }
+    {
       name = "openwebui";
       localPort = 30000 + services.open-webui.hosts.idols-ai.port;
       remoteHost = endpoints.y9000p2025.easytier;
