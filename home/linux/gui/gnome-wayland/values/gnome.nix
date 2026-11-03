@@ -37,6 +37,15 @@ in
         clipboard-indicator.extensionUuid
         mirror.extensionUuid
       ];
+      # Dash favorites; `google-chrome.desktop` is the visible Chrome entry
+      # (`com.google.Chrome.desktop` is its NoDisplay portal duplicate).
+      favorite-apps = [
+        "com.mitchellh.ghostty.desktop"
+        "google-chrome.desktop"
+        "org.mozilla.firefox.desktop"
+        "code.desktop"
+        "org.gnome.Nautilus.desktop"
+      ];
     };
     settings."org/gnome/mutter" = {
       experimental-features = [
