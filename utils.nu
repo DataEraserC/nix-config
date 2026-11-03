@@ -28,6 +28,19 @@ export def nixos-switch [
 }
 
 
+# Run `nix build` in a user systemd scope with the client-side memory limits
+# from vars/nix-build-guard.nix. Builders themselves run under
+# nix-daemon.service; this protects the eval/coordinator process. Requires a
+# per-user systemd manager (loginctl enable-linger). Pass derivation targets
+# only; `--no-link --print-build-logs` are added here.
+export def nix-build-limited [...targets: string] {
+    let guard = (nix eval --json --impure --expr 'import ./vars/nix-build-guard.nix' | from json)
+    let max = $"MemoryMax=($guard.clientMemoryMax)"
+    let swap = $"MemorySwapMax=($guard.clientMemorySwapMax)"
+    systemd-run --user --scope --quiet -p $max -p $swap -- nix build --no-link --print-build-logs ...$targets
+}
+
+
 # ====================== Misc =============================
 
 export def make-editable [

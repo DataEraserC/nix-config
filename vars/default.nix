@@ -1,5 +1,8 @@
 { lib }:
 {
+  # Shared guard values for Nix builds; see vars/nix-build-guard.nix.
+  nixBuildGuard = import ./nix-build-guard.nix;
+
   username = "nixos";
   userfullname = "DataEraserC";
   useremail = "102341238+DataEraserC@users.noreply.github.com";

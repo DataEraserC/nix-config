@@ -176,6 +176,11 @@ rec {
 
   modules.btrbk.enable = true;
 
+  # Confine Nix builds to a cgroup budget so a runaway build does not trigger
+  # the kernel global OOM killer and take an Electron renderer with it. Values
+  # and rationale live in vars/nix-build-guard.nix.
+  modules.nix-build-guard.enable = true;
+
   # Permit the desktop user to access Intel accelerator devices for local ASR.
   users.users.${myvars.username}.extraGroups = [ "render" ];
 
