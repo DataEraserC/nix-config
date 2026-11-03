@@ -4,7 +4,10 @@
   lib,
   ...
 }:
-# Pin the GIDs/UIDs so they are not reassigned if the group is missing.
+# Declares the service accounts and groups on every NixOS host: sets
+# isSystemUser and the primary group so the names exist even when their service
+# is disabled. This file does NOT pin numeric uid/gid; those are pinned in
+# hosts/service-user-ids.nix, which only applies to the hosts importing it.
 {
   users.groups = {
     # sunshine
