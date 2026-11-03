@@ -39,6 +39,7 @@ rec {
 
     ./preservation.nix
     ./preservation-downstream.nix
+    ../service-user-ids.nix
     ./impermanence_addon.nix
     # ./secureboot.nix
     # ./dae.nix

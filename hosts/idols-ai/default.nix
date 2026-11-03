@@ -56,6 +56,7 @@ rec {
 
     ./preservation.nix
     ./preservation-downstream.nix
+    ../service-user-ids.nix
     ./secureboot.nix
     ./sunshine.nix
 
