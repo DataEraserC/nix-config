@@ -483,6 +483,10 @@ rec {
         idols-ai = rec {
           enable = true;
           host = "127.0.0.1";
+          # console / opencode 对外监听地址：0.0.0.0 = ZeroTier / Tailscale /
+          # EasyTier / LAN 都能访问（仍分别要求 token / Basic Auth）。
+          # dsh web 保持 host=127.0.0.1：它的安全校验只接受 SSH 隧道。
+          exposeHost = "0.0.0.0";
           ports = {
             dsh = 3080;
             endpoint = 7700;

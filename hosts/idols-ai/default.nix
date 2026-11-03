@@ -127,6 +127,7 @@ rec {
   modules.acb = {
     enable = (svc "acb").enable;
     host = (svc "acb").host;
+    exposeHost = (svc "acb").exposeHost;
     dshPort = (svc "acb").ports.dsh;
     endpointPort = (svc "acb").ports.endpoint;
     consolePort = (svc "acb").ports.console;

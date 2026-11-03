@@ -128,7 +128,13 @@ in
 
     host = lib.mkOption {
       type = lib.types.str;
-      description = "dsh / 桥 / opencode 的监听地址（来自 services.acb 注册表）。";
+      description = "dsh / 桥接入点的监听地址（来自 services.acb 注册表）。";
+    };
+
+    exposeHost = lib.mkOption {
+      type = lib.types.str;
+      default = "127.0.0.1";
+      description = "console / opencode 的对外监听地址；0.0.0.0 表示所有网卡（ZeroTier 等）。";
     };
 
     dshPort = lib.mkOption {
@@ -251,7 +257,7 @@ in
           Environment = [
             "PATH=/run/current-system/sw/bin:/etc/profiles/per-user/nixos/bin:/run/wrappers/bin"
             "ACB_ENDPOINT_LISTEN=${cfg.host}:${toString cfg.endpointPort}"
-            "ACB_CONSOLE_LISTEN=${cfg.host}:${toString cfg.consolePort}"
+            "ACB_CONSOLE_LISTEN=${cfg.exposeHost}:${toString cfg.consolePort}"
             "ACB_RELAY_LISTEN=0.0.0.0:${toString cfg.relayPort}"
             "ACB_LUA_DIR=${dataDir}/lua"
           ];
@@ -298,6 +304,7 @@ in
             "PATH=/run/current-system/sw/bin:/etc/profiles/per-user/nixos/bin:/run/wrappers/bin"
             "ACB_OPENCODE_DIR=${dataDir}/opencode"
             "ACB_OPENCODE_PORT=${toString cfg.opencodePort}"
+            "ACB_OPENCODE_HOST=${cfg.exposeHost}"
             "ACB_OPENCODE_BIN=${opencode2}"
           ];
           EnvironmentFile = lib.optional (cfg.secretsFile != null) "-${cfg.secretsFile}";
