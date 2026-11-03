@@ -795,13 +795,7 @@ let
   # Mode stays `managed`, so the profile file on disk is a store snapshot of
   # that repo file and is restored on the next launch — in-place edits never
   # persist by design.
-  # web-qq and web-acb share the machine's working web settings (provider
-  # catalog, search/fetch, UI prefs): the fragment in web-shared.yml is
-  # substituted at the `@SHARED@` marker, so the two profiles cannot drift.
-  webSharedRows = builtins.readFile ./web-shared.yml;
-
-  repoPatch =
-    key: lib.replaceStrings [ "# @SHARED@" ] [ webSharedRows ] (builtins.readFile (./${key}.yml));
+  repoPatch = key: builtins.readFile (./${key}.yml);
 
   # 主页>插件 的卡片过滤是 `installed = dependencies.includes(name)`（读 profile
   # package.json 顶层 dependencies），可上游 resolve-dsh-bundles.mjs 的 profile

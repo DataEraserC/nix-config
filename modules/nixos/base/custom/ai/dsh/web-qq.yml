@@ -7,7 +7,4 @@
 # profile file is a store snapshot of it - edit here, run `just local`, then
 # restart dsh. In-place edits (Settings UI or $DSH_HOME/profiles/...) are
 # reverted to the snapshot on the next launch, by design (managed fingerprint).
-# The machine's working web settings (providers, search/fetch, UI prefs) live
-# in web-shared.yml; repoPatch substitutes them here so web-qq and web-acb stay
-# in sync without duplicating the provider catalog.
-# @SHARED@
+[]
