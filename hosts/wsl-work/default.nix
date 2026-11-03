@@ -75,6 +75,15 @@ rec {
     inherit hostName;
   };
 
+  # Static service overview page (modules/nixos/base/custom/services/homepage).
+  # Port, bind address and enable state come from services.homepage.hosts.wsl-work.
+  modules.homepage = {
+    enable = (svc "homepage").enable;
+    host = (svc "homepage").host;
+    port = (svc "homepage").port;
+    hostKey = serviceHost;
+  };
+
   # Oray PgyVisitor SDN client
   modules.pgy.enable = true;
 

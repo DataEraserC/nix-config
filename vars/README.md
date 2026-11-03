@@ -66,8 +66,8 @@ Consumers:
 - `tunnels.work` remote ports/hosts (every entry targets the laptop, so the `idols-ai` rows)
 - the ssh_config fold (one `Port` per `Host` block: that machine's `ssh.hosts.<key>` row when it has
   one, else `ssh.defaultPort`)
-- the port-catalog page, which renders the rows as-is (enable state, bind address, ports per
-  machine)
+- the service overview page (`modules/nixos/base/custom/services/homepage`), which derives one card
+  per enabled row, plus the row's optional `catalog` block (protocol, path, tags, note)
 
 ## Host Categories
 

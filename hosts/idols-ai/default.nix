@@ -91,6 +91,16 @@ rec {
     ];
   };
 
+  # Static service overview page (modules/nixos/base/custom/services/homepage).
+  # Port, bind address and enable state come from services.homepage.hosts.idols-ai;
+  # the page lists every registry service that carries a catalog block.
+  modules.homepage = {
+    enable = (svc "homepage").enable;
+    host = (svc "homepage").host;
+    port = (svc "homepage").port;
+    hostKey = serviceHost;
+  };
+
   # Sub-Store converts Clash-format subscriptions into base64 v2ray URI lists
   # that dae can fetch (dae has no Clash-YAML parser). Caddy fronts API 24500 and
   # web panel 24501 with Basic Auth (agenix secret sub-store.caddy), the panel

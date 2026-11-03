@@ -217,6 +217,21 @@ rec {
   #   defaultPort   `ssh` only: the stock sshd port for machines without a row;
   #                 ssh rows carry no `enable` - modules/nixos/base/ssh.nix
   #                 turns sshd on for every NixOS machine (base-wide)
+  #   catalog       optional page metadata. Its presence opts the service into
+  #                 the service overview page
+  #                 (modules/nixos/base/custom/services/homepage); services
+  #                 without it are not listed. Fields:
+  #                   protocol  URL scheme of the listed endpoint (default http)
+  #                   portKey   dotted path into the host row when the listed
+  #                             endpoint is not `port` (e.g. "adminPort",
+  #                             "ports.console", "frontendPort")
+  #                   bindKey   dotted path into the host row when the listed
+  #                             endpoint does not bind to `host` (e.g. acb's
+  #                             console on `exposeHost`)
+  #                   path      URL path prefix (default "/")
+  #                   tags      stable tokens translated by the page locales
+  #                   note      locale-key suffix under `note.`; the translated
+  #                             text lives in the page locales, never here
   #
   # Consumed by:
   #   - host wiring of `options.modules.<name>` in the hosts/* files: each
@@ -227,9 +242,9 @@ rec {
   #     (every entry targets the laptop, so it reads the `idols-ai` rows);
   #   - the ssh_config fold above (`services.ssh`), one Port per Host block:
   #     that machine's row when it has one, else `defaultPort`;
-  #   - the port catalog page, which renders this attribute set directly -
-  #     enable state, bind address and ports per machine - so enablement is
-  #     a single source of truth in the registry.
+  #   - the service overview page, which derives one card per enabled
+  #     (service x host) row from this attribute set and from `homepage.hosts`
+  #     below - ports, bind addresses and enablement stay single-sourced here.
   # ==========================================================================
   services = {
     # --- sshd; the per-host listen ports live here, not on hostsAddr ---
@@ -318,6 +333,13 @@ rec {
           port = 1100;
         };
       };
+      catalog = {
+        tags = [
+          "llm"
+          "gateway"
+        ];
+        note = "new-api";
+      };
     };
 
     opencode2api = {
@@ -341,6 +363,16 @@ rec {
           adminPort = 1102;
         };
       };
+      catalog = {
+        # The API on 1101 is not a browser target; link the WebUI on 1102.
+        portKey = "adminPort";
+        tags = [
+          "llm"
+          "gateway"
+          "ui"
+        ];
+        note = "opencode2api";
+      };
     };
 
     mimocode2api = {
@@ -360,6 +392,13 @@ rec {
           host = "0.0.0.0";
           port = 1103;
         };
+      };
+      catalog = {
+        tags = [
+          "llm"
+          "gateway"
+        ];
+        note = "mimocode2api";
       };
     };
 
@@ -381,6 +420,13 @@ rec {
           port = 1104;
         };
       };
+      catalog = {
+        tags = [
+          "llm"
+          "gateway"
+        ];
+        note = "m365-copilot2api";
+      };
     };
 
     cliproxyapi = {
@@ -401,6 +447,13 @@ rec {
           port = 1105;
         };
       };
+      catalog = {
+        tags = [
+          "llm"
+          "gateway"
+        ];
+        note = "cliproxyapi";
+      };
     };
 
     omniroute = {
@@ -410,6 +463,14 @@ rec {
           host = "0.0.0.0";
           port = 1106;
         };
+      };
+      catalog = {
+        tags = [
+          "llm"
+          "gateway"
+          "ui"
+        ];
+        note = "omniroute";
       };
     };
 
@@ -436,6 +497,14 @@ rec {
           port = 1107;
         };
       };
+      catalog = {
+        tags = [
+          "llm"
+          "gateway"
+          "loopback"
+        ];
+        note = "our-free-model-standalone";
+      };
     };
 
     # the API and the management panel share one port; `panelPort` in
@@ -453,6 +522,14 @@ rec {
           host = "0.0.0.0";
           port = 1108;
         };
+      };
+      catalog = {
+        tags = [
+          "llm"
+          "gateway"
+          "ui"
+        ];
+        note = "agent2api";
       };
     };
 
@@ -473,6 +550,13 @@ rec {
           host = "0.0.0.0";
           port = 1120;
         };
+      };
+      catalog = {
+        tags = [
+          "llm"
+          "ui"
+        ];
+        note = "open-webui";
       };
     };
 
@@ -511,6 +595,16 @@ rec {
           ];
         };
       };
+      catalog = {
+        # Console on 3100; the loopback dsh endpoint is deliberately not listed.
+        portKey = "ports.console";
+        bindKey = "exposeHost";
+        tags = [
+          "agent"
+          "ui"
+        ];
+        note = "acb";
+      };
     };
 
     alist = {
@@ -524,6 +618,13 @@ rec {
           s3Port = 5246;
         };
       };
+      catalog = {
+        tags = [
+          "files"
+          "ui"
+        ];
+        note = "alist";
+      };
     };
 
     # AstrBot chatbot + WebUI (base/custom/ai/astrbot.nix). Keeps upstream's
@@ -535,6 +636,41 @@ rec {
           host = "0.0.0.0";
           port = 6185;
         };
+      };
+      catalog = {
+        tags = [
+          "chat"
+          "ui"
+        ];
+        note = "astrbot";
+      };
+    };
+
+    # --- the service overview page (base/custom/services/homepage) ---
+    homepage = {
+      hosts = {
+        idols-ai = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 8090;
+        };
+        wsl-y9000p2025 = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 8090;
+        };
+        wsl-work = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 8090;
+        };
+      };
+      catalog = {
+        tags = [
+          "dashboard"
+          "infra"
+        ];
+        note = "homepage";
       };
     };
 
@@ -553,6 +689,48 @@ rec {
           frontendPort = 24501;
         };
       };
+      catalog = {
+        # Link the authenticated web panel, not the JSON API on 24500.
+        portKey = "frontendPort";
+        tags = [
+          "proxy"
+          "ui"
+          "auth"
+        ];
+        note = "sub-store";
+      };
+    };
+  };
+
+  # ==========================================================================
+  # homepage.hosts - the machines whose enabled services the overview page
+  # lists, keyed by the same host key `services.*.hosts` uses. Only host-level
+  # facts that cannot be derived from `devices` live here:
+  #   kind      "nixos" or "wsl"; the page uses it for the WSL localhost note
+  #   device    key in `devices` above whose overlay addresses this machine
+  #             owns; null when the host has no overlay registration (e.g. a
+  #             WSL distro without its own overlay client)
+  #   magicDns  optional Tailscale MagicDNS name for access links; null until
+  #             the tailnet suffix is declared here
+  # Overlay addresses come from `devices.<device>.addrs`; LAN addresses are
+  # intentionally not read by the page, so a host without a `device` entry is
+  # rendered as unreachable from other machines.
+  # ==========================================================================
+  homepage.hosts = {
+    idols-ai = {
+      kind = "nixos";
+      device = "y9000p2025";
+      magicDns = null;
+    };
+    wsl-work = {
+      kind = "wsl";
+      device = "work";
+      magicDns = null;
+    };
+    wsl-y9000p2025 = {
+      kind = "wsl";
+      device = null;
+      magicDns = null;
     };
   };
 
