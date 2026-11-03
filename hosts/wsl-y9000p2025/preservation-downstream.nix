@@ -3,7 +3,11 @@
 # The sibling `preservation.nix` keeps the base list; these additions live here
 # so base-list changes never conflict with them. Both modules set the same list
 # options and the module system concatenates them.
-{ config, myvars, ... }:
+{
+  config,
+  myvars,
+  ...
+}:
 let
   inherit (myvars) username;
 in
@@ -28,26 +32,32 @@ in
       "/etc/daed/"
 
       # cliproxyapi (generated config.yaml, management key and auth/provider files)
+      #
+      # Declare the owner explicitly. preservation turns each entry into a
+      # tmpfiles `d` rule, and the default owner is root:root. That rule also
+      # runs from systemd-tmpfiles-resetup during a rebuild, while the service
+      # is already running, so an undeclared owner revokes its access to the
+      # state directory.
       {
         directory = "/var/lib/cliproxyapi";
-        # user = "cliproxyapi";
-        # group = "cliproxyapi";
+        user = "cliproxyapi";
+        group = "cliproxyapi";
         mode = "0700";
       }
 
       # new-api (database)
       {
         directory = "/var/lib/new-api";
-        # user = "new-api";
-        # group = "new-api";
+        user = "new-api";
+        group = "new-api";
         mode = "0700";
       }
 
       # m365-copilot2api (accounts, tokens, sessions, API keys, settings)
       {
         directory = "/var/lib/m365-copilot2api";
-        # user = "m365-copilot2api";
-        # group = "m365-copilot2api";
+        user = "m365-copilot2api";
+        group = "m365-copilot2api";
         mode = "0700";
       }
 
@@ -92,23 +102,27 @@ in
       # for pve-nixos
       "/var/lib/pve-cluster"
 
+      # gnome-remote-desktop runs as a system service under its own account
+      # (User=gnome-remote-desktop). Its package ships the matching tmpfiles
+      # rules: /var/lib 0700, /etc 0755, both gnome-remote-desktop:gnome-remote-desktop.
       {
         directory = "/var/lib/gnome-remote-desktop";
-        # user = "gnome-remote-desktop";
-        # group = "gnome-remote-desktop";
-        mode = "0755";
+        user = "gnome-remote-desktop";
+        group = "gnome-remote-desktop";
+        mode = "0700";
       }
       {
         directory = "/etc/gnome-remote-desktop";
-        # user = "gnome-remote-desktop";
-        # group = "gnome-remote-desktop";
+        user = "gnome-remote-desktop";
+        group = "gnome-remote-desktop";
         mode = "0755";
       }
 
       # shared sunshine identity data (see hosts/idols-ai/sunshine.nix)
       {
         directory = "/var/lib/sunshine";
-        # group = "sunshine";
+        user = "root";
+        group = "sunshine";
         mode = "2770";
       }
     ];
@@ -147,6 +161,7 @@ in
         ".local/share/wine/drive_c/users/${username}"
         ".local/share/tiled"
         ".local/share/qq-bridge"
+        ".local/share/acb"
 
         # ======================================
         # Instant Messaging
@@ -327,4 +342,31 @@ in
       ++ config.modules.multi-instance.preserveDirectories;
     };
   };
+
+  # Converge ownership recursively for the service state directories.
+  #
+  # The preservation `d` rules above only manage the top-level directory. Files
+  # created under an older numeric uid/gid keep their stale owner, and systemd
+  # skips StateDirectory's recursive ownership fix when the top-level directory
+  # already matches User=/Group=. `Z` runs before the services start and on
+  # every systemd-tmpfiles-resetup, so a UID/GID reallocation or a restored
+  # /persistent never leaves an unreadable database behind. The mode field is
+  # left unset so existing file modes, including the SQLite database's 0600,
+  # are preserved.
+  #
+  # The rules are unconditional so every host generates the same Z set and the
+  # file stays byte-identical across the three hosts. `Z` on a missing path is
+  # a no-op, and all referenced accounts exist on every host through the
+  # shared service-id table.
+  systemd.tmpfiles.rules = [
+    "Z /var/lib/cliproxyapi - cliproxyapi cliproxyapi - -"
+    "Z /var/lib/m365-copilot2api - m365-copilot2api m365-copilot2api - -"
+    "Z /var/lib/new-api - new-api new-api - -"
+    # Sunshine state is shared by the login and greeter instances. Only the
+    # group has to be converged; owner and modes stay as each instance wrote
+    # them.
+    "Z /var/lib/sunshine - - sunshine - -"
+    "Z /var/lib/gnome-remote-desktop - gnome-remote-desktop gnome-remote-desktop - -"
+    "Z /etc/gnome-remote-desktop - gnome-remote-desktop gnome-remote-desktop - -"
+  ];
 }
