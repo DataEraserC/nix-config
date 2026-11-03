@@ -83,6 +83,7 @@ in
       # port = 23389; # 目前不知道为什么不起效
       # "negotiate-port" = true; # 目前不知道为什么不起效
       enable = true;
+      view-only = false;
     };
 
     # settings."org/gnome/desktop/remote-desktop/rdp/headless" = {
