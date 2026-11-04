@@ -282,7 +282,21 @@
     var loopback = service.bind === "127.0.0.1" || service.bind === "::1"
     var modes = []
 
-    if (served && localEnv) {
+    if (service.forwardPort && hostKey !== DATA.servedHost) {
+      // The page host forwards this remote endpoint to a local port. On the
+      // page host that port is the reachable localhost entry; from any other
+      // machine the forward does not exist.
+      var forwardUrl = serviceUrl(protocol, "localhost", service.forwardPort, path)
+      if (localEnv) {
+        modes.push(
+          available(t("mode.forwarded"), forwardUrl, {
+            hint: t("mode.forwardedHint", { host: DATA.servedHost }),
+          })
+        )
+      } else {
+        modes.push(unavailable(t("mode.forwarded"), t("reason.localOnly")))
+      }
+    } else if (served && localEnv) {
       modes.push(available(t("mode.localhost"), localUrl))
     } else if (served) {
       modes.push(conditional(t("mode.localhost"), localUrl, t("reason.localOnly")))

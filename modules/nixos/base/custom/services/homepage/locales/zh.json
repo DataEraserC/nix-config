@@ -22,6 +22,8 @@
   "empty.noServices": "本机没有已启用且登记到总览的服务。",
   "empty.noResults": "没有服务匹配当前筛选条件。",
   "mode.localhost": "本机 localhost",
+  "mode.forwarded": "本机转发",
+  "mode.forwardedHint": "经 {host} 端口转发",
   "mode.tailscale": "Tailscale",
   "mode.overlay": "{network} 覆盖网络",
   "mode.overlayGeneric": "覆盖网络",

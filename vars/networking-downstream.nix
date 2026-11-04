@@ -756,6 +756,8 @@ rec {
   # ports from `services`, so moving a gateway port stays a one-line edit in
   # the registry; local ports are `work`'s own addressing (3xxxx = forwarded
   # from the laptop, 4xxxx = from infiniti) and belong to this table.
+  # The homepage module on the forwarding host also reads this table to render
+  # local forward links (`forwardPort`); remote ports still come from `services`.
   # ==========================================================================
   tunnels.work =
     let

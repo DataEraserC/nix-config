@@ -42,6 +42,51 @@ let
   # Only services opted into the page; the catalog block is the opt-in marker.
   catalogServices = lib.filterAttrs (_: service: service ? catalog) network.services;
 
+  # Local port forwards applied on the machine this page is generated for.
+  # The table is keyed by the same device key as `homepage.hosts.*.device`
+  # (`tunnels.work` -> device "work" -> host wsl-work), so no host name is
+  # hardcoded here. A tunnel's target host and service are derived below from
+  # its remote overlay address and remote port; the tunnel table remains the
+  # single source for the forwarding rules.
+  pageDevice = hostMeta.device or null;
+  pageTunnels =
+    if pageDevice == null then [ ] else lib.attrByPath [ pageDevice ] [ ] (network.tunnels or { });
+
+  overlayIpsOf =
+    hostKey:
+    let
+      meta = network.homepage.hosts.${hostKey};
+      device = meta.device or null;
+    in
+    if device == null then
+      [ ]
+    else
+      lib.mapAttrsToList (_: addr: addr.ip) network.devices.${device}.addrs;
+
+  # Attach a target host key to every tunnel by matching remoteHost against the
+  # target host's registered overlay addresses. Tunnels to devices outside the
+  # page host set (e.g. infiniti) are ignored.
+  tunnelTargets = lib.filter (tunnel: tunnel.targetHost != null) (
+    map (
+      tunnel:
+      tunnel
+      // {
+        targetHost = lib.findFirst (hostKey: lib.elem tunnel.remoteHost (overlayIpsOf hostKey)) null (
+          lib.attrNames network.homepage.hosts
+        );
+      }
+    ) pageTunnels
+  );
+
+  forwardPortOf =
+    hostKey: port:
+    let
+      tunnel = lib.findFirst (
+        tunnel: tunnel.targetHost == hostKey && tunnel.remotePort == port
+      ) null tunnelTargets;
+    in
+    if tunnel == null then null else tunnel.localPort;
+
   # Resolve the listed endpoint from the host row. `portKey` is a dotted path so
   # a service can point at a secondary listener (adminPort, ports.console, ...).
   portOf =
@@ -75,17 +120,20 @@ let
         else
           let
             catalog = service.catalog;
+            port = portOf name hostKey row;
           in
           [
             {
-              inherit name;
+              inherit name port;
               label = catalog.label or name;
               protocol = catalog.protocol or "http";
-              port = portOf name hostKey row;
               path = catalog.path or "/";
               tags = catalog.tags or [ ];
               note = catalog.note or null;
               bind = lib.attrByPath (lib.splitString "." (catalog.bindKey or "host")) null row;
+              # Local port on the page host that forwards to this remote
+              # endpoint; null when no matching tunnel is declared.
+              forwardPort = forwardPortOf hostKey port;
             }
           ]
       ) (lib.attrNames catalogServices)

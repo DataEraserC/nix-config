@@ -22,6 +22,8 @@
   "empty.noServices": "No enabled service with a catalog entry on this host.",
   "empty.noResults": "No service matches the current filter.",
   "mode.localhost": "localhost",
+  "mode.forwarded": "Local forward",
+  "mode.forwardedHint": "via {host} port forwarding",
   "mode.tailscale": "Tailscale",
   "mode.overlay": "{network} overlay",
   "mode.overlayGeneric": "Overlay",
