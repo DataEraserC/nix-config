@@ -86,3 +86,13 @@ next merge. Push work outward, in this order, before writing it down here.
    which directories it creates) before enabling it, and comment the switch out afterwards when it
    is not needed yet. A commented switch documents a verified capability; an enabled one is a
    standing build and maintenance cost.
+
+## Agent-shell ownership measurements
+
+The agent shell runs in a private user namespace whose `/proc/self/uid_map` maps only the
+interactive uid/gid (`1000 1000 1` / `100 100 1` here). `stat`, `ls`, and similar tools therefore
+display every foreign uid/gid as `65534` (`nobody:nogroup`); this is a namespace measurement
+artifact, not a file ownership problem. Never judge ownership under `/var/lib`, `/etc`, or another
+root-managed path from the agent shell. Use `sudo stat`/`sudo ls` (real root view) or state
+explicitly that the result is a namespace view and do not draw ownership conclusions from it.
+Tmpfiles/preservation reports are not actionable without the real-root view.
