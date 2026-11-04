@@ -10,8 +10,8 @@
 # ACB（AgentChatBridge）：dsh-acb、桥、dsh 驱动、opencode serve。
 #
 # 模块开关、端口和会话列表都来自 vars/networking 的 services.acb 注册表；
-# 四个单元是 systemd --user、默认不自启：`acb-up` 按组件拉起，`acb-down`
-# 按组件停止，`acb-status` 看状态，`acb-logs` 跟日志。
+# 四个单元是 systemd --user、默认不自启：`acb up` 按组件拉起，`acb down`
+# 按组件停止，`acb status` 看状态，`acb logs` 跟日志。
 #
 # 数据在 ~/.local/share/acb；源码通过 modules.outOfStoreSymlink 的
 # agentChatBridge 根做可写软链（没配置就退回 flake store）。
@@ -71,7 +71,7 @@ let
   };
 
   acbUp = pkgs.writeShellApplication {
-    name = "acb-up";
+    name = "acb-up-internal";
     runtimeInputs = [
       pkgs.systemd
       pkgs.coreutils
@@ -88,17 +88,18 @@ let
       DSH_PORT = cfg.dshPort;
       ENDPOINT_PORT = cfg.endpointPort;
       OPENCODE_PORT = cfg.opencodePort;
+      STATUS = "${acbStatus}/bin/acb-status-internal";
     };
   };
 
   acbDown = pkgs.writeShellApplication {
-    name = "acb-down";
+    name = "acb-down-internal";
     runtimeInputs = [ pkgs.systemd ];
     text = builtins.readFile ./down.sh;
   };
 
   acbStatus = pkgs.writeShellApplication {
-    name = "acb-status";
+    name = "acb-status-internal";
     runtimeInputs = [
       pkgs.systemd
       pkgs.coreutils
@@ -126,9 +127,20 @@ let
   };
 
   acbLogs = pkgs.writeShellApplication {
-    name = "acb-logs";
+    name = "acb-logs-internal";
     runtimeInputs = [ pkgs.coreutils ];
     text = render ./logs.sh { LOG_DIR = logDir; };
+  };
+
+  acbCli = pkgs.writeShellApplication {
+    name = "acb";
+    runtimeInputs = [ pkgs.coreutils ];
+    text = render ./acb.sh {
+      UP = "${acbUp}/bin/acb-up-internal";
+      DOWN = "${acbDown}/bin/acb-down-internal";
+      STATUS = "${acbStatus}/bin/acb-status-internal";
+      LOGS = "${acbLogs}/bin/acb-logs-internal";
+    };
   };
 in
 {
@@ -230,10 +242,7 @@ in
   config = lib.mkIf cfg.enable {
     environment.systemPackages = [
       acbPkg
-      acbUp
-      acbDown
-      acbStatus
-      acbLogs
+      acbCli
     ];
 
     systemd.user.services = {
