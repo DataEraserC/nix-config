@@ -27,9 +27,7 @@ test:
 [linux]
 [group('nix')]
 test-vm:
-  #!/usr/bin/env nu
-  use {{utils_nu}} *;
-  nix-build-limited .#checks.x86_64-linux.security-exporters
+  nix build --no-link --print-build-logs .#checks.x86_64-linux.security-exporters
 
 # Evaluate a NixOS host configuration without building it.
 [group('nix')]
@@ -37,30 +35,14 @@ eval-host host:
   nix eval $".#nixosConfigurations.{{host}}.config.system.build.toplevel.drvPath" --raw --show-trace
 
 # Build a NixOS host system closure without changing the current system.
-[linux]
 [group('nix')]
 build-host host:
-  #!/usr/bin/env nu
-  use {{utils_nu}} *;
-  nix-build-limited $".#nixosConfigurations.{{host}}.config.system.build.toplevel"
+  nix build $".#nixosConfigurations.{{host}}.config.system.build.toplevel" --no-link --print-build-logs
 
 # Build a MicroVM runner locally. microvm-deploy copies the closure to the physical host.
-[linux]
 [group('nix')]
 build-microvm guest:
-  #!/usr/bin/env nu
-  use {{utils_nu}} *;
-  nix-build-limited $".#nixosConfigurations.{{guest}}.config.microvm.declaredRunner"
-
-# Run `nix build` inside a user systemd scope with the client-side memory
-# limits from vars/nix-build-guard.nix. Pass derivation targets only;
-# `--no-link --print-build-logs` are added by the wrapper.
-[linux]
-[group('nix')]
-build-limited *args:
-  #!/usr/bin/env nu
-  use {{utils_nu}} *;
-  nix-build-limited {{args}}
+  nix build $".#nixosConfigurations.{{guest}}.config.microvm.declaredRunner" --no-link --print-build-logs
 
 # Update all the flake inputs
 [group('nix')]

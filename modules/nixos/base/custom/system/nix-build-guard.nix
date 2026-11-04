@@ -1,10 +1,10 @@
 {
   config,
   lib,
-  myvars,
   ...
 }:
 let
+  guard = import ../../../../../vars/nix-build-guard.nix;
   cfg = config.modules.nix-build-guard;
 in
 {
@@ -13,25 +13,25 @@ in
 
     daemonMemoryHigh = lib.mkOption {
       type = lib.types.str;
-      default = myvars.nixBuildGuard.daemonMemoryHigh;
+      default = guard.daemonMemoryHigh;
       description = "systemd MemoryHigh for nix-daemon.service (throttle before the hard cap).";
     };
 
     daemonMemoryMax = lib.mkOption {
       type = lib.types.str;
-      default = myvars.nixBuildGuard.daemonMemoryMax;
+      default = guard.daemonMemoryMax;
       description = "systemd MemoryMax for nix-daemon.service; the hard limit for all builders.";
     };
 
     maxJobs = lib.mkOption {
       type = lib.types.int;
-      default = myvars.nixBuildGuard.maxJobs;
+      default = guard.maxJobs;
       description = "nix.settings.max-jobs; conservative default to keep concurrent builders inside the memory budget.";
     };
 
     cores = lib.mkOption {
       type = lib.types.int;
-      default = myvars.nixBuildGuard.cores;
+      default = guard.cores;
       description = "nix.settings.cores; limits CPU parallelism per builder instead of using all cores.";
     };
   };

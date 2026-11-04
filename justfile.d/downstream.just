@@ -36,6 +36,22 @@ droid mode="default":
 
 ############################################################################
 #
+#  Nix build memory guard
+#
+############################################################################
+
+# Build a derivation in a user systemd scope with the client-side memory
+# limits from vars/nix-build-guard.nix. Pass derivation targets only;
+# `--no-link --print-build-logs` are added by the wrapper.
+[linux]
+[group('nix')]
+build-limited *args:
+  #!/usr/bin/env nu
+  use {{utils_nu}} *;
+  nix-build-limited {{args}}
+
+############################################################################
+#
 #  NixOS Desktop related commands (downstream variants)
 #
 ############################################################################
