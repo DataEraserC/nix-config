@@ -40,16 +40,10 @@
   # "keyring password").
   security.pam.services.passwd.enableGnomeKeyring = true;
 
-  # gpg agent with pinentry.
-  # `pinentry-dispatch` (overlays/pinentry-dispatch.nix) picks the flavour per
-  # caller: a terminal client (pass, gpg, git signing) gets the curses prompt in
-  # that terminal, a GUI client (a browser's pass extension) gets the Qt dialog.
-  # Pointing `pinentryPackage` at a single flavour cannot do both.
-  # A running agent keeps the old flavour until `gpgconf --reload gpg-agent`
-  # (or the next login) picks up the rewritten gpg-agent.conf.
+  # gpg agent with pinentry
   programs.gnupg.agent = {
     enable = true;
-    pinentryPackage = pkgs.pinentry-dispatch;
+    pinentryPackage = pkgs.pinentry-qt;
     enableSSHSupport = false;
     settings.default-cache-ttl = 4 * 60 * 60; # 4 hours
   };
