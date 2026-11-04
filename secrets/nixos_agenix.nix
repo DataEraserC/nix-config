@@ -190,6 +190,14 @@ in
           owner = myvars.username;
           group = myvars.username;
         };
+        # ACB 带外通知（ntfy）的 topic，仅运行用户可读；由
+        # modules.acb.notifications.topicSecret 挂进 acb-bridge 的 EnvironmentFile。
+        "ntfy-acb-topic.env" = {
+          file = "${mysecrets}/ntfy-acb-topic.env.age";
+          mode = "0400";
+          owner = myvars.username;
+          group = myvars.username;
+        };
         "alist-jwt" = {
           file = "${mysecrets}/alist-jwt.age";
         }
