@@ -81,6 +81,7 @@ let
       LOGS = logDir;
       HARNESSES = harnessesSource;
       LUA = luaSource;
+      DSH_HOST = if cfg.host == "0.0.0.0" || cfg.host == "::" then "127.0.0.1" else cfg.host;
       DSH_PORT = cfg.dshPort;
       ENDPOINT_PORT = cfg.endpointPort;
       OPENCODE_PORT = cfg.opencodePort;
@@ -241,6 +242,7 @@ in
           ''}";
           Restart = "always";
           RestartSec = 5;
+          TimeoutStopSec = "15s";
           StandardOutput = "append:${logDir}/dsh.log";
           StandardError = "append:${logDir}/dsh.log";
         };

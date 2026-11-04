@@ -35,19 +35,32 @@ for target in "${targets[@]}"; do
   esac
 done
 
-wait_port() {
-  local port=$1 label=$2 n=0
-  while (( n < 40 )); do
+wait_http() {
+  local url=$1 label=$2 code="" deadline=$((SECONDS + 30))
+  while (( SECONDS < deadline )); do
+    code=$(curl -sS -o /dev/null --max-time 2 -w '%{http_code}' "$url" 2>/dev/null || true)
+    case "$code" in
+      200|401) echo "    $label 已就绪（$url HTTP $code）"; return 0 ;;
+    esac
+    sleep 0.5
+  done
+  echo "    ⚠ $label 30 秒内没有就绪：$url 最后 HTTP ${code:-无响应}" >&2
+  return 1
+}
+
+wait_tcp() {
+  local port=$1 label=$2 deadline=$((SECONDS + 30))
+  while (( SECONDS < deadline )); do
     ss -tln 2>/dev/null | grep -q ":$port " && { echo "    $label 已就绪（$port）"; return 0; }
-    sleep 0.5; (( n++ ))
+    sleep 0.5
   done
   echo "    ⚠ $label 30 秒内没在 $port 上监听" >&2
   return 1
 }
 
-if [[ $wait_dsh == yes ]]; then wait_port "@DSH_PORT@" "dsh" || true; fi
-if [[ $wait_bridge == yes ]]; then wait_port "@ENDPOINT_PORT@" "桥" || true; fi
-if [[ $wait_opencode == yes ]]; then wait_port "@OPENCODE_PORT@" "opencode" || true; fi
+if [[ $wait_dsh == yes ]]; then wait_http "http://@DSH_HOST@:@DSH_PORT@/" "dsh" || true; fi
+if [[ $wait_bridge == yes ]]; then wait_tcp "@ENDPOINT_PORT@" "桥" || true; fi
+if [[ $wait_opencode == yes ]]; then wait_tcp "@OPENCODE_PORT@" "opencode" || true; fi
 
 echo
 exec acb-status
