@@ -18,14 +18,17 @@
 let
   cfg = config.modules.acb;
 
-  home = "/home/${myvars.username}";
+  home = config.users.users.${myvars.username}.home;
   dataDir = cfg.dataDir;
   configFile = "${dataDir}/config/config.toml";
-  logDir = "${home}/.local/state/acb";
+  logDir = cfg.logDir;
+  userProfileBin = "/etc/profiles/per-user/${myvars.username}/bin";
+  basePath = "/run/current-system/sw/bin:${userProfileBin}:/run/wrappers/bin";
 
   acbSrc = acb.outPath;
   acbPkg = acb.packages.${pkgs.system}.acb-bridge;
   opencode2 = "${llm-agents.packages.${pkgs.system}.opencode2}/bin/opencode2";
+  dshBin = lib.getExe config.programs.dsh.package;
 
   driver = "${acbSrc}/harnesses/dsh/src/driver.mjs";
   sourceRoot = config.modules.outOfStoreSymlink.paths.agentChatBridge or null;
@@ -180,6 +183,12 @@ in
       description = "ACB 的配置、状态库、agent workspace 和 opencode 状态目录。";
     };
 
+    logDir = lib.mkOption {
+      type = lib.types.str;
+      default = "${home}/.local/state/acb";
+      description = "ACB 的日志目录。";
+    };
+
     workspaceDir = lib.mkOption {
       type = lib.types.str;
       default = "${dataDir}/agents";
@@ -232,13 +241,13 @@ in
           Type = "simple";
           WorkingDirectory = home;
           Environment = [
-            "PATH=/run/current-system/sw/bin:/etc/profiles/per-user/nixos/bin:/run/wrappers/bin"
+            "PATH=${basePath}"
           ];
           EnvironmentFile = lib.optional (cfg.secretsFile != null) "-${cfg.secretsFile}";
           ExecStart = "${pkgs.writeShellScript "acb-dsh-exec" ''
             set -e
             mkdir -p ${lib.escapeShellArg logDir}
-            exec dsh --profile ${lib.escapeShellArg cfg.profile} --host ${lib.escapeShellArg cfg.host} --no-open --port ${toString cfg.dshPort}
+            exec ${dshBin} --profile ${lib.escapeShellArg cfg.profile} --host ${lib.escapeShellArg cfg.host} --no-open --port ${toString cfg.dshPort}
           ''}";
           Restart = "always";
           RestartSec = 5;
@@ -257,7 +266,7 @@ in
           Type = "simple";
           WorkingDirectory = dataDir;
           Environment = [
-            "PATH=/run/current-system/sw/bin:/etc/profiles/per-user/nixos/bin:/run/wrappers/bin"
+            "PATH=${basePath}"
             "ACB_ENDPOINT_LISTEN=${cfg.host}:${toString cfg.endpointPort}"
             "ACB_CONSOLE_LISTEN=${cfg.exposeHost}:${toString cfg.consolePort}"
             "ACB_RELAY_LISTEN=0.0.0.0:${toString cfg.relayPort}"
@@ -303,7 +312,7 @@ in
         serviceConfig = {
           Type = "simple";
           Environment = [
-            "PATH=/run/current-system/sw/bin:/etc/profiles/per-user/nixos/bin:/run/wrappers/bin"
+            "PATH=${basePath}"
             "ACB_OPENCODE_DIR=${dataDir}/opencode"
             "ACB_OPENCODE_PORT=${toString cfg.opencodePort}"
             "ACB_OPENCODE_HOST=${cfg.exposeHost}"
