@@ -40,9 +40,9 @@
   # "keyring password").
   security.pam.services.passwd.enableGnomeKeyring = true;
 
-  # gpg agent with pinentry.  SSH callers export GPG_TTY (see the Linux
-  # shell module) and get the curses prompt in that terminal; everyone else
-  # keeps the previous Qt dialog.
+  # gpg agent with pinentry.  SSH callers pass their tty through GnuPG's
+  # PINENTRY_USER_DATA channel (see the Linux shell module); everyone else
+  # keeps the previous Qt dialog.  GPG_TTY stays as a fallback.
   programs.gnupg.agent = {
     enable = true;
     pinentryPackage = pkgs.writeShellApplication {
@@ -52,6 +52,16 @@
         pkgs.pinentry-qt
       ];
       text = ''
+        user_data="''${PINENTRY_USER_DATA:-}"
+        case "$user_data" in
+          ssh:*)
+            tty="''${user_data#ssh:}"
+            if [ -n "$tty" ] && [ -c "$tty" ]; then
+              exec ${pkgs.pinentry-curses}/bin/pinentry --ttyname="$tty" "$@"
+            fi
+            ;;
+        esac
+
         gpg_tty="''${GPG_TTY:-}"
         if [ -n "$gpg_tty" ] && [ -c "$gpg_tty" ]; then
           exec ${pkgs.pinentry-curses}/bin/pinentry "$@"

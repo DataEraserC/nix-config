@@ -39,8 +39,10 @@ rec {
         _gpg_tty=$(tty 2>/dev/null) || _gpg_tty=
         if [ -c "''${_gpg_tty:-}" ]; then
           export GPG_TTY="$_gpg_tty"
+          export PINENTRY_USER_DATA="ssh:$_gpg_tty"
         else
           unset GPG_TTY
+          unset PINENTRY_USER_DATA
         fi
         unset _gpg_tty
       fi
