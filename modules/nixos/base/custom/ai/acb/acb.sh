@@ -8,6 +8,7 @@ commands:
   down    stop the ACB bridge and drivers
   status  show dependency and unit readiness
   logs    follow ACB logs
+  stack   one-shot: dsh -> bridge -> drivers
 EOF
 }
 
@@ -27,6 +28,10 @@ case "${1:-}" in
   logs)
     shift
     exec "@LOGS@" "$@"
+    ;;
+  stack)
+    shift
+    exec "@STACK@" "$@"
     ;;
   "" | -h | --help)
     usage

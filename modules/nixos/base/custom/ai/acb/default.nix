@@ -10,8 +10,9 @@
 # ACB（AgentChatBridge）：dsh-acb、桥、dsh 驱动、opencode serve。
 #
 # 模块开关、端口和会话列表都来自 vars/networking 的 services.acb 注册表；
-# 四个单元是 systemd --user、默认不自启：`acb up` 按组件拉起，`acb down`
-# 按组件停止，`acb status` 看状态，`acb logs` 跟日志。
+# 四个单元是 systemd --user、默认不自启：`acb up` 只起桥，`acb down`
+# 停桥与 drivers；`acb status` 看状态，`acb logs` 跟日志；`acb stack`
+# 是用户显式使用的一次性便捷流程（dsh → 桥 → drivers）。
 #
 # 数据在 ~/.local/share/acb；源码通过 modules.outOfStoreSymlink 的
 # agentChatBridge 根做可写软链（没配置就退回 flake store）。
@@ -132,6 +133,23 @@ let
     text = render ./logs.sh { LOG_DIR = logDir; };
   };
 
+  acbStack = pkgs.writeShellApplication {
+    name = "acb-stack-internal";
+    runtimeInputs = [
+      pkgs.systemd
+      pkgs.coreutils
+      pkgs.iproute2
+      pkgs.curl
+      pkgs.gnugrep
+    ];
+    text = render ./stack.sh {
+      DSH_HOST = if cfg.host == "0.0.0.0" || cfg.host == "::" then "127.0.0.1" else cfg.host;
+      DSH_PORT = cfg.dshPort;
+      ENDPOINT_PORT = cfg.endpointPort;
+      STATUS = "${acbStatus}/bin/acb-status-internal";
+    };
+  };
+
   acbCli = pkgs.writeShellApplication {
     name = "acb";
     runtimeInputs = [ pkgs.coreutils ];
@@ -140,12 +158,21 @@ let
       DOWN = "${acbDown}/bin/acb-down-internal";
       STATUS = "${acbStatus}/bin/acb-status-internal";
       LOGS = "${acbLogs}/bin/acb-logs-internal";
+      STACK = "${acbStack}/bin/acb-stack-internal";
     };
+  };
+
+  acbl = pkgs.writeShellApplication {
+    name = "acbl";
+    text = ''
+      # If a future package provides `acb`, rename the dispatcher to `acbctl`; keep `acbl`.
+      exec ${acbCli}/bin/acb stack "$@"
+    '';
   };
 in
 {
   options.modules.acb = {
-    enable = lib.mkEnableOption "ACB 全链路（dsh-acb + 桥 + 驱动 + opencode）";
+    enable = lib.mkEnableOption "ACB（桥 + 驱动；dsh/opencode 由用户管理）";
 
     host = lib.mkOption {
       type = lib.types.str;
@@ -185,7 +212,7 @@ in
 
     snowlumaPort = lib.mkOption {
       type = lib.types.port;
-      description = "snowluma 的 OneBot WS 端口；acb-status 用它判断容器在不在。";
+      description = "snowluma 的 OneBot WS 端口；acb status 用它判断容器在不在。";
     };
 
     profile = lib.mkOption {
@@ -243,6 +270,7 @@ in
     environment.systemPackages = [
       acbPkg
       acbCli
+      acbl
     ];
 
     systemd.user.services = {
@@ -301,10 +329,10 @@ in
           Description = "ACB dsh drivers";
           After = [
             "network.target"
-            "dsh-acb.service"
             "acb-bridge.service"
           ];
           Requires = [ "acb-bridge.service" ];
+          PartOf = [ "acb-bridge.service" ];
         };
         serviceConfig = {
           Type = "simple";
