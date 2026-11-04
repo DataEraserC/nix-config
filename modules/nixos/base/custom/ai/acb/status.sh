@@ -8,8 +8,11 @@ fi
 unit_active() { systemctl --user is-active "$1.service" 2>/dev/null || true; }
 unit_loaded() { systemctl --user show "$1.service" -p LoadState --value 2>/dev/null || true; }
 http_code() { curl -sS -o /dev/null --max-time 2 -w '%{http_code}' "$1" 2>/dev/null || true; }
-http_code_auth() {
-  curl -sS -o /dev/null --max-time 2 -H "Authorization: Bearer $2" -w '%{http_code}' "$1" 2>/dev/null || true
+http_probe_auth() {
+  local url=$1 token=$2 body
+  body=$(curl -sS -o /dev/null --max-time 2 -H "Authorization: Bearer $token" -w '%{http_code}' "$url" 2>/dev/null)
+  probe_rc=$?
+  probe_code=${body:-000}
 }
 tcp_open() { ss -tln 2>/dev/null | grep -q ":$1 "; }
 
@@ -55,23 +58,81 @@ else
 fi
 
 # bridge: requires its console token; /api/status is the local self-report.
-token=$(awk '
+config_token=$(awk '
   /^\[console\]/ { f = 1; next }
   /^\[/          { f = 0 }
   f && /^token = / { gsub(/^token = "|"[[:space:]]*$/, "", $0); print; exit }
 ' "@CONFIG@" 2>/dev/null || true)
+
+token=""
+case "$config_token" in
+  '${'*'}')
+    inner=${config_token#\$\{}
+    inner=${inner%\}}
+    name=${inner%%:-*}
+    fallback=""
+    if [[ $inner == *:-* ]]; then
+      fallback=${inner#*:-}
+    fi
+    if [[ $name =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+      token=${!name:-$fallback}
+    fi
+    ;;
+  *)
+    token=$config_token
+    ;;
+esac
+
+if [[ -z $token ]]; then
+  env_files=$(systemctl --user show acb-bridge -p EnvironmentFiles --value 2>/dev/null | grep -o '/run/agenix/[^ ]*' || true)
+  case " $env_files " in
+    *" /run/agenix/acb.env "*) ;;
+    *) env_files="$env_files /run/agenix/acb.env" ;;
+  esac
+  read -r -a env_files_arr <<< "$env_files"
+  for env_file in "${env_files_arr[@]}"; do
+    [[ -r $env_file ]] || continue
+    token=$(awk -F= '$1=="ACB_CONSOLE_TOKEN"{sub(/^[^=]*=/,""); print; exit}' "$env_file" 2>/dev/null || true)
+    token=${token%$'\r'}
+    token=${token#\"}
+    token=${token%\"}
+    token=${token#\'}
+    token=${token%\'}
+    [[ -n $token ]] && break
+  done
+fi
+
+version_mismatch=no
+last_start=$(grep -n 'bridge running; press Ctrl-C to stop' "@LOG_DIR@/bridge.log" 2>/dev/null | tail -n 1 | cut -d: -f1)
+if [[ -n $last_start ]]; then
+  if tail -n +$((last_start + 1)) "@LOG_DIR@/bridge.log" 2>/dev/null | grep -q '协议版本不兼容\|protocol version.*mismatch'; then
+    version_mismatch=yes
+  fi
+elif tail -n 30 "@LOG_DIR@/bridge.log" 2>/dev/null | grep -q '协议版本不兼容\|protocol version.*mismatch'; then
+  version_mismatch=yes
+fi
+
 bridge_active=$(unit_active acb-bridge)
 bridge_loaded=$(unit_loaded acb-bridge)
 bridge_code=""
+bridge_rc=0
 if [[ $bridge_active == active ]]; then
   if [[ -z $token ]]; then
-    report bridge fail not_configured "console token missing in @CONFIG@"
+    report bridge fail not_configured "console token missing in @CONFIG@ and /run/agenix/acb.env"
   else
-    bridge_code=$(http_code_auth "http://@CONSOLE_HOST@:@CONSOLE_PORT@/api/status" "$token")
-    if [[ $bridge_code == 200 ]]; then
+    http_probe_auth "http://@CONSOLE_HOST@:@CONSOLE_PORT@/api/status" "$token"
+    bridge_code=$probe_code
+    bridge_rc=$probe_rc
+    if [[ $bridge_rc -ne 0 || $bridge_code == 000 ]]; then
+      report bridge fail unreachable "unit active but no HTTP response (curl rc=$bridge_rc); see @LOG_DIR@/bridge.log"
+    elif [[ $bridge_code == 401 || $bridge_code == 403 ]]; then
+      report bridge fail auth_fail "HTTP $bridge_code: console token rejected; see @LOG_DIR@/bridge.log"
+    elif [[ $bridge_code == 200 && $version_mismatch == no ]]; then
       report bridge ok ready "http://@CONSOLE_HOST@:@CONSOLE_PORT@/api/status HTTP $bridge_code"
+    elif [[ $version_mismatch == yes ]]; then
+      report bridge fail version_mismatch "HTTP $bridge_code but @LOG_DIR@/bridge.log reports protocol-version mismatch"
     else
-      report bridge fail unreachable "unit active but HTTP ${bridge_code:-000}; see @LOG_DIR@/bridge.log"
+      report bridge fail fail "unit active but HTTP $bridge_code; see @LOG_DIR@/bridge.log"
     fi
   fi
 elif [[ $bridge_loaded == not-found ]]; then
