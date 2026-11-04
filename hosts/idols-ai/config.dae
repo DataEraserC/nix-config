@@ -459,6 +459,17 @@ routing {
 
     ### Gemini
     domain(suffix: gemini.google.com, suffix: bard.google.com, suffix: ai.google.dev) -> gemini
+    # Gemini Code Assist / Antigravity reach their backend through the Cloud
+    # Code API: observed in `journalctl -u dae` as
+    # daily-cloudcode-pa.googleapis.com (Antigravity CLI, pname=agy) and
+    # daily-cloudcode-pa.sandbox.googleapis.com (Gemini CLI, pname=node). Both
+    # used to fall through to `domain(geosite:google) -> proxy`, whose
+    # min_moving_avg picked a Hong Kong node (dae log 2026-11-05 00:36 CST,
+    # dialer="香港cmi6|2x"); Hong Kong is not one of the locations where the
+    # Code Assist individual tier is served. Pin the Cloud Code API family to
+    # the existing gemini group (supported regions only) instead. This rule
+    # sits above domain(geosite:google) below, so that rule no longer sees it.
+    domain(keyword:'cloudcode-pa') -> gemini
 
     # Steam
     # from https://hky.moe/archives/471/
