@@ -65,6 +65,8 @@ config_token=$(awk '
 ' "@CONFIG@" 2>/dev/null || true)
 
 token=""
+# The `${` branch matches a literal placeholder; expanding it would break the check.
+# shellcheck disable=SC2016
 case "$config_token" in
   '${'*'}')
     inner=${config_token#\$\{}
