@@ -29,7 +29,7 @@ let
   acbSrc = acb.outPath;
   acbPkg = acb.packages.${pkgs.system}.acb-bridge;
   opencode2 = "${llm-agents.packages.${pkgs.system}.opencode2}/bin/opencode2";
-  dshBin = lib.getExe config.programs.dsh.package;
+  dshBin = lib.getExe config.modules.dsh.runtimePackage;
 
   driver = "${acbSrc}/harnesses/dsh/src/driver.mjs";
   sourceRoot = config.modules.outOfStoreSymlink.paths.agentChatBridge or null;

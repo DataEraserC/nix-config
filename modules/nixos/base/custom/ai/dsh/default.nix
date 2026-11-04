@@ -292,8 +292,8 @@ let
   # Entry: each surface owns its own launcher bundle, so a profile restates
   # its entry instead of inheriting the other surface's. The plugin packages
   # themselves are hoisted once under `$DSH_HOME/profiles/node_modules`.
-  tuiEntry = [ pkgs.dsh.bundles.tui ];
-  webEntry = [
+  defaultTuiEntry = [ pkgs.dsh.bundles.tui ];
+  defaultWebEntry = [
     pkgs.dsh.bundles.web-app
     pkgs.dsh.bundles.web-ui
   ];
@@ -305,7 +305,7 @@ let
   # of the extras below breaks the composition. modsearch is the essential
   # search replacement and belongs in every profile; without it dsh's search
   # capability is crippled.
-  baseBundles = [
+  defaultBaseBundles = [
     pkgs.dsh.bundles.modsearch
     pkgs.dsh.bundles.remote
   ];
@@ -315,7 +315,7 @@ let
   # configuration, so keep risky additions here — the failsafe profiles
   # omit this list entirely. The unstable QQ stack lives in `qqBundles`
   # below and ships only in the `web-qq*` profiles.
-  extraBundles = [
+  defaultExtraBundles = [
     # Snapshot the profile patch document and replay Settings-UI edits that
     # dsh-sync-profiles reverts on managed profiles: restores happen only
     # while the .nix-managed fingerprint still matches, so a `just local`
@@ -462,7 +462,7 @@ let
   # full combo, used in place of them in the failsafe combos. Group chat
   # drives dsh through opencode2dsh, so the bridge pairs with it and needs
   # nothing beyond the shared entry and base.
-  qqBundles = [
+  defaultQqBundles = [
     opencode2dsh
     (nur-DataEraserC.packages.${pkgs.system}.qq-bridge-dsh.override {
       qqBridgeHome = "/home/${myvars.username}/.local/share/qq-bridge";
@@ -739,6 +739,14 @@ let
     # nur-DataEraserC.packages.${pkgs.system}.dsh-plugin-guard
   ];
 
+  # 可写 bundle 集合的默认值见 modules.dsh.bundleSets；这里保留原引用名，
+  # profile 组合继续从同一组 option 读取，避免出现两份清单。
+  tuiEntry = cfg.bundleSets.tuiEntry;
+  webEntry = cfg.bundleSets.webEntry;
+  baseBundles = cfg.bundleSets.base;
+  extraBundles = cfg.bundleSets.extra;
+  qqBundles = cfg.bundleSets.qq;
+
   tuiBundles = tuiEntry ++ baseBundles ++ extraBundles;
   tuiFailsafeBundles = tuiEntry ++ baseBundles;
   webBundles = webEntry ++ baseBundles ++ extraBundles;
@@ -927,6 +935,65 @@ in
       default = [ ];
       description = "ACB 的 dsh 会话列表；每条生成一个 agent preset（preset 名 + 本地 MCP 端口）。";
     };
+
+    bundleSets = {
+      tuiEntry = lib.mkOption {
+        type = lib.types.listOf lib.types.package;
+        default = defaultTuiEntry;
+        description = "TUI profile 的入口 bundle 列表。";
+      };
+      webEntry = lib.mkOption {
+        type = lib.types.listOf lib.types.package;
+        default = defaultWebEntry;
+        description = "Web profile 的入口 bundle 列表。";
+      };
+      base = lib.mkOption {
+        type = lib.types.listOf lib.types.package;
+        default = defaultBaseBundles;
+        description = "所有 profile 共享的基础 bundle 列表。";
+      };
+      extra = lib.mkOption {
+        type = lib.types.listOf lib.types.package;
+        default = defaultExtraBundles;
+        description = "完整 tui/web profile 的额外 bundle 列表。";
+      };
+      qq = lib.mkOption {
+        type = lib.types.listOf lib.types.package;
+        default = defaultQqBundles;
+        description = "QQ 组合 profile 的 bundle 列表。";
+      };
+    };
+
+    runtimePackage = lib.mkOption {
+      type = lib.types.package;
+      readOnly = true;
+      default = config.programs.dsh.package.override {
+        profiles = config.programs.dsh.profiles;
+        agentPresets = config.programs.dsh.agentPresets;
+        defaultProfile = config.programs.dsh.defaultProfile;
+        desktopProfile =
+          if config.programs.dsh.desktop.enable then config.programs.dsh.desktop.profile else null;
+        homePatch = config.programs.dsh.patch;
+      };
+      description = ''
+        上游 mkDsh 组合出的全量运行时包（服务/ACB 使用）。只读派生值；
+        不得反向作为 profiles.*.bundles 或 patchProfileDeps 的输入。
+      '';
+    };
+
+    profileTemplates = lib.mkOption {
+      type = lib.types.package;
+      readOnly = true;
+      default = config.programs.dsh.package.passthru.profileTemplates;
+      description = "经 patchProfileDeps 注入 dependencies 后的 profile 模板集合。";
+    };
+
+    seedProfiles = lib.mkOption {
+      type = lib.types.package;
+      readOnly = true;
+      default = config.programs.dsh.package.passthru.seedProfiles;
+      description = "指向上述模板集合的 dsh-sync-profiles seeder。";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -1008,11 +1075,11 @@ in
         # Full profiles: entry + shared base + shared extras.
         tui = {
           bundles = tuiBundles;
-          patch = repoPatch "tui";
+          patch = lib.mkDefault (repoPatch "tui");
         };
         web = {
           bundles = webBundles;
-          patch = repoPatch "web";
+          patch = lib.mkDefault (repoPatch "web");
         };
 
         # Same composition as `web` (entry + base + extras, including
@@ -1021,7 +1088,7 @@ in
         #   dsh --profile nix-web-acb
         web-acb = {
           bundles = webAcbBundles;
-          patch = repoPatch "web-acb";
+          patch = lib.mkDefault (repoPatch "web-acb");
         };
 
         # Minimal fallback for the plain surfaces: entry + shared base only.
@@ -1029,11 +1096,11 @@ in
         #   dsh --profile nix-web-failsafe
         tui-failsafe = {
           bundles = tuiFailsafeBundles;
-          patch = repoPatch "tui-failsafe";
+          patch = lib.mkDefault (repoPatch "tui-failsafe");
         };
         web-failsafe = {
           bundles = webFailsafeBundles;
-          patch = repoPatch "web-failsafe";
+          patch = lib.mkDefault (repoPatch "web-failsafe");
         };
 
         # Group-chat combos: full = the whole web stack + the QQ stack, so
@@ -1043,11 +1110,11 @@ in
         #   dsh --profile nix-web-qq-failsafe
         web-qq = {
           bundles = webQQBundles;
-          patch = repoPatch "web-qq";
+          patch = lib.mkDefault (repoPatch "web-qq");
         };
         web-qq-failsafe = {
           bundles = webQQFailsafeBundles;
-          patch = repoPatch "web-qq-failsafe";
+          patch = lib.mkDefault (repoPatch "web-qq-failsafe");
         };
 
         # The same composition as `web`; these are the profiles to launch when
@@ -1056,11 +1123,11 @@ in
         #   dsh --profile nix-web-lan --host 10.126.126.150 --no-open
         web-lan = {
           bundles = webBundles;
-          patch = repoPatch "web-lan";
+          patch = lib.mkDefault (repoPatch "web-lan");
         };
         web-lan-failsafe = {
           bundles = webFailsafeBundles;
-          patch = repoPatch "web-lan-failsafe";
+          patch = lib.mkDefault (repoPatch "web-lan-failsafe");
         };
 
         # The two qq combos on the same seam — deliberate starts, like
@@ -1069,11 +1136,11 @@ in
         #   dsh --profile nix-web-qq-lan-failsafe --host 10.126.126.150 --no-open
         web-qq-lan = {
           bundles = webQQBundles;
-          patch = repoPatch "web-qq-lan";
+          patch = lib.mkDefault (repoPatch "web-qq-lan");
         };
         web-qq-lan-failsafe = {
           bundles = webQQFailsafeBundles;
-          patch = repoPatch "web-qq-lan-failsafe";
+          patch = lib.mkDefault (repoPatch "web-qq-lan-failsafe");
         };
       };
       defaultProfile = config.programs.dsh.profiles.tui.materializedName;
