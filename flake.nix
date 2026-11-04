@@ -533,7 +533,7 @@
     # 改完 fork 仓库要先 push 到 GitHub，再 `nix flake update qq-bridge-fork`
     # 刷新 narHash 后构建/切换。
     qq-bridge-fork = {
-      url = "github:DataEraserC/qq-bridge?ref=master-downstream";
+      url = "github:DataEraserC/AgentChatBridge?ref=master-downstream";
       flake = false;
     };
 

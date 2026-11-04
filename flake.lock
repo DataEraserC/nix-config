@@ -7609,14 +7609,14 @@
         "lastModified": 1792602314,
         "narHash": "sha256-TC0rzPrlzLnCgSfihJDCE28BbJuacULYSl11Y+5toVI=",
         "owner": "DataEraserC",
-        "repo": "qq-bridge",
+        "repo": "AgentChatBridge",
         "rev": "78fca6ae05f28e3e54fd9ec6c9e76c708e49f7c9",
         "type": "github"
       },
       "original": {
         "owner": "DataEraserC",
         "ref": "master-downstream",
-        "repo": "qq-bridge",
+        "repo": "AgentChatBridge",
         "type": "github"
       }
     },
