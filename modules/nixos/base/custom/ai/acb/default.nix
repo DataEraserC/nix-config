@@ -111,9 +111,14 @@ let
       DATA = dataDir;
       LOG_DIR = logDir;
       CONFIG = configFile;
+      DSH_HOST = if cfg.host == "0.0.0.0" || cfg.host == "::" then "127.0.0.1" else cfg.host;
       DSH_PORT = cfg.dshPort;
       ENDPOINT_PORT = cfg.endpointPort;
+      CONSOLE_HOST =
+        if cfg.exposeHost == "0.0.0.0" || cfg.exposeHost == "::" then "127.0.0.1" else cfg.exposeHost;
       CONSOLE_PORT = cfg.consolePort;
+      OPENCODE_HOST =
+        if cfg.exposeHost == "0.0.0.0" || cfg.exposeHost == "::" then "127.0.0.1" else cfg.exposeHost;
       OPENCODE_PORT = cfg.opencodePort;
       RELAY_PORT = cfg.relayPort;
       SNOWLUMA_PORT = cfg.snowlumaPort;

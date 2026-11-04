@@ -62,5 +62,6 @@ if [[ $wait_dsh == yes ]]; then wait_http "http://@DSH_HOST@:@DSH_PORT@/" "dsh" 
 if [[ $wait_bridge == yes ]]; then wait_tcp "@ENDPOINT_PORT@" "桥" || true; fi
 if [[ $wait_opencode == yes ]]; then wait_tcp "@OPENCODE_PORT@" "opencode" || true; fi
 
+acb-status --summary || true
 echo
 exec acb-status
