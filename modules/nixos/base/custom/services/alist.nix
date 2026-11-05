@@ -11,11 +11,11 @@
 #   - wsl_import.nix used to carry an ad-hoc alist stub for the same reason;
 #     it is superseded by this definition.
 #
-# The uid is pinned to the value already live on idols-ai (999): dynamic ids
+# The uid/gid are pinned to 998:997 in hosts/service-user-ids.nix: dynamic ids
 # (400-999) are only persisted per host in /var/lib/nixos/uid-map, which does
 # not survive the wiped /var of an impermanence setup - re-allocating would
-# orphan /var/lib/openlist and the decrypted secret. The gid stays dynamic:
-# access is owner-based (uid), agenix uses mode 0700 owner=alist.
+# orphan /var/lib/openlist and the decrypted secret. Access is owner-based
+# (uid); agenix uses mode 0700 owner=alist.
 {
   config,
   lib,

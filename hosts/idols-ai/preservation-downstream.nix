@@ -26,8 +26,18 @@ in
       # zerotier
       "/var/lib/zerotier-one"
 
-      # alist
-      "/var/lib/openlist"
+      # alist (openlist)
+      #
+      # The service writes /var/lib/openlist/data as alist. Declare the owner
+      # explicitly and converge it recursively below; otherwise a UID change
+      # leaves data/ owned by the old numeric id and the pre-start's
+      # `cp config.json` fails with EACCES before the service can start.
+      {
+        directory = "/var/lib/openlist";
+        user = "alist";
+        group = "alist";
+        mode = "0755";
+      }
       # daed
       "/etc/daed/"
 
@@ -370,6 +380,7 @@ in
   # shared service-id table.
   systemd.tmpfiles.rules = [
     "Z /var/lib/cliproxyapi - cliproxyapi cliproxyapi - -"
+    "Z /var/lib/openlist - alist alist - -"
     "Z /var/lib/m365-copilot2api - m365-copilot2api m365-copilot2api - -"
     "Z /var/lib/new-api - new-api new-api - -"
     # Sunshine state is shared by the login and greeter instances. Only the
