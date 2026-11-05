@@ -108,6 +108,13 @@ in
         "<Super>q"
         "<Alt>F4"
       ];
+
+      # Alt+Tab 切换扁平窗口列表（switch-windows），Super+Tab 切换应用（switch-applications）。
+      # schema 默认把 Alt+Tab 也写在 switch-applications 里，必须显式覆盖才能去掉。
+      switch-windows = [ "<Alt>Tab" ];
+      switch-windows-backward = [ "<Shift><Alt>Tab" ];
+      switch-applications = [ "<Super>Tab" ];
+      switch-applications-backward = [ "<Shift><Super>Tab" ];
     };
 
     settings."org/gnome/settings-daemon/plugins/media-keys".custom-keybindings = [
