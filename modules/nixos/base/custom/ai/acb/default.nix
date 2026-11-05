@@ -215,6 +215,12 @@ in
   options.modules.acb = {
     enable = lib.mkEnableOption "ACB（桥 + 驱动；dsh 由用户管理）";
 
+    autoStart = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "登录时自动启动 acb-stack.target；false 时仍可手动 systemctl --user start。";
+    };
+
     host = lib.mkOption {
       type = lib.types.str;
       description = "dsh / 桥接入点的监听地址（来自 services.acb 注册表）。";
@@ -331,6 +337,7 @@ in
         unitConfig = {
           Description = "ACB dsh (${cfg.profile})";
           After = [ "network.target" ];
+          PartOf = [ "acb-stack.target" ];
         };
         serviceConfig = {
           Type = "simple";
@@ -357,6 +364,7 @@ in
         unitConfig = {
           Description = "ACB bridge";
           After = [ "network.target" ];
+          PartOf = [ "acb-stack.target" ];
         };
         serviceConfig = {
           Type = "simple";
@@ -391,9 +399,14 @@ in
           After = [
             "network.target"
             "acb-bridge.service"
+            "dsh-acb.service"
           ];
           Requires = [ "acb-bridge.service" ];
-          PartOf = [ "acb-bridge.service" ];
+          Wants = [ "dsh-acb.service" ];
+          PartOf = [
+            "acb-bridge.service"
+            "acb-stack.target"
+          ];
         };
         serviceConfig = {
           Type = "simple";
@@ -410,7 +423,12 @@ in
       "acb-opencode-serve" = {
         unitConfig = {
           Description = "ACB opencode serve";
-          After = [ "network.target" ];
+          After = [
+            "network.target"
+            "acb-bridge.service"
+          ];
+          Wants = [ "acb-bridge.service" ];
+          PartOf = [ "acb-stack.target" ];
         };
         serviceConfig = {
           Type = "simple";
@@ -430,6 +448,15 @@ in
           StandardError = "append:${logDir}/opencode.log";
         };
       };
+    };
+
+    systemd.user.units."acb-stack.target" = {
+      text = ''
+        [Unit]
+        Description=ACB stack
+        Wants=acb-bridge.service acb-drivers.service acb-opencode-serve.service dsh-acb.service
+      '';
+      wantedBy = lib.optional cfg.autoStart "default.target";
     };
   };
 }
