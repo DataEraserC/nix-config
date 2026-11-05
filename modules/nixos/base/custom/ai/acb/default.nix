@@ -357,6 +357,8 @@ in
           Description = "ACB bridge";
           After = [ "network.target" ];
           PartOf = [ "acb-stack.target" ];
+          StartLimitIntervalSec = 60;
+          StartLimitBurst = 3;
         };
         serviceConfig = {
           Type = "simple";
@@ -382,7 +384,9 @@ in
           ExecStart = "${acbPkg}/bin/acb-bridge --config ${
             lib.escapeShellArg (if notificationsEnabled then activeConfigFile else configFile)
           }";
-          Restart = "always";
+          Restart = "on-failure";
+          RestartForceExitStatus = 75;
+          RestartPreventExitStatus = 78;
           RestartSec = 5;
           StandardOutput = "append:${logDir}/bridge.log";
           StandardError = "append:${logDir}/bridge.log";
