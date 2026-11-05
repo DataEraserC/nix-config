@@ -577,7 +577,7 @@ rec {
       hosts = {
         idols-ai = rec {
           enable = true;
-          autoStart = true;
+          autoStart = false;
           host = "127.0.0.1";
           # console / opencode 对外监听地址：0.0.0.0 = ZeroTier / Tailscale /
           # EasyTier / LAN 都能访问（仍分别要求 token / Basic Auth）。

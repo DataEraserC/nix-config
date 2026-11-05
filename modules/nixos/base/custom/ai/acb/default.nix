@@ -10,12 +10,10 @@
 # ACB（AgentChatBridge）：dsh-acb、桥、dsh 驱动、opencode serve。
 #
 # 模块开关、端口和会话列表都来自 vars/networking 的 services.acb 注册表；
-# 四个单元是 systemd --user、默认不自启：`acb up` 只起桥，`acb down`
-# 停桥与 drivers；`acb status` 看状态，`acb logs` 跟日志；`acb stack`
-# 是用户显式使用的一次性便捷流程（dsh → 桥 → drivers）。
-#
-# 数据在 ~/.local/share/acb；源码通过 modules.outOfStoreSymlink 的
-# agentChatBridge 根做可写软链（没配置就退回 flake store）。
+# 四个单元是 systemd --user；acb-stack.target 默认不 enable，由用户显式
+# `systemctl --user start acb-stack.target` 或 `acb stack` 启动。
+# 数据在 ~/.local/share/acb；可写源码通过 modules.outOfStoreSymlink 的
+# agentChatBridge 根接入；没配置时只跳过链接，不退回 flake store。
 let
   cfg = config.modules.acb;
 
@@ -33,8 +31,6 @@ let
 
   driver = "${acbSrc}/harnesses/dsh/src/driver.mjs";
   sourceRoot = config.modules.outOfStoreSymlink.paths.agentChatBridge or null;
-  harnessesSource = if sourceRoot != null then "${sourceRoot}/harnesses" else "${acbSrc}/harnesses";
-  luaSource = if sourceRoot != null then "${sourceRoot}/examples/lua" else "${acbSrc}/examples/lua";
 
   # 脚本正文都在同目录的 *.sh 里，这里只替换 @NAME@ 占位符。
   render =
@@ -213,8 +209,8 @@ in
 
     autoStart = lib.mkOption {
       type = lib.types.bool;
-      default = true;
-      description = "登录时自动启动 acb-stack.target；false 时仍可手动 systemctl --user start。";
+      default = false;
+      description = "是否把 acb-stack.target 挂到 default.target；默认 false，由用户显式启动。";
     };
 
     host = lib.mkOption {
@@ -377,8 +373,10 @@ in
             ++ lib.optional notificationsEnabled cfg.notifications.topicSecret;
           ExecStartPre = [
             "${pkgs.coreutils}/bin/mkdir -p ${lib.escapeShellArg dataDir} ${lib.escapeShellArg logDir}"
-            "${pkgs.coreutils}/bin/ln -sfnT ${lib.escapeShellArg harnessesSource} ${lib.escapeShellArg "${dataDir}/harnesses"}"
-            "${pkgs.coreutils}/bin/ln -sfnT ${lib.escapeShellArg luaSource} ${lib.escapeShellArg "${dataDir}/lua"}"
+          ]
+          ++ lib.optionals (sourceRoot != null) [
+            "${pkgs.coreutils}/bin/ln -sfnT ${lib.escapeShellArg "${sourceRoot}/harnesses"} ${lib.escapeShellArg "${dataDir}/harnesses"}"
+            "${pkgs.coreutils}/bin/ln -sfnT ${lib.escapeShellArg "${sourceRoot}/examples/lua"} ${lib.escapeShellArg "${dataDir}/lua"}"
           ]
           ++ lib.optional notificationsEnabled "${configMerge}/bin/acb-config-merge";
           ExecStart = "${acbPkg}/bin/acb-bridge --config ${

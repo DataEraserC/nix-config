@@ -137,7 +137,7 @@ rec {
   # ACB：开关、绑定地址、端口和会话列表全部读 services.acb 注册表。
   modules.acb = {
     enable = (svc "acb").enable;
-    autoStart = (svc "acb").autoStart or true;
+    autoStart = (svc "acb").autoStart or false;
     host = (svc "acb").host;
     exposeHost = (svc "acb").exposeHost;
     dshPort = (svc "acb").ports.dsh;
