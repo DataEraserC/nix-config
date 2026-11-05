@@ -14,6 +14,33 @@ http_probe_auth() {
   probe_rc=$?
   probe_code=${body:-000}
 }
+http_basic_code() {
+  local url=$1 user=$2 password=$3
+  curl -sS -o /dev/null --max-time 2 -u "$user:$password" -w '%{http_code}' "$url" 2>/dev/null || true
+}
+read_env_value() {
+  local file=$1 key=$2 value=""
+  [[ -r $file ]] || return 0
+  value=$(grep -E "^${key}=" "$file" 2>/dev/null | tail -n 1 | cut -d= -f2-)
+  value=${value%$'\r'}
+  value=${value#\"}
+  value=${value%\"}
+  value=${value#\'}
+  value=${value%\'}
+  printf '%s' "$value"
+}
+opencode_password() {
+  local password files file
+  password=$(read_env_value /run/agenix/acb.env ACB_OPENCODE_PASSWORD)
+  if [[ -z $password ]]; then
+    files=$(systemctl --user show acb-opencode-serve -p EnvironmentFiles --value 2>/dev/null | grep -o '/run/agenix/[^ ]*' || true)
+    for file in $files; do
+      password=$(read_env_value "$file" ACB_OPENCODE_PASSWORD)
+      [[ -n $password ]] && break
+    done
+  fi
+  printf '%s' "${password:-acb-opencode-local}"
+}
 tcp_open() { ss -tln 2>/dev/null | grep -q ":$1 "; }
 
 statuses=()
@@ -43,18 +70,21 @@ else
   report dsh fail unreachable "unit active but HTTP ${dsh_code:-000}; see @LOG_DIR@/dsh.log"
 fi
 
-# opencode: external component; same shape as dsh.
-opencode_code=$(http_code "http://@OPENCODE_HOST@:@OPENCODE_PORT@/")
+# opencode: ACB-owned harness. Readiness = authenticated /api/info HTTP 200.
+opencode_password_value=$(opencode_password)
+opencode_code=$(http_basic_code "http://@OPENCODE_HOST@:@OPENCODE_PORT@/api/info" opencode "$opencode_password_value")
 opencode_active=$(unit_active acb-opencode-serve)
 opencode_loaded=$(unit_loaded acb-opencode-serve)
-if [[ $opencode_code == 200 || $opencode_code == 401 ]]; then
-  report opencode ok ready "http://@OPENCODE_HOST@:@OPENCODE_PORT@/ HTTP $opencode_code"
+if [[ $opencode_code == 200 ]]; then
+  report opencode ok ready "http://@OPENCODE_HOST@:@OPENCODE_PORT@/api/info HTTP 200"
 elif [[ $opencode_loaded == not-found ]]; then
   report opencode fail not_configured "acb-opencode-serve unit not found"
 elif [[ $opencode_active != active ]]; then
-  report opencode fail not_started "start acb-opencode-serve (external component)"
+  report opencode fail not_started "start acb-opencode-serve or use acb stack"
+elif [[ $opencode_code == 401 || $opencode_code == 403 ]]; then
+  report opencode fail auth_fail "HTTP $opencode_code: ACB_OPENCODE_PASSWORD mismatch; see @LOG_DIR@/opencode.log"
 else
-  report opencode fail unreachable "unit active but HTTP ${opencode_code:-000}; see @LOG_DIR@/opencode.log"
+  report opencode fail unreachable "unit active but /api/info HTTP ${opencode_code:-000}; see @LOG_DIR@/opencode.log"
 fi
 
 # bridge: requires its console token; /api/status is the local self-report.

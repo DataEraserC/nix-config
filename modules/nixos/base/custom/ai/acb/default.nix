@@ -124,6 +124,8 @@ let
       DSH_HOST = if cfg.host == "0.0.0.0" || cfg.host == "::" then "127.0.0.1" else cfg.host;
       DSH_PORT = cfg.dshPort;
       ENDPOINT_PORT = cfg.endpointPort;
+      OPENCODE_HOST =
+        if cfg.exposeHost == "0.0.0.0" || cfg.exposeHost == "::" then "127.0.0.1" else cfg.exposeHost;
       OPENCODE_PORT = cfg.opencodePort;
       STATUS = "${acbStatus}/bin/acb-status-internal";
     };
@@ -182,6 +184,9 @@ let
       DSH_HOST = if cfg.host == "0.0.0.0" || cfg.host == "::" then "127.0.0.1" else cfg.host;
       DSH_PORT = cfg.dshPort;
       ENDPOINT_PORT = cfg.endpointPort;
+      OPENCODE_HOST =
+        if cfg.exposeHost == "0.0.0.0" || cfg.exposeHost == "::" then "127.0.0.1" else cfg.exposeHost;
+      OPENCODE_PORT = cfg.opencodePort;
       STATUS = "${acbStatus}/bin/acb-status-internal";
     };
   };
@@ -208,7 +213,7 @@ let
 in
 {
   options.modules.acb = {
-    enable = lib.mkEnableOption "ACB（桥 + 驱动；dsh/opencode 由用户管理）";
+    enable = lib.mkEnableOption "ACB（桥 + 驱动；dsh 由用户管理）";
 
     host = lib.mkOption {
       type = lib.types.str;

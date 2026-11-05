@@ -4,11 +4,11 @@ usage() {
 usage: acb <command> [args...]
 
 commands:
-  up      start the ACB bridge (external components are user-managed)
-  down    stop the ACB bridge and drivers
+  up      start ACB units (bridge / drivers / opencode; dsh is user-managed)
+  down    stop ACB units (bridge / drivers / opencode; dsh is user-managed)
   status  show dependency and unit readiness
-  logs    follow ACB logs
-  stack   one-shot: dsh -> bridge -> drivers
+  logs    follow ACB logs (dsh / bridge / drivers / opencode)
+  stack   one-shot: dsh -> bridge -> opencode -> drivers (opencode failure degrades, no abort)
 EOF
 }
 
