@@ -334,6 +334,7 @@ in
             "PATH=${basePath}"
           ];
           EnvironmentFile = lib.optional (cfg.secretsFile != null) "-${cfg.secretsFile}";
+          ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p ${lib.escapeShellArg logDir}";
           ExecStart = "${pkgs.writeShellScript "acb-dsh-exec" ''
             set -e
             mkdir -p ${lib.escapeShellArg logDir}
