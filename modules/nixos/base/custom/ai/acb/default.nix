@@ -117,10 +117,6 @@ let
       pkgs.gnugrep
     ];
     text = render ./up.sh {
-      DATA = dataDir;
-      LOGS = logDir;
-      HARNESSES = harnessesSource;
-      LUA = luaSource;
       DSH_HOST = if cfg.host == "0.0.0.0" || cfg.host == "::" then "127.0.0.1" else cfg.host;
       DSH_PORT = cfg.dshPort;
       ENDPOINT_PORT = cfg.endpointPort;
@@ -381,6 +377,8 @@ in
             ++ lib.optional notificationsEnabled cfg.notifications.topicSecret;
           ExecStartPre = [
             "${pkgs.coreutils}/bin/mkdir -p ${lib.escapeShellArg dataDir} ${lib.escapeShellArg logDir}"
+            "${pkgs.coreutils}/bin/ln -sfnT ${lib.escapeShellArg harnessesSource} ${lib.escapeShellArg "${dataDir}/harnesses"}"
+            "${pkgs.coreutils}/bin/ln -sfnT ${lib.escapeShellArg luaSource} ${lib.escapeShellArg "${dataDir}/lua"}"
           ]
           ++ lib.optional notificationsEnabled "${configMerge}/bin/acb-config-merge";
           ExecStart = "${acbPkg}/bin/acb-bridge --config ${

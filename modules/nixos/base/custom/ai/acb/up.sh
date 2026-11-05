@@ -27,11 +27,6 @@ for target in "${targets[@]}"; do
   esac
 done
 
-mkdir -p "@DATA@" "@LOGS@"
-ln -sfnT "@HARNESSES@" "@DATA@/harnesses"
-
-ln -sfnT "@LUA@" "@DATA@/lua"
-
 wait_tcp() {
   local port=$1 label=$2 deadline=$((SECONDS + 30))
   while (( SECONDS < deadline )); do
