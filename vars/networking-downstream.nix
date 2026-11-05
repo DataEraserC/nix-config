@@ -587,6 +587,8 @@ rec {
             endpoint = 7700;
             console = 3100;
             driver-dsh = 3101;
+            driver-dev = 3103;
+            driver-snowluma-test = 3104;
             driver-group2 = 3102;
             opencode = 4097;
             relay = 3131;
@@ -594,9 +596,19 @@ rec {
           };
           sessions = [
             {
-              id = "dsh";
+              id = "dsh-qas";
               preset = "acb-dsh";
               port = ports.driver-dsh;
+            }
+            {
+              id = "dsh-dev";
+              preset = "acb-dsh-dev";
+              port = ports.driver-dev;
+            }
+            {
+              id = "dsh-snowluma-test";
+              preset = "acb-dsh-snowluma-test";
+              port = ports.driver-snowluma-test;
             }
             {
               id = "dsh-group2";
