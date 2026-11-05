@@ -238,11 +238,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793879464,
-        "narHash": "sha256-XvdsSXfR14xLsaX9x48PziRHEBbOck45Yh4sYfaYciA=",
+        "lastModified": 1793889733,
+        "narHash": "sha256-cWED2k60txN4MpUqbEmovv+mWtb9OWTe9Mqw0+Vbl9Y=",
         "owner": "DataEraserC",
         "repo": "AgentChatBridge",
-        "rev": "f91919a85e76eea8df65ece43f710d88ec5c7247",
+        "rev": "c26dd2cfe435208f29c0beee3a619647443c42fd",
         "type": "github"
       },
       "original": {
