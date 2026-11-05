@@ -81,6 +81,13 @@ let
       uid = 993;
       gid = 992;
     };
+    # ACB issue service: a new account, so take a free id below the current
+    # 970+ block. The id must be fixed because the preserved SQLite database
+    # under /var/lib/acb-issue is owned by this account across reboots.
+    acb-issue = {
+      uid = 950;
+      gid = 950;
+    };
   };
 
   # Sunshine has no account: the desktop user services run as the logged-in

@@ -86,6 +86,16 @@ in
         mode = "0700";
       }
 
+      # acb-issue-service (SQLite issue database). The unit is pinned to the
+      # acb-issue account: a DynamicUser uid is not stable across reboots, so
+      # the preserved directory could not keep a readable owner.
+      {
+        directory = "/var/lib/acb-issue";
+        user = "acb-issue";
+        group = "acb-issue";
+        mode = "0750";
+      }
+
       # astrbot (venv, uv cache, cmd_config.json, plugins, plugin_data,
       # knowledge base, WebUI dist). Keeping the venv here means an AstrBot
       # upgrade only re-resolves the wheels instead of reinstalling ~1GB; delete
