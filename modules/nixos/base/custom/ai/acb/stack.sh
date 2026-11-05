@@ -97,28 +97,33 @@ wait_tcp() {
   return 1
 }
 
-dsh_loaded=$(unit_loaded dsh-acb)
-dsh_started=no
-dsh_code=$(http_code "http://@DSH_HOST@:@DSH_PORT@/")
-if [[ $dsh_code == 200 || $dsh_code == 401 ]]; then
-  echo "dsh 已在运行（HTTP $dsh_code），跳过启动"
-else
-  if [[ $dsh_loaded == not-found ]]; then
-    echo "dsh-acb 未配置；无法启动 dsh（dsh 是外部组件）" >&2
-    exit 1
+wait_active() {
+  local unit=$1 label=$2 deadline=$((SECONDS + 30))
+  if [[ $dry_run == yes ]]; then
+    printf '[dry-run] wait for %s active\n' "$unit"
+    return 0
   fi
-  run systemctl --user start dsh-acb.service
-  dsh_started=yes
-  wait_http "http://@DSH_HOST@:@DSH_PORT@/" "dsh" || {
-    echo "dsh 未就绪，未启动桥与 drivers" >&2
-    exit 1
-  }
-fi
+  while (( SECONDS < deadline )); do
+    if [[ $(systemctl --user is-active "$unit.service" 2>/dev/null || true) == active ]]; then
+      echo "    $label 已 active"
+      return 0
+    fi
+    sleep 0.5
+  done
+  echo "    $label 30 秒内没有 active" >&2
+  return 1
+}
 
-run systemctl --user start acb-bridge.service
-wait_tcp "@ENDPOINT_PORT@" "桥" || {
-  echo "桥未就绪，未启动 drivers" >&2
+run systemctl --user start acb-stack.target || {
+  echo "acb-stack.target 启动失败" >&2
   exit 1
+}
+
+wait_http "http://@DSH_HOST@:@DSH_PORT@/" "dsh" || {
+  echo "dsh 未就绪；target 已启动，继续汇总" >&2
+}
+wait_tcp "@ENDPOINT_PORT@" "桥" || {
+  echo "桥未就绪；target 已启动，继续汇总" >&2
 }
 
 opencode_url="http://@OPENCODE_HOST@:@OPENCODE_PORT@/api/info"
@@ -127,31 +132,26 @@ opencode_code=$(http_basic_code "$opencode_url" opencode "$opencode_password_val
 opencode_loaded=$(unit_loaded acb-opencode-serve)
 opencode_degraded=no
 if [[ $opencode_code == 200 ]]; then
-  echo "opencode 已在运行（/api/info HTTP 200），跳过启动"
+  echo "opencode 已就绪（/api/info HTTP 200）"
 elif [[ $opencode_code == 401 || $opencode_code == 403 ]]; then
   opencode_degraded=yes
-  echo "opencode /api/info HTTP $opencode_code（ACB_OPENCODE_PASSWORD 不匹配？）；继续启动 drivers" >&2
+  echo "opencode /api/info HTTP $opencode_code（ACB_OPENCODE_PASSWORD 不匹配？）" >&2
 elif [[ $opencode_loaded == not-found ]]; then
-  echo "acb-opencode-serve 未配置；跳过 opencode，继续启动 drivers" >&2
   opencode_degraded=yes
-else
-  run systemctl --user start acb-opencode-serve.service
-  if ! wait_opencode "$opencode_url" "$opencode_password_value"; then
-    opencode_degraded=yes
-    echo "opencode 未就绪；继续启动 drivers（acb status 会显示失败）" >&2
-  fi
+  echo "acb-opencode-serve 未配置；target 继续保留其它服务" >&2
+elif ! wait_opencode "$opencode_url" "$opencode_password_value"; then
+  opencode_degraded=yes
+  echo "opencode 未就绪；target 仍保持 active，acb status 会显示失败" >&2
 fi
 
-run systemctl --user start acb-drivers.service
+wait_active acb-drivers "drivers" || {
+  echo "drivers 未 active；继续汇总" >&2
+}
 
-if [[ $dsh_started == yes ]]; then
-  echo "dsh 是本脚本启动的；\`acb down\` 不会停它，需要时手动 systemctl --user stop dsh-acb"
-else
-  echo "dsh 本来就在运行；\`acb down\` 不会停它"
-fi
+echo "acb-stack.target 已启动；\`acb down\` 会停止 target 及其 PartOf 服务"
 
 if [[ $opencode_degraded == yes ]]; then
-  echo "opencode 未就绪；dsh/bridge/drivers 已继续启动，修复后用 acb status 复查" >&2
+  echo "opencode 未就绪；修复后用 acb status 复查" >&2
 fi
 
 if [[ $dry_run == yes ]]; then

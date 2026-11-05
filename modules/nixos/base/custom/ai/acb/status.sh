@@ -65,7 +65,7 @@ if [[ $dsh_code == 200 || $dsh_code == 401 ]]; then
 elif [[ $dsh_loaded == not-found ]]; then
   report dsh fail not_configured "dsh-acb unit not found; dsh is user-managed"
 elif [[ $dsh_active != active ]]; then
-  report dsh fail not_started "start dsh-acb or use acb stack"
+  report dsh fail not_started "start acb-stack.target or use acb stack"
 else
   report dsh fail unreachable "unit active but HTTP ${dsh_code:-000}; see @LOG_DIR@/dsh.log"
 fi
@@ -80,7 +80,7 @@ if [[ $opencode_code == 200 ]]; then
 elif [[ $opencode_loaded == not-found ]]; then
   report opencode fail not_configured "acb-opencode-serve unit not found"
 elif [[ $opencode_active != active ]]; then
-  report opencode fail not_started "start acb-opencode-serve or use acb stack"
+  report opencode fail not_started "start acb-stack.target or use acb stack"
 elif [[ $opencode_code == 401 || $opencode_code == 403 ]]; then
   report opencode fail auth_fail "HTTP $opencode_code: ACB_OPENCODE_PASSWORD mismatch; see @LOG_DIR@/opencode.log"
 else
@@ -170,7 +170,7 @@ if [[ $bridge_active == active ]]; then
 elif [[ $bridge_loaded == not-found ]]; then
   report bridge fail not_configured "acb-bridge unit not found"
 else
-  report bridge fail not_started "start acb-bridge (acb up)"
+  report bridge fail not_started "start acb-stack.target or use acb stack"
 fi
 
 # drivers are ACB-owned; active state is enough for the local readiness view.
@@ -181,7 +181,7 @@ if [[ $drivers_active == active ]]; then
 elif [[ $drivers_loaded == not-found ]]; then
   report drivers fail not_configured "acb-drivers unit not found"
 else
-  report drivers fail not_started "start acb-drivers (acb up drivers)"
+  report drivers fail not_started "start acb-stack.target or use acb stack"
 fi
 
 # snowluma is platform-side and has no ACB unit; only TCP visibility is possible here.
