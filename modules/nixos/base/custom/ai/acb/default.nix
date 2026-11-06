@@ -361,6 +361,9 @@ in
           Restart = "always";
           RestartSec = 5;
           TimeoutStopSec = "15s";
+          # $XDG_STATE_HOME/acb，systemd 在 spawn 前建好，避免日志目录被
+          # impermanence 清空后 append: 以 209/STDOUT 失败。
+          StateDirectory = "acb";
           StandardOutput = "append:${logDir}/dsh.log";
           StandardError = "append:${logDir}/dsh.log";
         };
@@ -407,6 +410,9 @@ in
           RestartForceExitStatus = 75;
           RestartPreventExitStatus = 78;
           RestartSec = 5;
+          # $XDG_STATE_HOME/acb，systemd 在 spawn 前建好，避免日志目录被
+          # impermanence 清空后 append: 以 209/STDOUT 失败。
+          StateDirectory = "acb";
           StandardOutput = "append:${logDir}/bridge.log";
           StandardError = "append:${logDir}/bridge.log";
         };
@@ -434,6 +440,9 @@ in
           ExecStart = "${driverScript}/bin/acb-drivers";
           Restart = "always";
           RestartSec = 5;
+          # $XDG_STATE_HOME/acb，systemd 在 spawn 前建好，避免日志目录被
+          # impermanence 清空后 append: 以 209/STDOUT 失败。
+          StateDirectory = "acb";
           StandardOutput = "append:${logDir}/drivers.log";
           StandardError = "append:${logDir}/drivers.log";
         };
@@ -463,6 +472,9 @@ in
           ExecStart = "${pkgs.bash}/bin/bash ${profileCurrent}/deploy/opencode-serve.sh";
           Restart = "always";
           RestartSec = 5;
+          # $XDG_STATE_HOME/acb，systemd 在 spawn 前建好，避免日志目录被
+          # impermanence 清空后 append: 以 209/STDOUT 失败。
+          StateDirectory = "acb";
           StandardOutput = "append:${logDir}/opencode.log";
           StandardError = "append:${logDir}/opencode.log";
         };
