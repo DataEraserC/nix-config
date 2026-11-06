@@ -182,6 +182,8 @@ in
         ".local/share/tiled"
         ".local/share/qq-bridge"
         ".local/share/acb"
+        # bridge/dsh runtime logs (StateDirectory alone does not survive reboot)
+        ".local/state/acb"
 
         # ======================================
         # Instant Messaging
