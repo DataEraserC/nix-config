@@ -19,6 +19,10 @@ let
 
   home = config.users.users.${myvars.username}.home;
   dataDir = cfg.dataDir;
+  # profile 是四个单元的稳定入口：seed 之后 current 指向一个 generation，
+  # 切换 generation 只换软链，单元文本不变。
+  profileDir = "${dataDir}/profile";
+  profileCurrent = "${profileDir}/current";
   configFile = "${dataDir}/config/config.toml";
   logDir = cfg.logDir;
   userProfileBin = "/etc/profiles/per-user/${myvars.username}/bin";
@@ -38,7 +42,7 @@ let
   opencode2 = "${llm-agents.packages.${pkgs.system}.opencode2}/bin/opencode2";
   dshBin = lib.getExe config.modules.dsh.runtimePackage;
 
-  driver = "${acbSrc}/harnesses/dsh/src/driver.mjs";
+  driver = "${profileCurrent}/harnesses/dsh/src/driver.mjs";
   sourceRoot = config.modules.outOfStoreSymlink.paths.agentChatBridge or null;
 
   # 脚本正文都在同目录的 *.sh 里，这里只替换 @NAME@ 占位符。
@@ -377,7 +381,8 @@ in
             "ACB_ENDPOINT_LISTEN=${cfg.host}:${toString cfg.endpointPort}"
             "ACB_CONSOLE_LISTEN=${cfg.exposeHost}:${toString cfg.consolePort}"
             "ACB_RELAY_LISTEN=0.0.0.0:${toString cfg.relayPort}"
-            "ACB_LUA_DIR=${dataDir}/lua"
+            "ACB_LUA_DIR=${profileCurrent}/examples/lua"
+            "ACB_PROFILE_DIR=${profileDir}"
           ];
           EnvironmentFile =
             lib.optional (cfg.secretsFile != null) "-${cfg.secretsFile}"
@@ -386,14 +391,15 @@ in
             "${pkgs.coreutils}/bin/mkdir -p ${lib.escapeShellArg dataDir} ${lib.escapeShellArg logDir}"
           ]
           ++ lib.optionals (sourceRoot != null) [
+            # 只保留 harnesses 的开发覆盖链接（opencode 插件路径仍指向这里）；
+            # lua 已由 profile/current/examples/lua 提供，不再另建一份。
             "${pkgs.coreutils}/bin/ln -sfnT ${lib.escapeShellArg "${sourceRoot}/harnesses"} ${lib.escapeShellArg "${dataDir}/harnesses"}"
-            "${pkgs.coreutils}/bin/ln -sfnT ${lib.escapeShellArg "${sourceRoot}/examples/lua"} ${lib.escapeShellArg "${dataDir}/lua"}"
           ]
           ++ lib.optional notificationsEnabled "${configMerge}/bin/acb-config-merge"
           ++ [
             "${profileBootstrap}/bin/acbctl profile seed ${profileBootstrap}"
           ];
-          ExecStart = "${acbPkg}/bin/acb-bridge --config ${
+          ExecStart = "${profileCurrent}/bin/acb-bridge --config ${
             lib.escapeShellArg (if notificationsEnabled then activeConfigFile else configFile)
           }";
           Restart = "on-failure";
@@ -453,7 +459,7 @@ in
           ];
           EnvironmentFile = lib.optional (cfg.secretsFile != null) "-${cfg.secretsFile}";
           ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p ${lib.escapeShellArg logDir}";
-          ExecStart = "${pkgs.bash}/bin/bash ${acbSrc}/deploy/opencode-serve.sh";
+          ExecStart = "${pkgs.bash}/bin/bash ${profileCurrent}/deploy/opencode-serve.sh";
           Restart = "always";
           RestartSec = 5;
           StandardOutput = "append:${logDir}/opencode.log";
