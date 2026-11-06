@@ -25,7 +25,19 @@ let
   basePath = "/run/current-system/sw/bin:${userProfileBin}:/run/wrappers/bin";
 
   acbSrc = acb.outPath;
-  acbPkg = acb.packages.${pkgs.system}.acb-bridge;
+  # 上游 acbctl 的 doctor 测试用 `#!/usr/bin/env bash` 起 systemctl shim，
+  # Nix 构建沙箱里没有 /usr/bin/env，测试必然失败；部署构建跳过测试。
+  acbPkg = acb.packages.${pkgs.system}.acb-bridge.overrideAttrs (_: {
+    doCheck = false;
+  });
+  # 499ec94 的 acb-bridge 产物已经包含 bin/acbctl（workspace 同构建），
+  # 不需要再单独建一份 acbctl。
+  profileBootstrap = pkgs.runCommand "acb-profile-bootstrap" { } ''
+    mkdir -p $out/bin $out/deploy $out/harnesses
+    cp -a ${acbPkg}/bin/* $out/bin/
+    cp -a ${acbSrc}/deploy/. $out/deploy/
+    cp -a ${acbSrc}/harnesses/. $out/harnesses/
+  '';
   opencode2 = "${llm-agents.packages.${pkgs.system}.opencode2}/bin/opencode2";
   dshBin = lib.getExe config.modules.dsh.runtimePackage;
 
@@ -380,7 +392,10 @@ in
             "${pkgs.coreutils}/bin/ln -sfnT ${lib.escapeShellArg "${sourceRoot}/harnesses"} ${lib.escapeShellArg "${dataDir}/harnesses"}"
             "${pkgs.coreutils}/bin/ln -sfnT ${lib.escapeShellArg "${sourceRoot}/examples/lua"} ${lib.escapeShellArg "${dataDir}/lua"}"
           ]
-          ++ lib.optional notificationsEnabled "${configMerge}/bin/acb-config-merge";
+          ++ lib.optional notificationsEnabled "${configMerge}/bin/acb-config-merge"
+          ++ [
+            "${profileBootstrap}/bin/acbctl profile seed ${profileBootstrap}"
+          ];
           ExecStart = "${acbPkg}/bin/acb-bridge --config ${
             lib.escapeShellArg (if notificationsEnabled then activeConfigFile else configFile)
           }";
