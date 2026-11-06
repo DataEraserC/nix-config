@@ -33,10 +33,11 @@ let
   # 499ec94 的 acb-bridge 产物已经包含 bin/acbctl（workspace 同构建），
   # 不需要再单独建一份 acbctl。
   profileBootstrap = pkgs.runCommand "acb-profile-bootstrap" { } ''
-    mkdir -p $out/bin $out/deploy $out/harnesses
+    mkdir -p $out/bin $out/deploy $out/harnesses $out/examples
     cp -a ${acbPkg}/bin/* $out/bin/
     cp -a ${acbSrc}/deploy/. $out/deploy/
     cp -a ${acbSrc}/harnesses/. $out/harnesses/
+    cp -a ${acbSrc}/examples/lua $out/examples/
   '';
   opencode2 = "${llm-agents.packages.${pkgs.system}.opencode2}/bin/opencode2";
   dshBin = lib.getExe config.modules.dsh.runtimePackage;
