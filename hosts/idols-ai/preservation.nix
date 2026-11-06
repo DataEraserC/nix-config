@@ -182,6 +182,11 @@ in
         ".local/share/opencode"
         ".local/state/opencode"
 
+        # acb bridge/dsh logs. The root subvolume is replaced on every boot and
+        # this path is not otherwise recreated, so the units failed with
+        # 209/STDOUT before ExecStartPre could mkdir it.
+        ".local/state/acb"
+
         # ctx7 docs lookup login
         {
           directory = ".config/context7";
