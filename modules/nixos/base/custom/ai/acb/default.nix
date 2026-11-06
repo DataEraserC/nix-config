@@ -25,12 +25,8 @@ let
   basePath = "/run/current-system/sw/bin:${userProfileBin}:/run/wrappers/bin";
 
   acbSrc = acb.outPath;
-  # 上游 acbctl 的 doctor 测试用 `#!/usr/bin/env bash` 起 systemctl shim，
-  # Nix 构建沙箱里没有 /usr/bin/env，测试必然失败；部署构建跳过测试。
-  acbPkg = acb.packages.${pkgs.system}.acb-bridge.overrideAttrs (_: {
-    doCheck = false;
-  });
-  # 499ec94 的 acb-bridge 产物已经包含 bin/acbctl（workspace 同构建），
+  acbPkg = acb.packages.${pkgs.system}.acb-bridge;
+  # acb-bridge 产物已经包含 bin/acbctl（workspace 同构建），
   # 不需要再单独建一份 acbctl。
   profileBootstrap = pkgs.runCommand "acb-profile-bootstrap" { } ''
     mkdir -p $out/bin $out/deploy $out/harnesses $out/examples
