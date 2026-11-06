@@ -9,5 +9,5 @@ else
     ACB_PRESET="@PRESET@" \
     ACB_MCP_PORT="@PORT@" \
     DSH_BASE_URL="@DSH_URL@" \
-    node "@DRIVER@" &
+    node "${DRIVER_SCRIPT:-@DRIVER@}" &
 fi

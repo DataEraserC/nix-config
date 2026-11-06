@@ -112,6 +112,7 @@ let
       CONFIG = configFile;
       WORKSPACE = cfg.workspaceDir;
       TITLE = cfg.workspaceTitle;
+      DRIVER = driver;
       SESSIONS = driverSessionBlocks;
     };
   };
