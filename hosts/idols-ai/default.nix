@@ -92,6 +92,11 @@ rec {
     ];
   };
 
+  # CyIME's IBus component has to be merged into the directory the ibus-daemon
+  # wrapper pins via IBUS_COMPONENT_PATH, otherwise the engine never shows up
+  # in `ibus list-engine`. Only the GNOME Wayland variant runs CyIME.
+  modules.cyime-ibus.enable = lib.mkIf config.modules.desktop.gnome-wayland.enable true;
+
   # Static service overview page (modules/nixos/base/custom/services/homepage).
   # Port, bind address and enable state come from services.homepage.hosts.idols-ai;
   # the page lists every registry service that carries a catalog block.
