@@ -17,6 +17,9 @@ in
 
   modules.desktop.vinput.enable = true;
 
+  # cyime replaces fcitx5 on the GNOME Wayland variant only.
+  modules.desktop.cyime.enable = lib.mkIf cfgGnomeWayland.enable true;
+
   programs.ssh.settings."github.com".identityFile =
     "${config.home.homeDirectory}/.ssh/idols-ai_id_ed25519";
 
