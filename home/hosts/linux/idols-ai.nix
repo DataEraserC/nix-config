@@ -17,11 +17,9 @@ in
 
   modules.desktop.vinput.enable = true;
 
-  # cyime replaces fcitx5 on the GNOME Wayland variant only.
-  modules.desktop.cyime.enable = lib.mkIf cfgGnomeWayland.enable true;
-
-  # rime-ice (雾凇拼音) tables replace the tiny pinyin_simp dictionary.
-  modules.cyime-ice.enable = lib.mkIf cfgGnomeWayland.enable true;
+  # 暂时切回 fcitx5；取消注释即可重新启用 cyime（仅 GNOME Wayland 变体）。
+  # modules.desktop.cyime.enable = lib.mkIf cfgGnomeWayland.enable true;
+  # modules.cyime-ice.enable = lib.mkIf cfgGnomeWayland.enable true;
 
   programs.ssh.settings."github.com".identityFile =
     "${config.home.homeDirectory}/.ssh/idols-ai_id_ed25519";
