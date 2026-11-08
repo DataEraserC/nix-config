@@ -45,9 +45,7 @@ let
     cp -a ${acbSrc}/examples/lua $out/examples/
     cp -a ${acbSrc}/deploy/opencode-serve.sh $out/deploy/
   '';
-  dshBin = lib.getExe config.modules.dsh.runtimePackage;
 
-  driver = "${profileCurrent}/harnesses/dsh/src/driver.mjs";
   sourceRoot = config.modules.outOfStoreSymlink.paths.agentChatBridge or null;
 
   # 脚本正文都在同目录的 *.sh 里，这里只替换 @NAME@ 占位符。
@@ -92,137 +90,10 @@ let
       }
     else
       null;
-
-  driverSessionBlocks = lib.concatMapStringsSep "\n" (
-    item:
-    render ./driver-session.sh {
-      ID = item.id;
-      PRESET = item.preset;
-      PORT = item.port;
-      ENDPOINT = "${cfg.host}:${toString cfg.endpointPort}";
-      DSH_URL = "http://${cfg.host}:${toString cfg.dshPort}";
-      DRIVER = driver;
-    }
-  ) cfg.sessions;
-
-  driverScript = pkgs.writeShellApplication {
-    name = "acb-drivers";
-    runtimeInputs = [
-      pkgs.coreutils
-      pkgs.nodejs
-      pkgs.gnugrep
-      pkgs.gawk
-    ];
-    text = render ./drivers.sh {
-      CONFIG = configFile;
-      WORKSPACE = cfg.workspaceDir;
-      TITLE = cfg.workspaceTitle;
-      DRIVER = driver;
-      SESSIONS = driverSessionBlocks;
-    };
-  };
-
-  acbUp = pkgs.writeShellApplication {
-    name = "acb-up-internal";
-    runtimeInputs = [
-      pkgs.systemd
-      pkgs.coreutils
-      pkgs.iproute2
-      pkgs.curl
-      pkgs.gnugrep
-    ];
-    text = render ./up.sh {
-      ENDPOINT_PORT = cfg.endpointPort;
-      STATUS = "${acbStatus}/bin/acb-status-internal";
-    };
-  };
-
-  acbDown = pkgs.writeShellApplication {
-    name = "acb-down-internal";
-    runtimeInputs = [ pkgs.systemd ];
-    text = builtins.readFile ./down.sh;
-  };
-
-  acbStatus = pkgs.writeShellApplication {
-    name = "acb-status-internal";
-    runtimeInputs = [
-      pkgs.systemd
-      pkgs.coreutils
-      pkgs.iproute2
-      pkgs.gnugrep
-      pkgs.gawk
-      pkgs.curl
-    ];
-    text = render ./status.sh {
-      DATA = dataDir;
-      LOG_DIR = logDir;
-      CONFIG = configFile;
-      DSH_HOST = if cfg.host == "0.0.0.0" || cfg.host == "::" then "127.0.0.1" else cfg.host;
-      DSH_PORT = cfg.dshPort;
-      ENDPOINT_PORT = cfg.endpointPort;
-      CONSOLE_HOST =
-        if cfg.exposeHost == "0.0.0.0" || cfg.exposeHost == "::" then "127.0.0.1" else cfg.exposeHost;
-      CONSOLE_PORT = cfg.consolePort;
-      OPENCODE_HOST =
-        if cfg.exposeHost == "0.0.0.0" || cfg.exposeHost == "::" then "127.0.0.1" else cfg.exposeHost;
-      OPENCODE_PORT = cfg.opencodePort;
-      RELAY_PORT = cfg.relayPort;
-      SNOWLUMA_PORT = cfg.snowlumaPort;
-    };
-  };
-
-  acbLogs = pkgs.writeShellApplication {
-    name = "acb-logs-internal";
-    runtimeInputs = [ pkgs.coreutils ];
-    text = render ./logs.sh { LOG_DIR = logDir; };
-  };
-
-  acbStack = pkgs.writeShellApplication {
-    name = "acb-stack-internal";
-    runtimeInputs = [
-      pkgs.systemd
-      pkgs.coreutils
-      pkgs.iproute2
-      pkgs.curl
-      pkgs.gnugrep
-    ];
-    text = render ./stack.sh {
-      DSH_HOST = if cfg.host == "0.0.0.0" || cfg.host == "::" then "127.0.0.1" else cfg.host;
-      DSH_PORT = cfg.dshPort;
-      ENDPOINT_PORT = cfg.endpointPort;
-      STATUS = "${acbStatus}/bin/acb-status-internal";
-    };
-  };
-
-  acbCli = pkgs.writeShellApplication {
-    name = "acb";
-    runtimeInputs = [ pkgs.coreutils ];
-    text = render ./acb.sh {
-      UP = "${acbUp}/bin/acb-up-internal";
-      DOWN = "${acbDown}/bin/acb-down-internal";
-      STATUS = "${acbStatus}/bin/acb-status-internal";
-      LOGS = "${acbLogs}/bin/acb-logs-internal";
-      STACK = "${acbStack}/bin/acb-stack-internal";
-    };
-  };
-
-  acbl = pkgs.writeShellApplication {
-    name = "acbl";
-    text = ''
-      # If a future package provides `acb`, rename the dispatcher to `acbctl`; keep `acbl`.
-      exec ${acbCli}/bin/acb stack "$@"
-    '';
-  };
 in
 {
   options.modules.acb = {
     enable = lib.mkEnableOption "ACB（桥；dsh / drivers 等组件由 acbl 管理）";
-
-    autoStart = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = "迁移期保留：acb-stack.target 已移除，本选项暂无消费者；acbl 由部署者显式启动。";
-    };
 
     host = lib.mkOption {
       type = lib.types.str;
@@ -295,20 +166,6 @@ in
       description = "dsh Workspaces 里这个目录的显示标题。";
     };
 
-    sessions = lib.mkOption {
-      type = lib.types.listOf (
-        lib.types.submodule {
-          options = {
-            id = lib.mkOption { type = lib.types.str; };
-            preset = lib.mkOption { type = lib.types.str; };
-            port = lib.mkOption { type = lib.types.port; };
-          };
-        }
-      );
-      default = [ ];
-      description = "每个 ACB 会话一个 dsh 驱动：会话 id、preset 名、本地 MCP 端口。";
-    };
-
     secretsFile = lib.mkOption {
       type = lib.types.nullOr lib.types.str;
       default = null;
@@ -331,18 +188,14 @@ in
   config = lib.mkIf cfg.enable {
     environment.systemPackages = [
       acblPkg
-      acbCli
-      acbl
     ];
 
     systemd.user.services = {
       "acb-bridge" = {
         unitConfig = {
-          # 单元名保留 acb-bridge，供现有 acb CLI / drivers / opencode 依赖引用；
-          # 实际入口已换成静态的 acb-launcher（acbl 包）。
+          # 单元名保留 acb-bridge（acbl 静态入口）；实际程序是 acb-launcher。
           Description = "ACB launcher (static acbl)";
           After = [ "network.target" ];
-          PartOf = [ "acb-stack.target" ];
           StartLimitIntervalSec = 60;
           StartLimitBurst = 3;
         };
