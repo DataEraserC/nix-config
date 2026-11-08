@@ -571,8 +571,8 @@ rec {
       };
     };
 
-    # ACB（AgentChatBridge）：dsh 的 3080 是主端口，其余是桥/驱动/opencode/
-    # 中继的内部端口。sessions 里的 port 指向同一张 ports 表，别另写一份。
+    # ACB（AgentChatBridge）：dsh 的 3080 是主端口，其余是桥/opencode/
+    # 中继的内部端口。dsh 驱动与会话由 acbl 组件管理，会话端口不再登记在这里。
     acb = {
       hosts = {
         idols-ai = rec {
@@ -587,36 +587,10 @@ rec {
             dsh = 3080;
             endpoint = 7700;
             console = 3100;
-            driver-dsh = 3101;
-            driver-dev = 3103;
-            driver-snowluma-test = 3104;
-            driver-group2 = 3102;
             opencode = 4097;
             relay = 3131;
             snowluma = 53001;
           };
-          sessions = [
-            {
-              id = "dsh-qas";
-              preset = "acb-dsh";
-              port = ports.driver-dsh;
-            }
-            {
-              id = "dsh-dev";
-              preset = "acb-dsh-dev";
-              port = ports.driver-dev;
-            }
-            {
-              id = "dsh-snowluma-test";
-              preset = "acb-dsh-snowluma-test";
-              port = ports.driver-snowluma-test;
-            }
-            {
-              id = "dsh-group2";
-              preset = "acb-dsh-group2";
-              port = ports.driver-group2;
-            }
-          ];
         };
       };
       catalog = {

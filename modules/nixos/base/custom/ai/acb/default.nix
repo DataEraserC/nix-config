@@ -7,11 +7,11 @@
   myvars,
   ...
 }:
-# ACB（AgentChatBridge）：dsh-acb、桥、dsh 驱动、opencode serve。
+# ACB（AgentChatBridge）：桥（acbl 静态入口）。
 #
-# 模块开关、端口和会话列表都来自 vars/networking 的 services.acb 注册表；
-# 四个单元是 systemd --user；acb-stack.target 默认不 enable，由用户显式
-# `systemctl --user start acb-stack.target` 或 `acb stack` 启动。
+# 模块开关与端口来自 vars/networking 的 services.acb 注册表；dsh / drivers /
+# opencode 已由 acbl 组件管理，不再由 nix-config 生成单元。本模块当前只生成
+# acb-bridge（launcher）一个 systemd --user 单元。
 # 数据在 ~/.local/share/acb；可写源码通过 modules.outOfStoreSymlink 的
 # agentChatBridge 根接入；没配置时只跳过链接，不退回 flake store。
 let
@@ -29,17 +29,22 @@ let
   basePath = "/run/current-system/sw/bin:${userProfileBin}:/run/wrappers/bin";
 
   acbSrc = acb.outPath;
-  acbPkg = acb.packages.${pkgs.system}.acb-bridge;
-  # acb-bridge 产物已经包含 bin/acbctl（workspace 同构建），
-  # 不需要再单独建一份 acbctl。
+  # acbl：静态入口包（launcher / supervisor / acbctl + unit 模板），进系统环境，
+  # 也是 unit 的唯一入口；它的升级不再跟随 payload 换代。
+  acblPkg = acb.packages.${pkgs.system}.acbl;
+  # payload：bridge / harnesses / start-drivers.sh / acb-contract.json，
+  # 由 acbl 的 profile 管理；nix-config 只负责把它 seed 成第一个 generation。
+  payloadPkg = acb.packages.${pkgs.system}.acb-payload;
+  # payload 收窄后不再带 lua 示例与 opencode-serve.sh；这两个是 nix-config
+  # 现有单元仍在用的过渡文件，补在 seed 源上，等它们迁到 acbl 预设后再删。
   profileBootstrap = pkgs.runCommand "acb-profile-bootstrap" { } ''
-    mkdir -p $out/bin $out/deploy $out/harnesses $out/examples
-    cp -a ${acbPkg}/bin/* $out/bin/
-    cp -a ${acbSrc}/deploy/. $out/deploy/
-    cp -a ${acbSrc}/harnesses/. $out/harnesses/
+    mkdir -p $out
+    cp -a ${payloadPkg}/. $out/
+    chmod -R u+w $out
+    mkdir -p $out/examples
     cp -a ${acbSrc}/examples/lua $out/examples/
+    cp -a ${acbSrc}/deploy/opencode-serve.sh $out/deploy/
   '';
-  opencode2 = "${llm-agents.packages.${pkgs.system}.opencode2}/bin/opencode2";
   dshBin = lib.getExe config.modules.dsh.runtimePackage;
 
   driver = "${profileCurrent}/harnesses/dsh/src/driver.mjs";
@@ -127,12 +132,7 @@ let
       pkgs.gnugrep
     ];
     text = render ./up.sh {
-      DSH_HOST = if cfg.host == "0.0.0.0" || cfg.host == "::" then "127.0.0.1" else cfg.host;
-      DSH_PORT = cfg.dshPort;
       ENDPOINT_PORT = cfg.endpointPort;
-      OPENCODE_HOST =
-        if cfg.exposeHost == "0.0.0.0" || cfg.exposeHost == "::" then "127.0.0.1" else cfg.exposeHost;
-      OPENCODE_PORT = cfg.opencodePort;
       STATUS = "${acbStatus}/bin/acb-status-internal";
     };
   };
@@ -190,9 +190,6 @@ let
       DSH_HOST = if cfg.host == "0.0.0.0" || cfg.host == "::" then "127.0.0.1" else cfg.host;
       DSH_PORT = cfg.dshPort;
       ENDPOINT_PORT = cfg.endpointPort;
-      OPENCODE_HOST =
-        if cfg.exposeHost == "0.0.0.0" || cfg.exposeHost == "::" then "127.0.0.1" else cfg.exposeHost;
-      OPENCODE_PORT = cfg.opencodePort;
       STATUS = "${acbStatus}/bin/acb-status-internal";
     };
   };
@@ -219,12 +216,12 @@ let
 in
 {
   options.modules.acb = {
-    enable = lib.mkEnableOption "ACB（桥 + 驱动；dsh 由用户管理）";
+    enable = lib.mkEnableOption "ACB（桥；dsh / drivers 等组件由 acbl 管理）";
 
     autoStart = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = "是否把 acb-stack.target 挂到 default.target；默认 false，由用户显式启动。";
+      description = "迁移期保留：acb-stack.target 已移除，本选项暂无消费者；acbl 由部署者显式启动。";
     };
 
     host = lib.mkOption {
@@ -333,52 +330,27 @@ in
 
   config = lib.mkIf cfg.enable {
     environment.systemPackages = [
-      acbPkg
+      acblPkg
       acbCli
       acbl
     ];
 
     systemd.user.services = {
-      "dsh-acb" = {
-        unitConfig = {
-          Description = "ACB dsh (${cfg.profile})";
-          After = [ "network.target" ];
-          PartOf = [ "acb-stack.target" ];
-        };
-        serviceConfig = {
-          Type = "simple";
-          WorkingDirectory = home;
-          Environment = [
-            "PATH=${basePath}"
-          ];
-          EnvironmentFile = lib.optional (cfg.secretsFile != null) "-${cfg.secretsFile}";
-          ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p ${lib.escapeShellArg logDir}";
-          ExecStart = "${pkgs.writeShellScript "acb-dsh-exec" ''
-            set -e
-            mkdir -p ${lib.escapeShellArg logDir}
-            exec ${dshBin} --profile ${lib.escapeShellArg cfg.profile} --host ${lib.escapeShellArg cfg.host} --no-open --port ${toString cfg.dshPort}
-          ''}";
-          Restart = "always";
-          RestartSec = 5;
-          TimeoutStopSec = "15s";
-          # $XDG_STATE_HOME/acb，systemd 在 spawn 前建好，避免日志目录被
-          # impermanence 清空后 append: 以 209/STDOUT 失败。
-          StateDirectory = "acb";
-          StandardOutput = "append:${logDir}/dsh.log";
-          StandardError = "append:${logDir}/dsh.log";
-        };
-      };
-
       "acb-bridge" = {
         unitConfig = {
-          Description = "ACB bridge";
+          # 单元名保留 acb-bridge，供现有 acb CLI / drivers / opencode 依赖引用；
+          # 实际入口已换成静态的 acb-launcher（acbl 包）。
+          Description = "ACB launcher (static acbl)";
           After = [ "network.target" ];
           PartOf = [ "acb-stack.target" ];
           StartLimitIntervalSec = 60;
           StartLimitBurst = 3;
         };
         serviceConfig = {
-          Type = "simple";
+          # launcher 支持 sd_notify：READY=1 + watchdog 心跳。
+          Type = "notify";
+          NotifyAccess = "main";
+          WatchdogSec = 120;
           WorkingDirectory = dataDir;
           Environment = [
             "PATH=${basePath}"
@@ -387,6 +359,9 @@ in
             "ACB_RELAY_LISTEN=0.0.0.0:${toString cfg.relayPort}"
             "ACB_LUA_DIR=${profileCurrent}/examples/lua"
             "ACB_PROFILE_DIR=${profileDir}"
+            # profile seed 把它写进 current.json 的 args；没有它，launcher
+            # 拉起 bridge 时不会带 --config。
+            "ACB_UNIT_CONFIG_FILE=${if notificationsEnabled then activeConfigFile else configFile}"
           ];
           EnvironmentFile =
             lib.optional (cfg.secretsFile != null) "-${cfg.secretsFile}"
@@ -401,15 +376,21 @@ in
           ]
           ++ lib.optional notificationsEnabled "${configMerge}/bin/acb-config-merge"
           ++ [
-            "${profileBootstrap}/bin/acbctl profile seed ${profileBootstrap}"
+            # payload 来自 acb-payload（store 路径），用 store 策略建 generation。
+            # seed 幂等：已有 generation 时直接跳过。
+            "${acblPkg}/bin/acbctl profile seed ${profileBootstrap} --strategy store"
           ];
-          ExecStart = "${profileCurrent}/bin/acb-bridge --config ${
-            lib.escapeShellArg (if notificationsEnabled then activeConfigFile else configFile)
-          }";
+          # 稳定入口：不写 acblPkg 的具体 store 路径，升级 acbl 不改变这一行。
+          # 不带 --config：launcher 自管 state/supervisor/supervisor.toml，
+          # 组件表也从那里读。
+          ExecStart = "/run/current-system/sw/bin/acb-launcher";
           Restart = "on-failure";
           RestartForceExitStatus = 75;
           RestartPreventExitStatus = 78;
-          RestartSec = 5;
+          RestartSec = 1;
+          # 停 acbl 不连带杀 bridge；bridge 由新 acbl 启动时 adopt。
+          KillMode = "process";
+          TimeoutStopSec = "45s";
           # $XDG_STATE_HOME/acb，systemd 在 spawn 前建好，避免日志目录被
           # impermanence 清空后 append: 以 209/STDOUT 失败。
           StateDirectory = "acb";
@@ -417,77 +398,6 @@ in
           StandardError = "append:${logDir}/bridge.log";
         };
       };
-
-      "acb-drivers" = {
-        unitConfig = {
-          Description = "ACB dsh drivers";
-          After = [
-            "network.target"
-            "acb-bridge.service"
-            "dsh-acb.service"
-          ];
-          Requires = [ "acb-bridge.service" ];
-          Wants = [ "dsh-acb.service" ];
-          PartOf = [
-            "acb-bridge.service"
-            "acb-stack.target"
-          ];
-        };
-        serviceConfig = {
-          Type = "simple";
-          EnvironmentFile = lib.optional (cfg.secretsFile != null) "-${cfg.secretsFile}";
-          ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p ${lib.escapeShellArg logDir}";
-          ExecStart = "${driverScript}/bin/acb-drivers";
-          Restart = "always";
-          RestartSec = 5;
-          # $XDG_STATE_HOME/acb，systemd 在 spawn 前建好，避免日志目录被
-          # impermanence 清空后 append: 以 209/STDOUT 失败。
-          StateDirectory = "acb";
-          StandardOutput = "append:${logDir}/drivers.log";
-          StandardError = "append:${logDir}/drivers.log";
-        };
-      };
-
-      "acb-opencode-serve" = {
-        unitConfig = {
-          Description = "ACB opencode serve";
-          After = [
-            "network.target"
-            "acb-bridge.service"
-          ];
-          Wants = [ "acb-bridge.service" ];
-          PartOf = [ "acb-stack.target" ];
-        };
-        serviceConfig = {
-          Type = "simple";
-          Environment = [
-            "PATH=${basePath}"
-            "ACB_OPENCODE_DIR=${dataDir}/opencode"
-            "ACB_OPENCODE_PORT=${toString cfg.opencodePort}"
-            "ACB_OPENCODE_HOST=${cfg.exposeHost}"
-            "ACB_OPENCODE_BIN=${opencode2}"
-          ];
-          EnvironmentFile = lib.optional (cfg.secretsFile != null) "-${cfg.secretsFile}";
-          ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p ${lib.escapeShellArg logDir}";
-          ExecStart = "${pkgs.bash}/bin/bash ${profileCurrent}/deploy/opencode-serve.sh";
-          Restart = "always";
-          RestartSec = 5;
-          # $XDG_STATE_HOME/acb，systemd 在 spawn 前建好，避免日志目录被
-          # impermanence 清空后 append: 以 209/STDOUT 失败。
-          StateDirectory = "acb";
-          StandardOutput = "append:${logDir}/opencode.log";
-          StandardError = "append:${logDir}/opencode.log";
-        };
-      };
-    };
-
-    systemd.user.units."acb-stack.target" = {
-      text = ''
-        [Unit]
-        Description=ACB stack
-        Wants=acb-bridge.service acb-drivers.service acb-opencode-serve.service dsh-acb.service
-      '';
-      wantedBy = lib.optional cfg.autoStart "default.target";
     };
   };
 }

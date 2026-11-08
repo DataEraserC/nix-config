@@ -4,23 +4,15 @@ if (( $# == 0 )); then
 else
   targets=("$@")
 fi
-start_target=no
 start_bridge=no
-start_drivers=no
-start_opencode=no
-start_dsh=no
-opencode_required=no
 for target in "${targets[@]}"; do
   case "$target" in
-    all) start_target=yes ;;
-    bridge) start_bridge=yes ;;
-    drivers) start_drivers=yes ;;
-    opencode)
-      start_opencode=yes
-      opencode_required=yes
+    all | bridge) start_bridge=yes ;;
+    drivers | dsh | opencode)
+      echo "「$target」由 acbl 组件管理，不再由 systemd 启动；请用 acbctl component 等命令操作。" >&2
+      exit 1
       ;;
-    dsh) start_dsh=yes ;;
-    *) echo "不认识的组件：$target（可用：all / bridge / drivers / dsh / opencode）" >&2; exit 1 ;;
+    *) echo "不认识的组件：$target（可用：all / bridge）" >&2; exit 1 ;;
   esac
 done
 
@@ -34,104 +26,9 @@ wait_tcp() {
   return 1
 }
 
-http_code() { curl -sS -o /dev/null --max-time 2 -w '%{http_code}' "$1" 2>/dev/null || true; }
-http_basic_code() {
-  local url=$1 user=$2 password=$3
-  curl -sS -o /dev/null --max-time 2 -u "$user:$password" -w '%{http_code}' "$url" 2>/dev/null || true
-}
-
-read_env_value() {
-  local file=$1 key=$2 value=""
-  [[ -r $file ]] || return 0
-  value=$(grep -E "^${key}=" "$file" 2>/dev/null | tail -n 1 | cut -d= -f2-)
-  value=${value%$'\r'}
-  value=${value#\"}
-  value=${value%\"}
-  value=${value#\'}
-  value=${value%\'}
-  printf '%s' "$value"
-}
-
-opencode_password() {
-  local password files file
-  password=$(read_env_value /run/agenix/acb.env ACB_OPENCODE_PASSWORD)
-  if [[ -z $password ]]; then
-    files=$(systemctl --user show acb-opencode-serve -p EnvironmentFiles --value 2>/dev/null | grep -o '/run/agenix/[^ ]*' || true)
-    for file in $files; do
-      password=$(read_env_value "$file" ACB_OPENCODE_PASSWORD)
-      [[ -n $password ]] && break
-    done
-  fi
-  printf '%s' "${password:-acb-opencode-local}"
-}
-
-wait_http() {
-  local url=$1 label=$2 code="" deadline=$((SECONDS + 30))
-  while (( SECONDS < deadline )); do
-    code=$(http_code "$url")
-    case "$code" in
-      200 | 401) echo "    $label 已就绪（HTTP $code）"; return 0 ;;
-    esac
-    sleep 0.5
-  done
-  echo "    ⚠ $label 30 秒内没有就绪：$url 最后 HTTP ${code:-无响应}" >&2
-  return 1
-}
-
-wait_opencode() {
-  local url=$1 password=$2 code="" deadline=$((SECONDS + 30))
-  while (( SECONDS < deadline )); do
-    code=$(http_basic_code "$url" opencode "$password")
-    if [[ $code == 200 ]]; then
-      echo "    opencode 已就绪（HTTP 200）"
-      return 0
-    fi
-    sleep 0.5
-  done
-  echo "    ⚠ opencode 30 秒内没有就绪：$url 最后 HTTP ${code:-无响应}" >&2
-  return 1
-}
-
-if [[ $start_target == yes ]]; then
-  systemctl --user start acb-stack.target || exit 1
+if [[ $start_bridge == yes ]]; then
+  systemctl --user start acb-bridge.service || exit 1
   wait_tcp "@ENDPOINT_PORT@" "桥" || true
-else
-  if [[ $start_dsh == yes ]]; then
-    systemctl --user start dsh-acb.service
-    wait_http "http://@DSH_HOST@:@DSH_PORT@/" "dsh" || true
-  fi
-  if [[ $start_bridge == yes ]]; then
-    systemctl --user start acb-bridge.service
-    wait_tcp "@ENDPOINT_PORT@" "桥" || true
-  fi
-  if [[ $start_opencode == yes ]]; then
-    opencode_url="http://@OPENCODE_HOST@:@OPENCODE_PORT@/api/info"
-    opencode_password_value=$(opencode_password)
-    opencode_code=$(http_basic_code "$opencode_url" opencode "$opencode_password_value")
-    if [[ $opencode_code == 200 ]]; then
-      echo "opencode 已在运行（/api/info HTTP 200），跳过启动"
-    elif [[ $opencode_code == 401 || $opencode_code == 403 ]]; then
-      echo "opencode /api/info HTTP $opencode_code（ACB_OPENCODE_PASSWORD 不匹配？）" >&2
-      [[ $opencode_required == yes ]] && exit 1
-      echo "opencode 未就绪；继续（acb status 会显示失败）" >&2
-    else
-      opencode_loaded=$(systemctl --user show acb-opencode-serve.service -p LoadState --value 2>/dev/null || true)
-      if [[ $opencode_loaded == not-found ]]; then
-        echo "acb-opencode-serve 未配置；跳过 opencode" >&2
-        [[ $opencode_required == yes ]] && exit 1
-      else
-        systemctl --user start acb-opencode-serve.service
-        if ! wait_opencode "$opencode_url" "$opencode_password_value"; then
-          [[ $opencode_required == yes ]] && exit 1
-          echo "opencode 未就绪；继续（acb status 会显示失败）" >&2
-        fi
-      fi
-    fi
-  fi
-  if [[ $start_drivers == yes ]]; then
-    systemctl --user start acb-drivers.service
-    wait_tcp "@ENDPOINT_PORT@" "桥" || true
-  fi
 fi
 
 "@STATUS@" --summary || true

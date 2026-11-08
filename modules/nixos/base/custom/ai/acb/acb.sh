@@ -4,11 +4,11 @@ usage() {
 usage: acb <command> [args...]
 
 commands:
-  up      start acb-stack.target, or one component (bridge / drivers / dsh / opencode)
-  down    stop acb-stack.target, or one component
+  up      start acb-bridge (acbl 负责拉起受管组件)
+  down    stop acb-bridge
   status  show dependency and unit readiness
   logs    follow ACB logs (dsh / bridge / drivers / opencode)
-  stack   start acb-stack.target, wait for readiness, print summary
+  stack   start acb-bridge, wait for readiness, print summary
 EOF
 }
 

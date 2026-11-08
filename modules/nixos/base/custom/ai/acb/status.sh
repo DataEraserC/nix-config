@@ -14,33 +14,6 @@ http_probe_auth() {
   probe_rc=$?
   probe_code=${body:-000}
 }
-http_basic_code() {
-  local url=$1 user=$2 password=$3
-  curl -sS -o /dev/null --max-time 2 -u "$user:$password" -w '%{http_code}' "$url" 2>/dev/null || true
-}
-read_env_value() {
-  local file=$1 key=$2 value=""
-  [[ -r $file ]] || return 0
-  value=$(grep -E "^${key}=" "$file" 2>/dev/null | tail -n 1 | cut -d= -f2-)
-  value=${value%$'\r'}
-  value=${value#\"}
-  value=${value%\"}
-  value=${value#\'}
-  value=${value%\'}
-  printf '%s' "$value"
-}
-opencode_password() {
-  local password files file
-  password=$(read_env_value /run/agenix/acb.env ACB_OPENCODE_PASSWORD)
-  if [[ -z $password ]]; then
-    files=$(systemctl --user show acb-opencode-serve -p EnvironmentFiles --value 2>/dev/null | grep -o '/run/agenix/[^ ]*' || true)
-    for file in $files; do
-      password=$(read_env_value "$file" ACB_OPENCODE_PASSWORD)
-      [[ -n $password ]] && break
-    done
-  fi
-  printf '%s' "${password:-acb-opencode-local}"
-}
 tcp_open() { ss -tln 2>/dev/null | grep -q ":$1 "; }
 
 statuses=()
@@ -56,36 +29,15 @@ if [[ $summary == no ]]; then
   printf '%-10s %-5s %-14s %s\n' "依赖" "结果" "状态" "提示"
 fi
 
-# dsh: preferred when its HTTP endpoint answers, even if started outside systemd.
+# dsh: 由 acbl 组件管理，这里只按 HTTP 端口判断可达性。
 dsh_code=$(http_code "http://@DSH_HOST@:@DSH_PORT@/")
-dsh_active=$(unit_active dsh-acb)
-dsh_loaded=$(unit_loaded dsh-acb)
 if [[ $dsh_code == 200 || $dsh_code == 401 ]]; then
   report dsh ok ready "http://@DSH_HOST@:@DSH_PORT@/ HTTP $dsh_code"
-elif [[ $dsh_loaded == not-found ]]; then
-  report dsh fail not_configured "dsh-acb unit not found; dsh is user-managed"
-elif [[ $dsh_active != active ]]; then
-  report dsh fail not_started "start acb-stack.target or use acb stack"
 else
-  report dsh fail unreachable "unit active but HTTP ${dsh_code:-000}; see @LOG_DIR@/dsh.log"
+  report dsh fail unreachable "dsh 由 acbl 管理；见 acbctl component status / @LOG_DIR@/dsh.log"
 fi
 
-# opencode: ACB-owned harness. Readiness = authenticated /api/info HTTP 200.
-opencode_password_value=$(opencode_password)
-opencode_code=$(http_basic_code "http://@OPENCODE_HOST@:@OPENCODE_PORT@/api/info" opencode "$opencode_password_value")
-opencode_active=$(unit_active acb-opencode-serve)
-opencode_loaded=$(unit_loaded acb-opencode-serve)
-if [[ $opencode_code == 200 ]]; then
-  report opencode ok ready "http://@OPENCODE_HOST@:@OPENCODE_PORT@/api/info HTTP 200"
-elif [[ $opencode_loaded == not-found ]]; then
-  report opencode fail not_configured "acb-opencode-serve unit not found"
-elif [[ $opencode_active != active ]]; then
-  report opencode fail not_started "start acb-stack.target or use acb stack"
-elif [[ $opencode_code == 401 || $opencode_code == 403 ]]; then
-  report opencode fail auth_fail "HTTP $opencode_code: ACB_OPENCODE_PASSWORD mismatch; see @LOG_DIR@/opencode.log"
-else
-  report opencode fail unreachable "unit active but /api/info HTTP ${opencode_code:-000}; see @LOG_DIR@/opencode.log"
-fi
+# opencode 已由 acbl 组件管理，状态见 `acbctl component status`。
 
 # bridge: requires its console token; /api/status is the local self-report.
 config_token=$(awk '
@@ -170,19 +122,10 @@ if [[ $bridge_active == active ]]; then
 elif [[ $bridge_loaded == not-found ]]; then
   report bridge fail not_configured "acb-bridge unit not found"
 else
-  report bridge fail not_started "start acb-stack.target or use acb stack"
+  report bridge fail not_started "start acb-bridge (systemctl --user start acb-bridge.service or acb stack)"
 fi
 
-# drivers are ACB-owned; active state is enough for the local readiness view.
-drivers_active=$(unit_active acb-drivers)
-drivers_loaded=$(unit_loaded acb-drivers)
-if [[ $drivers_active == active ]]; then
-  report drivers ok ready "acb-drivers unit active"
-elif [[ $drivers_loaded == not-found ]]; then
-  report drivers fail not_configured "acb-drivers unit not found"
-else
-  report drivers fail not_started "start acb-stack.target or use acb stack"
-fi
+# drivers / dsh-presets 已由 acbl 组件管理，状态见 `acbctl component status`。
 
 # snowluma is platform-side and has no ACB unit; only TCP visibility is possible here.
 snowluma_port="@SNOWLUMA_PORT@"

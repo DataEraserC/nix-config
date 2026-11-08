@@ -7,12 +7,12 @@ fi
 units=()
 for target in "${targets[@]}"; do
   case "$target" in
-    all) units+=(acb-stack.target) ;;
-    bridge) units+=(acb-bridge.service) ;;
-    drivers) units+=(acb-drivers.service) ;;
-    opencode) units+=(acb-opencode-serve.service) ;;
-    dsh) units+=(dsh-acb.service) ;;
-    *) echo "不认识的组件：$target（可用：all / bridge / drivers / dsh / opencode）" >&2; exit 1 ;;
+    all | bridge) units+=(acb-bridge.service) ;;
+    drivers | dsh | opencode)
+      echo "「$target」由 acbl 组件管理，不再由 systemd 停止；请用 acbctl component 等命令操作。" >&2
+      exit 1
+      ;;
+    *) echo "不认识的组件：$target（可用：all / bridge）" >&2; exit 1 ;;
   esac
 done
 
