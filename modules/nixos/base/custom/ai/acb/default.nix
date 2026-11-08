@@ -106,11 +106,6 @@ in
       description = "console / opencode 的对外监听地址；0.0.0.0 表示所有网卡（ZeroTier 等）。";
     };
 
-    dshPort = lib.mkOption {
-      type = lib.types.port;
-      description = "dsh-acb 的 Web UI 端口。";
-    };
-
     endpointPort = lib.mkOption {
       type = lib.types.port;
       description = "桥的 harness 接入端口。";
@@ -121,25 +116,9 @@ in
       description = "桥的控制台端口。";
     };
 
-    opencodePort = lib.mkOption {
-      type = lib.types.port;
-      description = "ACB 专用 opencode serve 端口。";
-    };
-
     relayPort = lib.mkOption {
       type = lib.types.port;
       description = "文件中继端口。";
-    };
-
-    snowlumaPort = lib.mkOption {
-      type = lib.types.port;
-      description = "snowluma 的 OneBot WS 端口；acb status 用它判断容器在不在。";
-    };
-
-    profile = lib.mkOption {
-      type = lib.types.str;
-      default = "nix-web-acb";
-      description = "dsh 使用的 profile。";
     };
 
     dataDir = lib.mkOption {
@@ -152,18 +131,6 @@ in
       type = lib.types.str;
       default = "${home}/.local/state/acb";
       description = "ACB 的日志目录。";
-    };
-
-    workspaceDir = lib.mkOption {
-      type = lib.types.str;
-      default = "${dataDir}/agents";
-      description = "dsh 会话的 cwd（Workspaces 分组）。";
-    };
-
-    workspaceTitle = lib.mkOption {
-      type = lib.types.str;
-      default = "ACB";
-      description = "dsh Workspaces 里这个目录的显示标题。";
     };
 
     secretsFile = lib.mkOption {

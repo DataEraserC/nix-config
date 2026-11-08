@@ -145,12 +145,9 @@ rec {
     enable = (svc "acb").enable;
     host = (svc "acb").host;
     exposeHost = (svc "acb").exposeHost;
-    dshPort = (svc "acb").ports.dsh;
     endpointPort = (svc "acb").ports.endpoint;
     consolePort = (svc "acb").ports.console;
-    opencodePort = (svc "acb").ports.opencode;
     relayPort = (svc "acb").ports.relay;
-    snowlumaPort = (svc "acb").ports.snowluma;
     secretsFile = config.age.secrets."acb.env".path;
   };
 
