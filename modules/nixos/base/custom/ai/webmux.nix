@@ -60,6 +60,14 @@
 # it also drops user-made launch configs - or edit the "Shell" preset in the UI:
 #   sudo rm /var/lib/webmux/webmux/launch-configs.json && sudo systemctl restart webmux
 #
+# Generic ACP agents and wrapper commands are DECLARED, not installed:
+# `acpAgents` / `agentWrappers` become WEBMUX_ACP_AGENTS / WEBMUX_AGENT_WRAPPERS
+# in the unit environment, read by the patched webmux build. No per-agent or
+# per-instance executable is generated, and nothing is added to
+# environment.systemPackages. `acpShims` exposes a protocol shim under the
+# agent's name on a service-local PATH only, so a wrapper's `command -v <agent>`
+# resolves it while the system-wide CLI stays the vendor binary.
+#
 # Binds to 0.0.0.0:<port> by default. The shared host firewall trusts only the
 # LAN and the overlay interfaces, so the page is reachable from the tailnet /
 # zerotier / easytier peers and not from the internet; the token is the only
@@ -131,15 +139,21 @@ let
       --listen ${lib.escapeShellArg listen}
   '';
 
-  # One wrapper per declared agent that runs a whole command line: the name is
-  # what a launch config execs and what WebMux rebuilds the chat-side and
-  # resume commands from, and the command line - which WebMux cannot pass
-  # through itself - becomes the executable. `exec` keeps it a single process,
-  # and the command resolves through the session PATH at runtime, so it may
-  # name another module's wrapper such as `multi-instance`.
-  acpWrappers = lib.mapAttrsToList (
-    name: spec: pkgs.writeShellScriptBin name ''exec ${spec.command} "$@"''
-  ) (lib.filterAttrs (_: spec: spec.command != "") cfg.acpAgents);
+  # A service-local bin directory: each shim is linked under the agent's own
+  # name so both a direct run and a wrapper's `command -v <agent>` resolve to
+  # it. Nothing is installed into environment.systemPackages, and there is one
+  # symlink per agent - not one per instance. The global CLI stays untouched.
+  acpShimPath = pkgs.runCommand "webmux-acp-shims" { } (
+    ''
+      mkdir -p $out/bin
+    ''
+    + lib.concatStringsSep "\n" (
+      lib.mapAttrsToList (
+        name: shim: "ln -s ${lib.getExe shim} $out/bin/${lib.escapeShellArg name}"
+      ) cfg.acpShims
+    )
+    + "\n"
+  );
 in
 {
   options.modules.webmux = {
@@ -196,7 +210,9 @@ in
       default = nur-DataEraserC.packages.${system}.webmux or null;
       description = ''
         WebMux package. Defaults to the DataEraserC NUR build, which is the
-        repository version when the NUR overlay is applied.
+        repository version when the NUR overlay is applied. A host that wants
+        the config-driven ACP declarations below points this at `webmux-acp`,
+        the test build carrying the local (un-PR'd) upstream patch.
       '';
     };
 
@@ -224,6 +240,19 @@ in
               default = "";
               description = "Argument that starts the agent's ACP server (`--acp`, `acp`, ...); empty means `acp`.";
             };
+            acpExe = lib.mkOption {
+              type = lib.types.str;
+              default = "";
+              example = "codebuddy-acp";
+              description = ''
+                Base name of a stdio shim that fills ACP protocol gaps (such as
+                a missing `session/list`). Applies to a DIRECT run only:
+                `ACPArgv` replaces the agent's argv[0] with it. A wrapped run
+                keeps its full prefix; expose the shim through `acpShims`
+                instead, otherwise the wrapper would treat the shim as an
+                ordinary argument to the agent.
+              '';
+            };
             resumeFlag = lib.mkOption {
               type = lib.types.str;
               default = "";
@@ -234,22 +263,14 @@ in
               default = "";
               description = "How a terminal process is matched to an agent session; only \"none\" (fall back to session/list), which is also the default.";
             };
-            command = lib.mkOption {
+            launcher = lib.mkOption {
               type = lib.types.str;
               default = "";
-              example = "multi-instance codebuddy 1";
+              example = "bwrap";
               description = ''
-                Full command line the name runs: setting this installs a thin
-                wrapper named after the entry that execs it with the session's
-                arguments appended. WebMux rebuilds the chat-side and resume
-                commands as `<name> <acpArg>` / `<name> <resumeFlag> <id>` and
-                drops arguments it cannot classify, so a command line that is
-                not a bare agent - `multi-instance codebuddy 1`, a
-                `nix shell` prefix, an env wrapper - must become the executable
-                itself for hybrid mode to start the same thing on both sides.
-                The command is resolved through the session PATH at runtime;
-                the name is added to `environment.systemPackages`, so pick one
-                nothing else installs.
+                Executable that remains the PTY root process when the agent is
+                started through an interpreter or launcher that forks instead
+                of exec'ing. Empty means the agent's own executable is the root.
               '';
             };
           };
@@ -263,28 +284,78 @@ in
             acpArg = "--acp";
             resumeFlag = "--resume";
           };
-          codebuddy-1 = {
-            title = "CodeBuddy 1";
-            command = "multi-instance codebuddy 1";
-            acpArg = "--acp";
-            resumeFlag = "--resume";
-          };
         }
       '';
       description = ''
-        Agents this build has no adapter for, keyed by executable base name. Only
-        `package` = `webmux-acp` (the NUR build carrying the
+        Agents this build has no adapter for, keyed by executable base name. Any
+        CLI that speaks ACP is declared the same way - there is no per-agent
+        option. Only `package` = `webmux-acp` (the NUR build carrying the
         `WEBMUX_ACP_AGENTS` extension) can use them; the plain package ignores
         the variable and these agents keep their terminal-only behaviour.
 
-        Upstream identifies an agent by the command name only, so a key must be
-        the exact base name a launch config execs (`codebuddy`, not a wrapper
-        path), and the agent has to answer ACP `initialize` itself. Capabilities
-        that the handshake cannot report - `session/list` above all - come from
-        the CLI or from a proxy such as `codebuddy-acp`; this module only
-        declares the launch facts. An entry with `command` set wraps a whole
-        command line under the entry's name, which is how `multi-instance`
-        invocations and other prefixes become hybrid-capable too.
+        A key must be the exact base name a launch config execs. The declared
+        agent does not claim a terminal-signal identity, so session matching
+        falls back to `session/list` probing. Capabilities the handshake cannot
+        report - `session/list` above all - come from the CLI itself or from a
+        shim declared in `acpShims`.
+      '';
+    };
+
+    agentWrappers = lib.mkOption {
+      type = lib.types.attrsOf (
+        lib.types.submodule {
+          options = {
+            args = lib.mkOption {
+              type = lib.types.int;
+              default = 1;
+              description = ''
+                Number of fixed leading arguments the wrapper takes before the
+                agent's own arguments. The first one must name a registered
+                agent. Values 1-8 are accepted; a shorter command is reported
+                as an unsupported form.
+              '';
+            };
+            launcher = lib.mkOption {
+              type = lib.types.str;
+              default = "";
+              example = "bwrap";
+              description = ''
+                Executable that stays as the PTY root process when the wrapper
+                forks instead of exec'ing the agent (bubblewrap sandboxes do
+                this). Empty means the wrapper chain ends at the agent's own
+                executable.
+              '';
+            };
+          };
+        }
+      );
+      default = { };
+      example = lib.literalExpression ''
+        { multi-instance = { args = 2; launcher = "bwrap"; }; }
+      '';
+      description = ''
+        Wrapper commands whose fixed prefix WebMux must preserve when it
+        rebuilds the TUI, resume and ACP command lines. Keyed by the wrapper
+        executable's base name. One declaration covers every instance
+        (`multi-instance codebuddy 1 | 2 | work | home`): this is a pure
+        declaration, no executable is generated or installed into the system.
+      '';
+    };
+
+    acpShims = lib.mkOption {
+      type = lib.types.attrsOf lib.types.package;
+      default = { };
+      example = lib.literalExpression ''
+        { codebuddy = nur-DataEraserC.packages.${pkgs.stdenv.hostPlatform.system}.codebuddy-acp; }
+      '';
+      description = ''
+        ACP protocol shims exposed to WebMux sessions under the agent's own
+        name. Each entry creates one symlink in a service-local bin directory
+        prepended to the unit's PATH, so WebMux sessions - including
+        `command -v <agent>` inside a wrapper such as `multi-instance` -
+        resolve the shim, while the global executable in
+        `environment.systemPackages` stays the vendor CLI. This is not a
+        per-instance wrapper and does not grow the system PATH.
       '';
     };
 
@@ -324,6 +395,10 @@ in
         assertion = builtins.hasAttr cfg.group config.users.groups;
         message = "modules.webmux.group is set to \"${cfg.group}\", but that group is not defined.";
       }
+      {
+        assertion = lib.all (name: builtins.match "[^/ ]+" name != null) (lib.attrNames cfg.acpShims);
+        message = "modules.webmux.acpShims keys must be executable base names without '/' or spaces.";
+      }
     ];
 
     systemd.services.webmux = {
@@ -337,13 +412,11 @@ in
       # a login from the console; XDG_STATE_HOME keeps the upstream state
       # directory inside stateDir instead of the (wiped) home.
       #
-      # `WEBMUX_ACP_AGENTS` is read once at start by the `webmux-acp` build,
-      # which rebuilds its agent registry from the JSON in this variable; the
-      # plain package never looks at it. Empty fields are dropped so a declared
-      # agent carries only the facts it needs, and the variable stays unset when
-      # nothing is declared, which leaves the built-in registry untouched.
-      # `command` is module-local (it becomes a wrapper), so it never reaches
-      # the agent table.
+      # The two declaration tables are read once at start by the `webmux-acp`
+      # build, which rebuilds its agent registry from the JSON and recognises
+      # wrapper prefixes. Empty fields are dropped; a table stays unset when
+      # empty, which leaves the built-in registry untouched. The plain package
+      # never looks at either variable.
       environment = {
         HOME = home;
         SHELL = shell;
@@ -351,9 +424,14 @@ in
       }
       // lib.optionalAttrs (cfg.acpAgents != { }) {
         WEBMUX_ACP_AGENTS = builtins.toJSON (
+          lib.mapAttrs (_: spec: lib.filterAttrs (_: value: value != "") spec) cfg.acpAgents
+        );
+      }
+      // lib.optionalAttrs (cfg.agentWrappers != { }) {
+        WEBMUX_AGENT_WRAPPERS = builtins.toJSON (
           lib.mapAttrs (
-            _: spec: lib.filterAttrs (name: value: value != "" && name != "command") spec
-          ) cfg.acpAgents
+            _: w: { args = w.args; } // lib.optionalAttrs (w.launcher != "") { launcher = w.launcher; }
+          ) cfg.agentWrappers
         );
       };
 
@@ -362,32 +440,36 @@ in
       # exec's directly - an agent preset, or a custom entry like
       # `multi-instance codebuddy 1` - inherits this unit's PATH alone, and the
       # NixOS service default is just coreutils/findutils/grep/sed/systemd.
-      # git and ssh cover the repository panel (the login user's git comes from
-      # home-manager and never reaches a unit); `environment.profiles` - the
-      # same list set-environment turns into a login's $PATH - adds the system
-      # profile and the user's own profiles, with its $HOME/$USER/
-      # ${XDG_STATE_HOME} placeholders expanded for this unit's user, plus the
-      # setuid wrappers.
-      path = [
-        pkgs.git
-        pkgs.openssh
-      ]
-      ++ map (
-        profile:
-        lib.replaceStrings
-          [
-            "$HOME"
-            "$USER"
-            "\${XDG_STATE_HOME}"
-          ]
-          [
-            home
-            cfg.user
-            "${home}/.local/state"
-          ]
-          profile
-      ) config.environment.profiles
-      ++ [ "/run/wrappers" ];
+      # The service-local shim directory comes first when declared: a wrapper
+      # resolves the agent through `command -v`, so the shim must be on the
+      # session PATH; it is not installed system-wide. git and ssh cover the
+      # repository panel (the login user's git comes from home-manager and
+      # never reaches a unit); `environment.profiles` - the same list
+      # set-environment turns into a login's $PATH - adds the system profile
+      # and the user's own profiles, with its $HOME/$USER/${XDG_STATE_HOME}
+      # placeholders expanded for this unit's user, plus the setuid wrappers.
+      path =
+        lib.optionals (cfg.acpShims != { }) [ "${acpShimPath}/bin" ]
+        ++ [
+          pkgs.git
+          pkgs.openssh
+        ]
+        ++ map (
+          profile:
+          lib.replaceStrings
+            [
+              "$HOME"
+              "$USER"
+              "\${XDG_STATE_HOME}"
+            ]
+            [
+              home
+              cfg.user
+              "${home}/.local/state"
+            ]
+            profile
+        ) config.environment.profiles
+        ++ [ "/run/wrappers" ];
 
       serviceConfig = {
         Type = "simple";
@@ -425,11 +507,6 @@ in
         install -d -m 0700 -o ${cfg.user} -g ${cfg.group} ${lib.escapeShellArg stateDir}
       ''
     );
-
-    # Declared `command` agents run as their wrapper name: a launch config execs
-    # it, WebMux's chat side resolves it through the session PATH, and a shell
-    # user can run it too.
-    environment.systemPackages = lib.mkIf (acpWrappers != [ ]) acpWrappers;
 
     networking.firewall = lib.mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];
