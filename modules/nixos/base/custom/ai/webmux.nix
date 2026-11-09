@@ -17,8 +17,7 @@
 # token.
 #
 # State layout - stateDir = /var/lib/webmux (systemd StateDirectory):
-#   /var/lib/webmux/config.toml     listen address, defaults, and the access
-#                                   token unless `tokenFile` supplies it
+#   /var/lib/webmux/config.toml     listen address, access token, defaults
 #   /var/lib/webmux/webmux/         upstream state dir ($XDG_STATE_HOME/webmux):
 #                                   launch-configs.json, repositories.json,
 #                                   hybrid-sessions.json, run/webmux.sock
@@ -32,29 +31,18 @@
 # `default_cwd`, `allowed_origins`, `scrollback_bytes`, `[voice]`, ... - is
 # yours to edit in place; a redeploy keeps it.
 #
-# The token - upstream reads it from config.toml or `serve --token`, there is no
-# environment variable it honours on its own. Setting `tokenFile` takes it out of
-# the state directory: the unit gets an EnvironmentFile (`WEBMUX_TOKEN=...`) and
-# passes it as `--token`, so the secret stays in agenix and the seeded config is
-# stripped of its random token. The token then shows up in the process command
-# line (`/proc/<pid>/cmdline`, readable by every local user) - acceptable on a
-# single-user host, and the only way to keep it out of a 0600 file the running
-# user owns. Web edits to the token in the UI are ignored while `tokenFile` is
-# set; rotate it by rotating the secret and restarting the unit.
+# The token lives in config.toml (0600, owned by the service user): upstream
+# reads it from that file or from `serve --token` and honours no environment
+# variable of its own. A flag would put it in the process command line, which
+# every local user can read through /proc, so the file is the safer home even
+# though the service user can read it - it can run shells as that user anyway.
 #
-# Reading the access token with `tokenFile` unset (the subcommand comes first;
-# `XDG_STATE_HOME` is what the client uses to find the running instance, the unit
-# sets it to stateDir):
+# Reading the access token (the subcommand comes first; `XDG_STATE_HOME` is what
+# the client uses to find the running instance, the unit sets it to stateDir):
 #   sudo -u <user> env XDG_STATE_HOME=/var/lib/webmux /run/current-system/sw/bin/webmux \
 #     status --config /var/lib/webmux/config.toml --json --reveal-token
-# With `tokenFile` set it is the secret instead:
-#   sudo cat /run/agenix/webmux.env
-# `webmux status` then reports a `token` entry under `drift`: the running token
-# comes from the environment while config.toml has none. That is expected, not a
-# misconfiguration.
-# Resetting the token (all browsers must log in again): delete the file the
-# token came from and restart - `rm /var/lib/webmux/config.toml` in the first
-# case, a rotated secret in the second.
+# Resetting the token (all browsers must log in again):
+#   sudo rm /var/lib/webmux/config.toml && sudo systemctl restart webmux
 #
 # The repository panel shells out to `git`, so the unit's PATH carries git and
 # ssh: systemd hands a unit the compiled-in default PATH (`/usr/bin`, ...), which
@@ -108,26 +96,17 @@ let
   listen = "${cfg.host}:${toString cfg.port}";
   configPath = "${stateDir}/config.toml";
 
-  hasTokenFile = cfg.tokenFile != null;
-
-  # Seed the config exactly once: `webmux config init` writes the upstream
-  # template, creating the parent directory 0700 and the file 0600, and `-s`
-  # (not `-e`) retries after a truncated leftover file.
-  #
-  # With `tokenFile` the token comes from the environment instead - the CLI flag
-  # beats the file - so the `token` line is removed on every start: the seeded
-  # one, and one an earlier deployment or the web UI wrote. That also cleans up a
-  # state directory that already carried a token before `tokenFile` was set.
+  # Seed the token-bearing config exactly once: `webmux config init` writes the
+  # upstream template with a random token, creating the parent directory 0700
+  # and the file 0600, and `-s` (not `-e`) retries after a truncated leftover.
   seedConfig = pkgs.writeShellScript "webmux-config-init" ''
     set -eu
-    if [ ! -s ${lib.escapeShellArg configPath} ]; then
-      ${webmuxExe} config init \
-        --config ${lib.escapeShellArg configPath} \
-        --listen ${lib.escapeShellArg listen}
+    if [ -s ${lib.escapeShellArg configPath} ]; then
+      exit 0
     fi
-    ${lib.optionalString hasTokenFile ''
-      ${pkgs.gnused}/bin/sed -i '/^[[:space:]]*token[[:space:]]*=/d' ${lib.escapeShellArg configPath}
-    ''}
+    exec ${webmuxExe} config init \
+      --config ${lib.escapeShellArg configPath} \
+      --listen ${lib.escapeShellArg listen}
   '';
 in
 {
@@ -196,26 +175,7 @@ in
         "--log-file"
         "/var/lib/webmux/webmux.log"
       ];
-      description = "Extra arguments appended to `webmux serve`, after the managed `--config`, `--listen` and `--token`.";
-    };
-
-    tokenFile = lib.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      default = null;
-      example = "/run/agenix/webmux.env";
-      description = ''
-        systemd EnvironmentFile holding `WEBMUX_TOKEN=<token>`; when set, the
-        access token comes from there - `serve --token` - instead of
-        `config.toml`, and the seeded config keeps no token at all.
-
-        systemd reads the file before dropping privileges, so it can stay
-        root-only (the agenix default), and the token never needs to be readable
-        by the service user. Upstream has no token environment variable of its
-        own: this module turns the file into the `--token` flag. The token is
-        therefore visible in the process command line. Keep it to a host where
-        every local user is trusted, or leave this unset and keep the 0600
-        `config.toml`.
-      '';
+      description = "Extra arguments appended to `webmux serve`, after the managed `--config` and `--listen`.";
     };
 
     openFirewall = lib.mkOption {
@@ -278,8 +238,8 @@ in
         Group = cfg.group;
         WorkingDirectory = home;
         ExecStartPre = "${seedConfig}";
-        ExecStart = lib.concatStringsSep " " (
-          map lib.escapeShellArg [
+        ExecStart = lib.escapeShellArgs (
+          [
             webmuxExe
             "serve"
             "--config"
@@ -289,20 +249,10 @@ in
             "--listen"
             listen
           ]
-          # Expanded by systemd from the EnvironmentFile, so it must stay
-          # unescaped; `$` is not a Nix interpolation here. Kept before
-          # extraArgs so a host can still pin its own token by hand.
-          ++ lib.optional hasTokenFile "--token \${WEBMUX_TOKEN}"
-          ++ map lib.escapeShellArg cfg.extraArgs
+          ++ cfg.extraArgs
         );
         Restart = "on-failure";
         RestartSec = 5;
-      }
-      // lib.optionalAttrs hasTokenFile {
-        EnvironmentFile = cfg.tokenFile;
-        # A missing agenix secret should fail loudly instead of starting a
-        # second instance with an empty token.
-        AssertPathExists = [ cfg.tokenFile ];
       }
       // lib.optionalAttrs useStateDirectory {
         StateDirectory = [ (builtins.baseNameOf stateDir) ];

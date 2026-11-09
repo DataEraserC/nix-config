@@ -291,10 +291,6 @@ rec {
   modules.webmux.enable = (svc "webmux").enable;
   modules.webmux.host = (svc "webmux").host;
   modules.webmux.port = (svc "webmux").port;
-  # The access token lives in the agenix secret, not in /var/lib/webmux: the
-  # unit turns WEBMUX_TOKEN into `serve --token`, so rotating it is a secret
-  # rotation plus a restart.
-  modules.webmux.tokenFile = config.age.secrets."webmux.env".path;
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
   modules.opencode2api.enable = (svc "opencode2api").enable;
