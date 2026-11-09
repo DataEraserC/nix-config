@@ -96,6 +96,16 @@ in
         mode = "0700";
       }
 
+      # webmux (config.toml with the access token, launch configs, runtime
+      # records). The unit runs as the login user, so the tmpfiles rule must
+      # carry that owner instead of the preservation default root:root.
+      {
+        directory = "/var/lib/webmux";
+        user = "${username}";
+        group = "users";
+        mode = "0700";
+      }
+
       # acb-issue-service (SQLite issue database). The unit is pinned to the
       # acb-issue account: a DynamicUser uid is not stable across reboots, so
       # the preserved directory could not keep a readable owner.

@@ -544,6 +544,37 @@ rec {
       };
     };
 
+    # WebMux browser terminal server (base/custom/ai/webmux). Not a gateway, but
+    # it is the surface the CLI agents of this block are driven from, so it takes
+    # the next free 11xx slot instead of opening a second range. The access token
+    # in /var/lib/webmux/config.toml is its only authentication.
+    webmux = {
+      hosts = {
+        idols-ai = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1109;
+        };
+        wsl-y9000p2025 = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1109;
+        };
+        wsl-work = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1109;
+        };
+      };
+      catalog = {
+        tags = [
+          "agent"
+          "ui"
+        ];
+        note = "webmux";
+      };
+    };
+
     open-webui = {
       hosts = {
         idols-ai = {

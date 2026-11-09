@@ -138,6 +138,12 @@ rec {
   modules.agent2api.enable = (svc "agent2api").enable;
   modules.agent2api.port = (svc "agent2api").port;
 
+  # WebMux browser terminal server, bound to 0.0.0.0:1109 (runs as this distro's
+  # login user so sessions reach its agent logins and HOME).
+  modules.webmux.enable = (svc "webmux").enable;
+  modules.webmux.host = (svc "webmux").host;
+  modules.webmux.port = (svc "webmux").port;
+
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
   modules.opencode2api.enable = (svc "opencode2api").enable;
   modules.opencode2api.port = (svc "opencode2api").port;
