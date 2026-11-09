@@ -130,6 +130,16 @@ let
       --config ${lib.escapeShellArg configPath} \
       --listen ${lib.escapeShellArg listen}
   '';
+
+  # One wrapper per declared agent that runs a whole command line: the name is
+  # what a launch config execs and what WebMux rebuilds the chat-side and
+  # resume commands from, and the command line - which WebMux cannot pass
+  # through itself - becomes the executable. `exec` keeps it a single process,
+  # and the command resolves through the session PATH at runtime, so it may
+  # name another module's wrapper such as `multi-instance`.
+  acpWrappers = lib.mapAttrsToList (
+    name: spec: pkgs.writeShellScriptBin name ''exec ${spec.command} "$@"''
+  ) (lib.filterAttrs (_: spec: spec.command != "") cfg.acpAgents);
 in
 {
   options.modules.webmux = {
@@ -224,6 +234,24 @@ in
               default = "";
               description = "How a terminal process is matched to an agent session; only \"none\" (fall back to session/list), which is also the default.";
             };
+            command = lib.mkOption {
+              type = lib.types.str;
+              default = "";
+              example = "multi-instance codebuddy 1";
+              description = ''
+                Full command line the name runs: setting this installs a thin
+                wrapper named after the entry that execs it with the session's
+                arguments appended. WebMux rebuilds the chat-side and resume
+                commands as `<name> <acpArg>` / `<name> <resumeFlag> <id>` and
+                drops arguments it cannot classify, so a command line that is
+                not a bare agent - `multi-instance codebuddy 1`, a
+                `nix shell` prefix, an env wrapper - must become the executable
+                itself for hybrid mode to start the same thing on both sides.
+                The command is resolved through the session PATH at runtime;
+                the name is added to `environment.systemPackages`, so pick one
+                nothing else installs.
+              '';
+            };
           };
         }
       );
@@ -232,6 +260,12 @@ in
         {
           codebuddy = {
             title = "CodeBuddy";
+            acpArg = "--acp";
+            resumeFlag = "--resume";
+          };
+          codebuddy-1 = {
+            title = "CodeBuddy 1";
+            command = "multi-instance codebuddy 1";
             acpArg = "--acp";
             resumeFlag = "--resume";
           };
@@ -248,7 +282,9 @@ in
         path), and the agent has to answer ACP `initialize` itself. Capabilities
         that the handshake cannot report - `session/list` above all - come from
         the CLI or from a proxy such as `codebuddy-acp`; this module only
-        declares the launch facts.
+        declares the launch facts. An entry with `command` set wraps a whole
+        command line under the entry's name, which is how `multi-instance`
+        invocations and other prefixes become hybrid-capable too.
       '';
     };
 
@@ -306,6 +342,8 @@ in
       # plain package never looks at it. Empty fields are dropped so a declared
       # agent carries only the facts it needs, and the variable stays unset when
       # nothing is declared, which leaves the built-in registry untouched.
+      # `command` is module-local (it becomes a wrapper), so it never reaches
+      # the agent table.
       environment = {
         HOME = home;
         SHELL = shell;
@@ -313,7 +351,9 @@ in
       }
       // lib.optionalAttrs (cfg.acpAgents != { }) {
         WEBMUX_ACP_AGENTS = builtins.toJSON (
-          lib.mapAttrs (_: spec: lib.filterAttrs (_: value: value != "") spec) cfg.acpAgents
+          lib.mapAttrs (
+            _: spec: lib.filterAttrs (name: value: value != "" && name != "command") spec
+          ) cfg.acpAgents
         );
       };
 
@@ -385,6 +425,11 @@ in
         install -d -m 0700 -o ${cfg.user} -g ${cfg.group} ${lib.escapeShellArg stateDir}
       ''
     );
+
+    # Declared `command` agents run as their wrapper name: a launch config execs
+    # it, WebMux's chat side resolves it through the session PATH, and a shell
+    # user can run it too.
+    environment.systemPackages = lib.mkIf (acpWrappers != [ ]) acpWrappers;
 
     networking.firewall = lib.mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];

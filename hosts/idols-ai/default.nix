@@ -301,6 +301,17 @@ rec {
     acpArg = "--acp";
     resumeFlag = "--resume";
   };
+  # Same CLI, one bubblewrap state directory per account (agent-accounts /
+  # multi-instance). WebMux rebuilds the chat-side command as `<name> --acp`
+  # and drops the rest, so the whole `multi-instance codebuddy 1` line runs as
+  # a generated wrapper named `codebuddy-1`; more accounts are one entry each
+  # (`codebuddy-2`, `codebuddy-work`, ...).
+  modules.webmux.acpAgents.codebuddy-1 = {
+    title = "CodeBuddy 1";
+    command = "multi-instance codebuddy 1";
+    acpArg = "--acp";
+    resumeFlag = "--resume";
+  };
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
   modules.opencode2api.enable = (svc "opencode2api").enable;
