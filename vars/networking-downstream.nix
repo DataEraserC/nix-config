@@ -813,6 +813,9 @@ rec {
       (laptop "mimocode2api" (regAi "mimocode2api" "port"))
       (laptop "M365-Copilot2API" (regAi "m365-copilot2api" "port"))
       (laptop "Agent2API" (regAi "agent2api" "port"))
+      # The laptop's browser terminal, reachable from this distro on its own
+      # local port as well (31109 = base + 1109), like the gateways above.
+      (laptop "webmux" (regAi "webmux" "port"))
       (laptop "cliproxyapimanagementcenter" (regAi "cliproxyapi" "port"))
       # kept for a future re-enable:
       # (laptop "omniroute" (regAi "omniroute" "port"))
