@@ -291,31 +291,6 @@ rec {
   modules.webmux.enable = (svc "webmux").enable;
   modules.webmux.host = (svc "webmux").host;
   modules.webmux.port = (svc "webmux").port;
-  # Test build: the latest upstream webmux plus a local, un-PR'd patch that
-  # adds config-driven ACP agents and wrapper commands. The plain package
-  # ignores the declarations below.
-  modules.webmux.package = nur-DataEraserC.packages.${pkgs.stdenv.hostPlatform.system}.webmux-acp;
-  # Any ACP-capable CLI is declared the same way. CodeBuddy is not one of
-  # upstream's adapters, and its `--acp` server lacks `session/list`.
-  modules.webmux.acpAgents.codebuddy = {
-    title = "CodeBuddy";
-    acpArg = "--acp";
-    resumeFlag = "--resume";
-  };
-  # `multi-instance` takes two fixed arguments (app, instance) and forks into
-  # bwrap rather than exec'ing the agent itself. Declaring it once covers
-  # `multi-instance codebuddy 1 | 2 | work | home` - no per-instance entry,
-  # and no generated executable.
-  modules.webmux.agentWrappers.multi-instance = {
-    args = 2;
-    launcher = "bwrap";
-  };
-  # CodeBuddy's ACP gap is filled by a distinctly named shim. Exposing it on
-  # the WebMux session PATH under the agent's name makes both direct runs and
-  # `command -v codebuddy` inside multi-instance resolve to it, while the
-  # system-wide `codebuddy` stays the vendor CLI.
-  modules.webmux.acpShims.codebuddy =
-    nur-DataEraserC.packages.${pkgs.stdenv.hostPlatform.system}.codebuddy-acp;
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
   modules.opencode2api.enable = (svc "opencode2api").enable;
