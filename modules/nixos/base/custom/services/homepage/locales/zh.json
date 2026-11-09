@@ -52,7 +52,7 @@
   "note.omniroute": "带面板的统一 LLM 网关；首次启动的引导令牌见日志。",
   "note.our-free-model-standalone": "上游要求绑定回环地址，因此仅能在其主机上访问。",
   "note.agent2api": "API 与管理面板共用同一端口。",
-  "note.webmux": "浏览器里的持久终端；访问 token 位于其主机的 /var/lib/webmux/config.toml。",
+  "note.webmux": "浏览器里的持久终端；访问 token 由 agenix 的 webmux.env 提供。",
   "note.open-webui": "面向兼容 OpenAI 接口网关的聊天前端。",
   "note.acb": "AgentChatBridge 控制台；dsh 端点保持仅本机监听，未列入。",
   "note.alist": "文件列表；可选的 S3 监听未列入。",

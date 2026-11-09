@@ -198,6 +198,15 @@ in
           owner = myvars.username;
           group = myvars.username;
         };
+        # WebMux 的访问 token（浏览器凭它登录）。systemd 以 root 读完
+        # EnvironmentFile 才降权，所以这份保持 root 独占：模块用
+        # `serve --token` 取用，/var/lib/webmux/config.toml 里不再存 token。
+        "webmux.env" = {
+          file = "${mysecrets}/webmux.env.age";
+          mode = "0400";
+          owner = "root";
+          group = "root";
+        };
         "alist-jwt" = {
           file = "${mysecrets}/alist-jwt.age";
         }

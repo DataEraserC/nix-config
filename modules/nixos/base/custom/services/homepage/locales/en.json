@@ -52,7 +52,7 @@
   "note.omniroute": "Unified LLM gateway with dashboard; the first-start bootstrap token is in the journal.",
   "note.our-free-model-standalone": "Upstream requires a loopback bind, so it is reachable only on its host.",
   "note.agent2api": "API and management panel share one port.",
-  "note.webmux": "Persistent browser terminal; the access token lives in /var/lib/webmux/config.toml on its host.",
+  "note.webmux": "Persistent browser terminal; the access token comes from the agenix webmux.env secret.",
   "note.open-webui": "Chat frontend for OpenAI-compatible gateways.",
   "note.acb": "AgentChatBridge console; the dsh endpoint stays loopback-only and is not listed.",
   "note.alist": "File listing; the optional S3 listener is not listed.",
