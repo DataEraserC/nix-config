@@ -291,6 +291,16 @@ rec {
   modules.webmux.enable = (svc "webmux").enable;
   modules.webmux.host = (svc "webmux").host;
   modules.webmux.port = (svc "webmux").port;
+  # The `webmux-acp` build knows the agents declared below; the plain package
+  # ignores them. CodeBuddy is not one of upstream's adapters, and its `--acp`
+  # server lacks `session/list`, so the two halves go together: the proxy
+  # answers the method, this table tells WebMux which command speaks ACP.
+  modules.webmux.package = nur-DataEraserC.packages.${pkgs.stdenv.hostPlatform.system}.webmux-acp;
+  modules.webmux.acpAgents.codebuddy = {
+    title = "CodeBuddy";
+    acpArg = "--acp";
+    resumeFlag = "--resume";
+  };
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
   modules.opencode2api.enable = (svc "opencode2api").enable;
@@ -348,6 +358,12 @@ rec {
   # so re-enabling one keeps the login and history already on disk.
   # See modules/nixos/base/custom/ai/{codebuddy,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl,zcode-cn,zcode-intl}.nix.
   modules.codebuddy.enable = true;
+  # The ACP proxy, installed as `codebuddy` (same name, so every launch config,
+  # shell alias and `multi-instance codebuddy <n>` keeps resolving to it). It
+  # forwards everything untouched except the ACP `session/list` reply that
+  # WebMux needs; see `modules.webmux.acpAgents.codebuddy` above.
+  modules.codebuddy.package =
+    nur-DataEraserC.packages.${pkgs.stdenv.hostPlatform.system}.codebuddy-acp;
   # modules.codearts.enable = true;
   modules.workbuddy.enable = true;
   modules.workbuddy-ai.enable = true;

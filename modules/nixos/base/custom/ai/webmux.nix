@@ -190,6 +190,68 @@ in
       '';
     };
 
+    acpAgents = lib.mkOption {
+      type = lib.types.attrsOf (
+        lib.types.submodule {
+          options = {
+            kind = lib.mkOption {
+              type = lib.types.str;
+              default = "";
+              description = "Protocol family; only \"acp\", which is also the default.";
+            };
+            title = lib.mkOption {
+              type = lib.types.str;
+              default = "";
+              description = "Display name in the session switcher; empty uses the executable name.";
+            };
+            icon = lib.mkOption {
+              type = lib.types.str;
+              default = "";
+              description = "Launch-config icon key; empty uses \"terminal\".";
+            };
+            acpArg = lib.mkOption {
+              type = lib.types.str;
+              default = "";
+              description = "Argument that starts the agent's ACP server (`--acp`, `acp`, ...); empty means `acp`.";
+            };
+            resumeFlag = lib.mkOption {
+              type = lib.types.str;
+              default = "";
+              description = "Flag that reopens a session in the terminal UI (`--resume`), passed the session ID.";
+            };
+            identity = lib.mkOption {
+              type = lib.types.str;
+              default = "";
+              description = "How a terminal process is matched to an agent session; only \"none\" (fall back to session/list), which is also the default.";
+            };
+          };
+        }
+      );
+      default = { };
+      example = lib.literalExpression ''
+        {
+          codebuddy = {
+            title = "CodeBuddy";
+            acpArg = "--acp";
+            resumeFlag = "--resume";
+          };
+        }
+      '';
+      description = ''
+        Agents this build has no adapter for, keyed by executable base name. Only
+        `package` = `webmux-acp` (the NUR build carrying the
+        `WEBMUX_ACP_AGENTS` extension) can use them; the plain package ignores
+        the variable and these agents keep their terminal-only behaviour.
+
+        Upstream identifies an agent by the command name only, so a key must be
+        the exact base name a launch config execs (`codebuddy`, not a wrapper
+        path), and the agent has to answer ACP `initialize` itself. Capabilities
+        that the handshake cannot report - `session/list` above all - come from
+        the CLI or from a proxy such as `codebuddy-acp`; this module only
+        declares the launch facts.
+      '';
+    };
+
     extraArgs = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ ];
@@ -238,10 +300,21 @@ in
       # Sessions inherit HOME, SHELL and the XDG state root, so they behave like
       # a login from the console; XDG_STATE_HOME keeps the upstream state
       # directory inside stateDir instead of the (wiped) home.
+      #
+      # `WEBMUX_ACP_AGENTS` is read once at start by the `webmux-acp` build,
+      # which rebuilds its agent registry from the JSON in this variable; the
+      # plain package never looks at it. Empty fields are dropped so a declared
+      # agent carries only the facts it needs, and the variable stays unset when
+      # nothing is declared, which leaves the built-in registry untouched.
       environment = {
         HOME = home;
         SHELL = shell;
         XDG_STATE_HOME = stateDir;
+      }
+      // lib.optionalAttrs (cfg.acpAgents != { }) {
+        WEBMUX_ACP_AGENTS = builtins.toJSON (
+          lib.mapAttrs (_: spec: lib.filterAttrs (_: value: value != "") spec) cfg.acpAgents
+        );
       };
 
       # A session must find what a console login finds. Only the "Shell" preset
