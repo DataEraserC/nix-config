@@ -110,25 +110,25 @@ let
 
   hasTokenFile = cfg.tokenFile != null;
 
-  # Seed the token-bearing config exactly once. `webmux config init` writes the
-  # upstream template with a random token, creating the parent directory 0700 and
-  # the file 0600; `-s` (not `-e`) retries after a truncated leftover file.
-  # With `tokenFile` the token comes from the environment instead, so the line
-  # `config init` just wrote is a stale copy of the secret and is dropped.
-  seedConfig = pkgs.writeShellScript "webmux-config-init" (
-    ''
-      set -eu
-      if [ -s ${lib.escapeShellArg configPath} ]; then
-        exit 0
-      fi
+  # Seed the config exactly once: `webmux config init` writes the upstream
+  # template, creating the parent directory 0700 and the file 0600, and `-s`
+  # (not `-e`) retries after a truncated leftover file.
+  #
+  # With `tokenFile` the token comes from the environment instead - the CLI flag
+  # beats the file - so the `token` line is removed on every start: the seeded
+  # one, and one an earlier deployment or the web UI wrote. That also cleans up a
+  # state directory that already carried a token before `tokenFile` was set.
+  seedConfig = pkgs.writeShellScript "webmux-config-init" ''
+    set -eu
+    if [ ! -s ${lib.escapeShellArg configPath} ]; then
       ${webmuxExe} config init \
         --config ${lib.escapeShellArg configPath} \
         --listen ${lib.escapeShellArg listen}
-    ''
-    + lib.optionalString hasTokenFile ''
+    fi
+    ${lib.optionalString hasTokenFile ''
       ${pkgs.gnused}/bin/sed -i '/^[[:space:]]*token[[:space:]]*=/d' ${lib.escapeShellArg configPath}
-    ''
-  );
+    ''}
+  '';
 in
 {
   options.modules.webmux = {
