@@ -50,6 +50,16 @@
 # directory either. Without it the panel reports "Git 不可用: exec: git:
 # executable file not found in $PATH" while sessions keep working.
 #
+# `SHELL` must be an executable file, not a package: WebMux uses `$SHELL` as the
+# command of its "Shell" launch preset (`$SHELL -l -i`) and as the shell agent
+# presets start through. See the `shell` binding below for the conversion.
+#
+# Those presets are seeded into `webmux/launch-configs.json` only while that file
+# does not exist yet; an existing one is never rewritten, so a state directory
+# created before a `SHELL` fix keeps the old (broken) command. Delete that file -
+# it also drops user-made launch configs - or edit the "Shell" preset in the UI:
+#   sudo rm /var/lib/webmux/webmux/launch-configs.json && sudo systemctl restart webmux
+#
 # Binds to 0.0.0.0:<port> by default. The shared host firewall trusts only the
 # LAN and the overlay interfaces, so the page is reachable from the tailnet /
 # zerotier / easytier peers and not from the internet; the token is the only
@@ -72,6 +82,7 @@
   config,
   lib,
   pkgs,
+  utils,
   myvars,
   nur-DataEraserC,
   ...
@@ -91,7 +102,18 @@ let
 
   userInfo = config.users.users.${cfg.user} or { };
   home = userInfo.home or stateDir;
-  shell = userInfo.shell or "${pkgs.bashInteractive}/bin/bash";
+
+  # `users.users.<name>.shell` holds a shell *package* (`bashInteractive` with
+  # `shellPath = "/bin/bash"`) unless a host pinned a plain path, so it must not
+  # be interpolated as is: that yields the store directory, and exec'ing a
+  # directory fails with EACCES. WebMux takes `$SHELL` verbatim as the "Shell"
+  # launch preset (`$SHELL -l -i`), which surfaced as "fork/exec
+  # /nix/store/...-bash-interactive-5.3p15: permission denied". `utils.toShellPath`
+  # is what NixOS itself writes into /etc/passwd - `/run/current-system/sw/bin/bash`
+  # for a package - and passes a plain path through unchanged.
+  shellOption = userInfo.shell or null;
+  shell =
+    if shellOption == null then "${pkgs.bashInteractive}/bin/bash" else utils.toShellPath shellOption;
 
   listen = "${cfg.host}:${toString cfg.port}";
   configPath = "${stateDir}/config.toml";
