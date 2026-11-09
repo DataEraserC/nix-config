@@ -244,15 +244,37 @@ in
         XDG_STATE_HOME = stateDir;
       };
 
-      # Prepended to the minimal service PATH NixOS builds by default (coreutils,
-      # findutils, grep, sed, systemd). Without it the repository panel reports
-      # "Git 不可用: exec: git: executable file not found in $PATH", because the
-      # login user's git comes from home-manager and never reaches a unit; ssh is
-      # here for ssh remotes.
+      # A session must find what a console login finds. Only the "Shell" preset
+      # runs a login shell that sources /etc/profile; everything a launch config
+      # exec's directly - an agent preset, or a custom entry like
+      # `multi-instance codebuddy 1` - inherits this unit's PATH alone, and the
+      # NixOS service default is just coreutils/findutils/grep/sed/systemd.
+      # git and ssh cover the repository panel (the login user's git comes from
+      # home-manager and never reaches a unit); `environment.profiles` - the
+      # same list set-environment turns into a login's $PATH - adds the system
+      # profile and the user's own profiles, with its $HOME/$USER/
+      # ${XDG_STATE_HOME} placeholders expanded for this unit's user, plus the
+      # setuid wrappers.
       path = [
         pkgs.git
         pkgs.openssh
-      ];
+      ]
+      ++ map (
+        profile:
+        lib.replaceStrings
+          [
+            "$HOME"
+            "$USER"
+            "\${XDG_STATE_HOME}"
+          ]
+          [
+            home
+            cfg.user
+            "${home}/.local/state"
+          ]
+          profile
+      ) config.environment.profiles
+      ++ [ "/run/wrappers" ];
 
       serviceConfig = {
         Type = "simple";
