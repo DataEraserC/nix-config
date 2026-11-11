@@ -159,6 +159,9 @@ in
 
     systemd.user.services = {
       "acb-bridge" = {
+        # 用户级 unit 默认不随登录拉起；linger 已开，挂到 default.target
+        # 就能开机自启（此前只能手工 `acbctl up all`）。
+        wantedBy = [ "default.target" ];
         unitConfig = {
           # 单元名保留 acb-bridge（acbl 静态入口）；实际程序是 acb-launcher。
           Description = "ACB launcher (static acbl)";
