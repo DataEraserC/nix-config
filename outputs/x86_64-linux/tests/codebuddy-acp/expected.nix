@@ -1,3 +1,26 @@
+let
+  canonicalInstances = builtins.genList (index: toString (index + 1)) 8;
+  canonicalCommand = instanceName: {
+    match = [
+      "multi-instance"
+      "codebuddy-acp"
+      instanceName
+    ];
+    acp = [
+      "multi-instance"
+      "codebuddy-acp"
+      instanceName
+      "--acp"
+    ];
+    resume = [
+      "multi-instance"
+      "codebuddy-acp"
+      instanceName
+      "--resume"
+    ];
+    launcher = "bwrap";
+  };
+in
 {
   module = {
     enabled = true;
@@ -36,10 +59,13 @@
 
   webmux = {
     package = "webmux-acp";
-    version = "0.14.4-unstable-2026-11-11";
-    nurSourceRev = "b1a5a7179c6f61b59e1867a75efb9a01e9dfb16c";
+    version = "0.14.5-unstable-2026-11-11";
+    nurSourceRev = "1704fdb1fb64816104d91070c8cddf437c450154";
     usesPinnedPackage = true;
     declarationEnvironmentKeys = [ "WEBMUX_ACP_AGENTS" ];
+    commandCount = 10;
+    legacyCommandCount = 1;
+    inherit canonicalInstances;
     connectorCommand = {
       match = [ "connector-agent" ];
       acp = [ "connector-agent-acp" ];
@@ -90,26 +116,7 @@
         ];
         launcher = "bwrap";
       }
-      {
-        match = [
-          "multi-instance"
-          "codebuddy-acp"
-          "1"
-        ];
-        acp = [
-          "multi-instance"
-          "codebuddy-acp"
-          "1"
-          "--acp"
-        ];
-        resume = [
-          "multi-instance"
-          "codebuddy-acp"
-          "1"
-          "--resume"
-        ];
-        launcher = "bwrap";
-      }
-    ];
+    ]
+    ++ map canonicalCommand canonicalInstances;
   };
 }

@@ -11,6 +11,20 @@ let
   webmuxEnvironment = cfg.systemd.services.webmux.environment;
   agent = builtins.fromJSON webmuxEnvironment.WEBMUX_ACP_AGENTS;
   codebuddy = agent.codebuddy-acp;
+  canonicalCommands = lib.filter (
+    command:
+    builtins.length command.match == 3
+    && builtins.elemAt command.match 0 == "multi-instance"
+    && builtins.elemAt command.match 1 == "codebuddy-acp"
+  ) codebuddy.commands;
+  legacyCommands = lib.filter (
+    command:
+    command.match == [
+      "multi-instance"
+      "codebuddy"
+      "1"
+    ]
+  ) codebuddy.commands;
   accountApp = cfg.modules.multi-instance.apps.codebuddy-acp;
   accountAliases = cfg.modules.multi-instance.aliases;
   stateRoot = cfg.modules.multi-instance.stateRoot;
@@ -89,6 +103,9 @@ in
     nurSourceRev = inputs.nur-DataEraserC.rev;
     usesPinnedPackage = usesPinnedWebMuxPackage;
     declarationEnvironmentKeys = lib.filter (lib.hasPrefix "WEBMUX_") (lib.attrNames webmuxEnvironment);
+    commandCount = builtins.length codebuddy.commands;
+    legacyCommandCount = builtins.length legacyCommands;
+    canonicalInstances = map (command: builtins.elemAt command.match 2) canonicalCommands;
     connectorCommand = connectorTest;
     agentKeys = lib.attrNames agent;
     inherit (codebuddy)

@@ -293,7 +293,8 @@ rec {
   modules.webmux.port = (svc "webmux").port;
   # Stable agent key with direct and wrapped command forms. The legacy
   # `multi-instance codebuddy 1` binding remains because launch-configs.json is
-  # seeded once; both wrapped forms reuse the historical codebuddy/1 state.
+  # seeded once; canonical accounts 1 through 8 all reuse the historical
+  # codebuddy/<instance> state directories.
   modules.webmux.acpAgents.codebuddy-acp = {
     title = "CodeBuddy";
     icon = "codebuddy";
@@ -333,27 +334,33 @@ rec {
         ];
         launcher = "bwrap";
       }
+    ]
+    ++ map (
+      instance:
+      let
+        instanceName = toString instance;
+      in
       {
         match = [
           "multi-instance"
           "codebuddy-acp"
-          "1"
+          instanceName
         ];
         acp = [
           "multi-instance"
           "codebuddy-acp"
-          "1"
+          instanceName
           "--acp"
         ];
         resume = [
           "multi-instance"
           "codebuddy-acp"
-          "1"
+          instanceName
           "--resume"
         ];
         launcher = "bwrap";
       }
-    ];
+    ) (lib.range 1 8);
   };
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).

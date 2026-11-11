@@ -23,7 +23,7 @@ let
     shift
 
     case "''${BWRAP_CASE:?BWRAP_CASE must name the expected invocation}" in
-      canonical | legacy)
+      canonical-1 | canonical-8 | legacy-1)
         test "$#" -eq 2
         test "$1" = ${fakeCodeBuddy}/bin/codebuddy-acp
         test "$2" = --acp
@@ -66,19 +66,20 @@ pkgs.runCommandLocal "codebuddy-acp-multi-instance-state-test"
     export BWRAP_TRACE="$PWD/bwrap.trace"
     mkdir -p "$HOME"
 
-    BWRAP_CASE=canonical ${pkgs.bash}/bin/bash ${launcher} codebuddy-acp 1 --acp
-    BWRAP_CASE=legacy ${pkgs.bash}/bin/bash ${launcher} codebuddy legacy --acp
+    BWRAP_CASE=canonical-1 ${pkgs.bash}/bin/bash ${launcher} codebuddy-acp 1 --acp
+    BWRAP_CASE=canonical-8 ${pkgs.bash}/bin/bash ${launcher} codebuddy-acp 8 --acp
+    BWRAP_CASE=legacy-1 ${pkgs.bash}/bin/bash ${launcher} codebuddy 1 --acp
     BWRAP_CASE=codearts ${pkgs.bash}/bin/bash ${launcher} codearts default --version
     BWRAP_CASE=alias-default ${pkgs.bash}/bin/bash ${launcher} codearts-old compat --version
     BWRAP_CASE=trae-cn ${pkgs.bash}/bin/bash ${launcher} trae-cn profile --inspect
 
-    expected=$(printf 'canonical\nlegacy\ncodearts\nalias-default\ntrae-cn')
+    expected=$(printf 'canonical-1\ncanonical-8\nlegacy-1\ncodearts\nalias-default\ntrae-cn')
     test "$(cat "$BWRAP_TRACE")" = "$expected"
 
     test -d "$MULTI_INSTANCE_ROOT/codebuddy/1/.codebuddy"
     test -d "$MULTI_INSTANCE_ROOT/codebuddy/1/.local/share/CodeBuddyExtension"
-    test -d "$MULTI_INSTANCE_ROOT/codebuddy/legacy/.codebuddy"
-    test -d "$MULTI_INSTANCE_ROOT/codebuddy/legacy/.local/share/CodeBuddyExtension"
+    test -d "$MULTI_INSTANCE_ROOT/codebuddy/8/.codebuddy"
+    test -d "$MULTI_INSTANCE_ROOT/codebuddy/8/.local/share/CodeBuddyExtension"
     test ! -e "$MULTI_INSTANCE_ROOT/codebuddy-acp"
     test -d "$MULTI_INSTANCE_ROOT/codearts/default/.codeartsdoer"
     test -d "$MULTI_INSTANCE_ROOT/codearts/compat/.codeartsdoer"
