@@ -182,6 +182,11 @@ in
             # profile seed 把它写进 current.json 的 args；没有它，launcher
             # 拉起 bridge 时不会带 --config。
             "ACB_UNIT_CONFIG_FILE=${if notificationsEnabled then activeConfigFile else configFile}"
+            # 库内密钥（secrets 表）的解密钥。文件手工创建、0600；没它 bridge
+            # 会在 preload 阶段以 78 退出，而且因为没有 LKG 会被判永久失败。
+            # 2026-11-11 重启事故：这行原来只写在本机 drop-in 里，rebuild 清掉
+            # drop-in 后整条桥起不来。
+            "ACB_KEY_FILE=${dataDir}/secrets/acb.key"
           ];
           EnvironmentFile =
             lib.optional (cfg.secretsFile != null) "-${cfg.secretsFile}"
