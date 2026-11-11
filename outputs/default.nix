@@ -248,6 +248,19 @@ rec {
         pkgs = nixpkgs.legacyPackages.${system};
         networking = myvars.networking;
       };
+      codebuddy-acp-multi-instance-state = import ./x86_64-linux/tests/codebuddy-acp/runtime.nix {
+        config =
+          (nixosConfigurations.ai-niri.extendModules {
+            modules = [
+              {
+                # Test that an alias of a null-default app resolves executable and
+                # state directory from the canonical key, not from the alias.
+                modules.multi-instance.aliases.codearts-old = "codearts";
+              }
+            ];
+          }).config;
+        pkgs = nixpkgs.legacyPackages.${system};
+      };
     }
   );
 

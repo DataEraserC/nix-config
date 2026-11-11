@@ -4,9 +4,10 @@
 # times as you like, each instance with its own state directory.
 #
 # A program's state paths are listed once, in `apps.<name>.paths`. Each instance
-# gets a directory under `stateRoot`, bind-mounted over every one of those paths
-# with bubblewrap, so no package is patched or wrapped. Each instance also gets
-# a private /tmp, because a program that derives a lock name from a state path
+# gets a directory under `stateRoot`, named by `stateDirectoryKey` (which defaults
+# to the app key), bind-mounted over every one of those paths with bubblewrap, so
+# no package is patched or wrapped. Each instance also gets a private /tmp,
+# because a program that derives a lock name from a state path
 # sees the same path in every instance. The instance store itself is replaced by
 # a tmpfs inside the sandbox, so one instance never sees the others.
 #
@@ -15,8 +16,9 @@
 # build caches behave exactly as before. Only the listed state paths are
 # replaced.
 #
-# Programs are just names: `multi-instance` resolves them with `command -v`, so
-# an entry also covers a binary the user installed themselves.
+# Canonical app keys map to the executable resolved by `command -v`, so an
+# entry also covers a binary the user installed themselves. `aliases` accepts
+# obsolete CLI names without duplicating the app or its persistent state.
 #
 # Usage
 #   multi-instance <app> <instance> [args...]
@@ -33,8 +35,35 @@
 let
   cfg = config.modules.multi-instance;
 
+  isAppKey = value: builtins.match "[A-Za-z0-9][A-Za-z0-9._+-]*" value != null;
+  isStateDirectoryKey =
+    value: value != "." && value != ".." && builtins.match "[A-Za-z0-9][A-Za-z0-9._-]*" value != null;
+  resolvedExecutable = name: app: if app.executable == null then name else app.executable;
+  resolvedStateDirectoryKey =
+    name: app: if app.stateDirectoryKey == null then name else app.stateDirectoryKey;
+
   appType = lib.types.submodule {
     options = {
+      executable = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        example = "codebuddy-acp";
+        description = ''
+          Executable resolved with `command -v`. Null uses the app key; set it
+          when the CLI key and actual executable differ.
+        '';
+      };
+
+      stateDirectoryKey = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        example = "codebuddy";
+        description = ''
+          Directory name below `stateRoot`. Null uses the app key. Set it when a
+          renamed app must keep using its existing per-instance login state.
+        '';
+      };
+
       paths = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         description = ''
@@ -96,20 +125,33 @@ let
     };
   };
 
-  # The spec is the only thing the launcher reads at runtime: one line per
-  # program, then its state paths, then an @-prefixed user data directory when it
-  # has one. Keeping it a file, not shell arguments, means a path with a space
-  # (`Trae CN`) never goes through desktop-entry quoting.
+  # The spec is the only thing the launcher reads at runtime: each line starts
+  # with the accepted CLI key, executable and stable state-directory key,
+  # followed by the canonical app's state paths and an @-prefixed user data
+  # directory when it has one. Aliases expand to the same canonical app data;
+  # they never create a second app, launcher or persistence declaration.
+  # Keeping it a file, not shell arguments, means a path with a space (`Trae CN`)
+  # never goes through desktop-entry quoting.
+  specLine =
+    cliName: canonicalName: app:
+    lib.concatStringsSep "|" (
+      [
+        cliName
+        (resolvedExecutable canonicalName app)
+        (resolvedStateDirectoryKey canonicalName app)
+      ]
+      ++ app.paths
+      ++ lib.optional (app.userDataDir != null) "@${app.userDataDir}"
+    );
+  canonicalSpecLines = lib.mapAttrsToList (name: specLine name name) cfg.apps;
+  aliasSpecLines = lib.concatLists (
+    lib.mapAttrsToList (
+      alias: canonical:
+      lib.optional (cfg.apps ? ${canonical}) (specLine alias canonical cfg.apps.${canonical})
+    ) cfg.aliases
+  );
   spec = pkgs.writeText "multi-instance.spec" (
-    lib.concatStringsSep "\n" (
-      lib.mapAttrsToList (
-        name: app:
-        lib.concatStringsSep "|" (
-          [ name ] ++ app.paths ++ lib.optional (app.userDataDir != null) "@${app.userDataDir}"
-        )
-      ) cfg.apps
-    )
-    + "\n"
+    lib.concatStringsSep "\n" (canonicalSpecLines ++ aliasSpecLines) + "\n"
   );
 
   # The only parameters nix passes to the script: the spec it reads and the store
@@ -154,7 +196,7 @@ let
 
   # Every path the programs redirect, plus the store they redirect into. The same
   # path can be listed by two programs (`CodeBuddyExtension` holds auth shared by
-  # codebuddy and workbuddy), and duplicate mount units are an error.
+  # codebuddy-acp and workbuddy), and duplicate mount units are an error.
   preserveDirectories = lib.unique (
     [
       {
@@ -177,8 +219,9 @@ in
       default = ".local/state/multi-instance";
       description = ''
         Store for per-instance state, relative to $HOME. Each instance uses
-        `<stateRoot>/<app>/<instance>`. Owner-only: instances hold credentials
-        and history.
+        `<stateRoot>/<stateDirectoryKey>/<instance>`; a null
+        `stateDirectoryKey` uses the app key. Owner-only: instances hold
+        credentials and history.
       '';
     };
 
@@ -186,10 +229,31 @@ in
       type = lib.types.attrsOf appType;
       default = { };
       description = ''
-        Programs that can be run as several instances, keyed by the name that
-        `command -v` resolves. Declaring a program here also exposes its state
-        paths in `preserveDirectories`.
+        Canonical programs that can be run as several instances. `executable`
+        controls what `command -v` resolves; obsolete CLI names belong in
+        `aliases`. Declaring a program here also exposes its state paths in
+        `preserveDirectories`.
       '';
+    };
+
+    aliases = lib.mkOption {
+      type = lib.types.attrsOf lib.types.str;
+      default = { };
+      example = {
+        old-name = "new-name";
+      };
+      description = ''
+        Compatibility names accepted by the `multi-instance` CLI, mapping each
+        alias to a canonical key in `apps`. Aliases reuse the canonical
+        executable, state key and paths; they do not create another app,
+        desktop launcher or preservation declaration.
+      '';
+    };
+
+    specFile = lib.mkOption {
+      type = lib.types.path;
+      readOnly = true;
+      description = "Generated runtime specification consumed by the multi-instance launcher.";
     };
 
     preserveDirectories = lib.mkOption {
@@ -231,6 +295,34 @@ in
           message = "modules.multi-instance.instances: only a program in `apps` with `desktop` metadata can have a launcher";
         }
         {
+          assertion = lib.all isAppKey (lib.attrNames cfg.apps);
+          message = "modules.multi-instance.apps: app keys must be non-empty command basenames";
+        }
+        {
+          assertion = lib.all isAppKey (lib.attrNames cfg.aliases);
+          message = "modules.multi-instance.aliases: alias keys must be non-empty command basenames";
+        }
+        {
+          assertion = lib.intersectLists (lib.attrNames cfg.apps) (lib.attrNames cfg.aliases) == [ ];
+          message = "modules.multi-instance.aliases: aliases must not replace canonical `apps` keys";
+        }
+        {
+          assertion = lib.all (canonical: cfg.apps ? ${canonical}) (lib.attrValues cfg.aliases);
+          message = "modules.multi-instance.aliases: every target must name a canonical entry in `apps`";
+        }
+        {
+          assertion = lib.all (name: isAppKey (resolvedExecutable name cfg.apps.${name})) (
+            lib.attrNames cfg.apps
+          );
+          message = "modules.multi-instance.apps: `executable` must be one non-empty command basename";
+        }
+        {
+          assertion = lib.all (name: isStateDirectoryKey (resolvedStateDirectoryKey name cfg.apps.${name})) (
+            lib.attrNames cfg.apps
+          );
+          message = "modules.multi-instance.apps: `stateDirectoryKey` must be one non-empty safe directory name";
+        }
+        {
           assertion = lib.all (app: lib.all (path: !lib.hasPrefix "/" path) app.paths) (
             lib.attrValues cfg.apps
           );
@@ -253,7 +345,10 @@ in
     # the programs, and their existing logins must survive a host that stops
     # enabling this module.
     {
-      modules.multi-instance.preserveDirectories = if cfg.apps == { } then [ ] else preserveDirectories;
+      modules.multi-instance = {
+        preserveDirectories = if cfg.apps == { } then [ ] else preserveDirectories;
+        specFile = spec;
+      };
     }
   ];
 }

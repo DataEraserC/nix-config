@@ -291,6 +291,70 @@ rec {
   modules.webmux.enable = (svc "webmux").enable;
   modules.webmux.host = (svc "webmux").host;
   modules.webmux.port = (svc "webmux").port;
+  # Stable agent key with direct and wrapped command forms. The legacy
+  # `multi-instance codebuddy 1` binding remains because launch-configs.json is
+  # seeded once; both wrapped forms reuse the historical codebuddy/1 state.
+  modules.webmux.acpAgents.codebuddy-acp = {
+    title = "CodeBuddy";
+    icon = "codebuddy";
+    processExecutables = [
+      "codebuddy"
+      "cbc"
+    ];
+    commands = [
+      {
+        match = [ "codebuddy-acp" ];
+        acp = [
+          "codebuddy-acp"
+          "--acp"
+        ];
+        resume = [
+          "codebuddy-acp"
+          "--resume"
+        ];
+      }
+      {
+        match = [
+          "multi-instance"
+          "codebuddy"
+          "1"
+        ];
+        acp = [
+          "multi-instance"
+          "codebuddy"
+          "1"
+          "--acp"
+        ];
+        resume = [
+          "multi-instance"
+          "codebuddy"
+          "1"
+          "--resume"
+        ];
+        launcher = "bwrap";
+      }
+      {
+        match = [
+          "multi-instance"
+          "codebuddy-acp"
+          "1"
+        ];
+        acp = [
+          "multi-instance"
+          "codebuddy-acp"
+          "1"
+          "--acp"
+        ];
+        resume = [
+          "multi-instance"
+          "codebuddy-acp"
+          "1"
+          "--resume"
+        ];
+        launcher = "bwrap";
+      }
+    ];
+  };
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
   modules.opencode2api.enable = (svc "opencode2api").enable;
@@ -338,16 +402,16 @@ rec {
   # Route CLI traffic through the local / LAN SOCKS proxies.
   modules.proxychains.enable = true;
 
-  # Agent tools and AI IDEs from nur-DataEraserC: CodeBuddy, WorkBuddy, WorkBuddy
-  # International, LobsterAI, Trae CN, Trae International, ZCode CN and ZCode
-  # International are on, CodeArts stays parked. Their state (~/.codebuddy,
-  # ~/.codeartsdoer, ~/.workbuddy, ~/.workbuddy-ai,
+  # Agent tools and AI IDEs from nur-DataEraserC: CodeBuddy ACP, WorkBuddy,
+  # WorkBuddy International, LobsterAI, Trae CN, Trae International, ZCode CN
+  # and ZCode International are on, CodeArts stays parked. Their state
+  # (~/.codebuddy, ~/.codeartsdoer, ~/.workbuddy, ~/.workbuddy-ai,
   # ~/.local/share/CodeBuddyExtension, ~/.config/LobsterAI, ~/lobsterai,
   # ~/.trae-cn, ~/.trae, ~/.config/Trae CN, ~/.config/Trae, ~/.zcode,
   # ~/.config/ZCode) is persisted unconditionally in preservation-downstream.nix,
   # so re-enabling one keeps the login and history already on disk.
-  # See modules/nixos/base/custom/ai/{codebuddy,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl,zcode-cn,zcode-intl}.nix.
-  modules.codebuddy.enable = true;
+  # See modules/nixos/base/custom/ai/{codebuddy-acp,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl,zcode-cn,zcode-intl}.nix.
+  modules.codebuddy-acp.enable = true;
   # modules.codearts.enable = true;
   modules.workbuddy.enable = true;
   modules.workbuddy-ai.enable = true;
@@ -358,6 +422,9 @@ rec {
   modules.zcode-intl.enable = true;
   # `multi-instance <app> <account>`: the same apps under bubblewrap with one
   # state directory per account; see modules/nixos/base/custom/ai/agent-accounts.nix.
+  # CodeBuddy account 1 accepts the canonical `multi-instance codebuddy-acp 1`
+  # and the seed-once legacy `multi-instance codebuddy 1`; both use the
+  # historical ~/.local/state/multi-instance/codebuddy/1 directory.
   modules.agent-accounts.enable = true;
   modules.agent-accounts.desktopAccounts = {
     workbuddy = 2;

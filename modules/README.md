@@ -31,7 +31,7 @@ modules/
     │   ├── btrbk.nix      # Local btrfs snapshots
     │   ├── core.nix       # Core system settings
     │   ├── custom/        # DataEraserC-specific modules, grouped by area
-    │   │   ├── ai/        # LLM gateways, agents, dsh (codebuddy/codearts/workbuddy), astrbot
+    │   │   ├── ai/        # LLM gateways, agents, dsh (codebuddy-acp/codearts/workbuddy), astrbot
     │   │   ├── desktop/   # Session-level extras (wf-recorder)
     │   │   ├── hardware/  # Machine-specific tools (intel-gpu-tools, lenovo-legion)
     │   │   ├── network/   # Proxies, tunnels, forwarding, sub-store

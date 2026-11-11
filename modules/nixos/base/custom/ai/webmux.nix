@@ -5,8 +5,9 @@
 # https://github.com/mzdluo123/webmux
 #
 # The package comes from the DataEraserC NUR
-# (`nur-DataEraserC.packages.<system>.webmux`); this module owns the unit, the
-# service account and the whole state layout, so no NUR module is involved.
+# (`nur-DataEraserC.legacyPackages.<system>.webmux-acp`); this module owns the
+# unit, the service account and the whole state layout, so no NUR module is
+# involved.
 #
 # Runs as the LOGIN user on purpose, not as a dedicated account: WebMux starts
 # every session as its own service user, so only the login user's HOME has the
@@ -118,6 +119,101 @@ let
   listen = "${cfg.host}:${toString cfg.port}";
   configPath = "${stateDir}/config.toml";
 
+  connectorType = lib.types.submodule {
+    options = {
+      executable = lib.mkOption {
+        type = lib.types.str;
+        description = "Connector executable basename checked by WebMux.";
+      };
+      title = lib.mkOption {
+        type = lib.types.str;
+        description = "Connector name shown in installation notices.";
+      };
+      installCommand = lib.mkOption {
+        type = lib.types.str;
+        description = "Command shown to install the connector.";
+      };
+      docsUrl = lib.mkOption {
+        type = lib.types.str;
+        description = "HTTP(S) connector installation documentation URL.";
+      };
+      verifiedVersion = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "Optional connector version verified by this declaration.";
+      };
+    };
+  };
+
+  commandType = lib.types.submodule {
+    options = {
+      match = lib.mkOption {
+        type = lib.types.nonEmptyListOf lib.types.str;
+        description = "Complete command argv WebMux matches exactly.";
+      };
+      acp = lib.mkOption {
+        type = lib.types.nonEmptyListOf lib.types.str;
+        description = "Complete argv WebMux uses to launch this form's ACP server.";
+      };
+      resume = lib.mkOption {
+        type = lib.types.nonEmptyListOf lib.types.str;
+        description = "Complete argv prefix WebMux uses to resume this form; it appends the session ID.";
+      };
+      launcher = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "Root process executable retained by a wrapper, such as bwrap.";
+      };
+      connector = lib.mkOption {
+        type = lib.types.nullOr connectorType;
+        default = null;
+        description = "Optional separately installed ACP connector metadata for this command.";
+      };
+    };
+  };
+
+  agentType = lib.types.submodule {
+    options = {
+      title = lib.mkOption {
+        type = lib.types.str;
+        description = "Display name for this external ACP agent.";
+      };
+      icon = lib.mkOption {
+        type = lib.types.str;
+        default = "terminal";
+        description = "WebMux launch-config icon key.";
+      };
+      processExecutables = lib.mkOption {
+        type = lib.types.nonEmptyListOf lib.types.str;
+        description = "Executable base names the running process may use.";
+      };
+      commands = lib.mkOption {
+        type = lib.types.nonEmptyListOf commandType;
+        description = "Direct and wrapped command forms, each with complete ACP and resume argv.";
+      };
+    };
+  };
+
+  cleanConnector = connector: lib.filterAttrs (_: value: value != null) connector;
+  cleanCommand =
+    command:
+    lib.filterAttrs (_: value: value != null) (
+      command
+      // lib.optionalAttrs (command.connector != null) {
+        connector = cleanConnector command.connector;
+      }
+    );
+
+  acpAgentsJSON = builtins.toJSON (
+    lib.mapAttrs (
+      _: agent:
+      agent
+      // {
+        commands = map cleanCommand agent.commands;
+      }
+    ) cfg.acpAgents
+  );
+
   # Seed the token-bearing config exactly once: `webmux config init` writes the
   # upstream template with a random token, creating the parent directory 0700
   # and the file 0600, and `-s` (not `-e`) retries after a truncated leftover.
@@ -183,10 +279,67 @@ in
 
     package = lib.mkOption {
       type = lib.types.nullOr lib.types.package;
-      default = nur-DataEraserC.packages.${system}.webmux or null;
+      default = nur-DataEraserC.legacyPackages.${system}.webmux-acp or null;
       description = ''
-        WebMux package. Defaults to the DataEraserC NUR build, which is the
-        repository version when the NUR overlay is applied.
+        WebMux package. Defaults to the ACP-capable test build from the pinned
+        DataEraserC NUR package set.
+      '';
+    };
+
+    acpAgents = lib.mkOption {
+      type = lib.types.attrsOf agentType;
+      default = { };
+      example = {
+        codebuddy-acp = {
+          title = "CodeBuddy";
+          icon = "codebuddy";
+          processExecutables = [
+            "codebuddy"
+            "cbc"
+          ];
+          commands = [
+            {
+              match = [ "codebuddy-acp" ];
+              acp = [
+                "codebuddy-acp"
+                "--acp"
+              ];
+              resume = [
+                "codebuddy-acp"
+                "--resume"
+              ];
+            }
+            {
+              match = [
+                "multi-instance"
+                "codebuddy-acp"
+                "1"
+              ];
+              acp = [
+                "multi-instance"
+                "codebuddy-acp"
+                "1"
+                "--acp"
+              ];
+              resume = [
+                "multi-instance"
+                "codebuddy-acp"
+                "1"
+                "--resume"
+              ];
+              launcher = "bwrap";
+            }
+          ];
+        };
+      };
+      description = ''
+        External ACP agents passed to the ACP-capable WebMux build through
+        `WEBMUX_ACP_AGENTS`. Attribute names are stable agent keys; every
+        command declares the full matched, ACP and resume argv so direct and
+        wrapped forms keep the same identity and state. `connector` is optional
+        per command; null or omitted means no installation check, and it never
+        participates in argv inference. WebMux appends the session ID to each
+        `resume` array.
       '';
     };
 
@@ -211,7 +364,7 @@ in
     assertions = [
       {
         assertion = cfg.package != null;
-        message = "modules.webmux.package must be set when the service is enabled (the DataEraserC NUR is not providing `webmux`).";
+        message = "modules.webmux.package must be set when the service is enabled (the DataEraserC NUR is not providing `webmux-acp`).";
       }
       {
         assertion = builtins.hasAttr cfg.user config.users.users;
@@ -237,17 +390,21 @@ in
 
       # Sessions inherit HOME, SHELL and the XDG state root, so they behave like
       # a login from the console; XDG_STATE_HOME keeps the upstream state
-      # directory inside stateDir instead of the (wiped) home.
+      # directory inside stateDir instead of the (wiped) home. The ACP build
+      # reads the complete external-agent declarations once at startup.
       environment = {
         HOME = home;
         SHELL = shell;
         XDG_STATE_HOME = stateDir;
+      }
+      // lib.optionalAttrs (cfg.acpAgents != { }) {
+        WEBMUX_ACP_AGENTS = acpAgentsJSON;
       };
 
       # A session must find what a console login finds. Only the "Shell" preset
       # runs a login shell that sources /etc/profile; everything a launch config
       # exec's directly - an agent preset, or a custom entry like
-      # `multi-instance codebuddy 1` - inherits this unit's PATH alone, and the
+      # `multi-instance codebuddy-acp 1` - inherits this unit's PATH alone, and the
       # NixOS service default is just coreutils/findutils/grep/sed/systemd.
       # git and ssh cover the repository panel (the login user's git comes from
       # home-manager and never reaches a unit); `environment.profiles` - the

@@ -3,9 +3,11 @@
 #
 # This file holds no program-specific data. Nix supplies the two inputs it
 # needs from modules.multi-instance:
-#   MULTI_INSTANCE_SPEC  one "app|path|path..." line per program, paths relative
-#                        to $HOME
-#   MULTI_INSTANCE_ROOT  instance store, one directory per <app>/<instance>
+#   MULTI_INSTANCE_SPEC  one "cli-key|executable|state-key|path|path..." line
+#                        per canonical app or compatibility alias, with state
+#                        paths relative to $HOME
+#   MULTI_INSTANCE_ROOT  instance store, one directory per
+#                        <state-key>/<instance>
 # bubblewrap and coreutils are on PATH via the wrapper's runtimeInputs.
 #
 # Each path on the line is a location the program hardcodes under $HOME with no
@@ -49,8 +51,9 @@ EOF
   list_apps
   cat <<'EOF'
 
-Each instance keeps its state in $MULTI_INSTANCE_ROOT/<app>/<instance>; the
-directory you start the command in stays available at its real path.
+Each instance keeps its state in $MULTI_INSTANCE_ROOT/<state-key>/<instance>; the
+state key usually matches the app but may stay stable across an executable rename.
+The directory you start the command in stays available at its real path.
 EOF
 }
 
@@ -87,23 +90,25 @@ if [ -z "$line" ]; then
 fi
 
 IFS='|' read -r -a fields <<<"$line"
+executable=${fields[1]}
+state_key=${fields[2]}
 data=
 paths=()
-for field in "${fields[@]:1}"; do
+for field in "${fields[@]:3}"; do
   case $field in
     @*) data=${field#@} ;;
     *) paths+=("$field") ;;
   esac
 done
 
-bin=$(command -v "$app" || true)
+bin=$(command -v "$executable" || true)
 if [ -z "$bin" ]; then
-  echo "multi-instance: $app is not installed on this host" >&2
+  echo "multi-instance: $executable (app $app) is not installed on this host" >&2
   exit 127
 fi
 
 root=${MULTI_INSTANCE_ROOT:-$HOME/.local/state/multi-instance}
-dir=$root/$app/$instance
+dir=$root/$state_key/$instance
 mkdir -p "$dir"
 
 mounts=()

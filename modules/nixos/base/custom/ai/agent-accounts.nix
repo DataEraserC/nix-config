@@ -9,7 +9,7 @@
 #
 # Usage
 #   multi-instance <app> <account> [args...]
-#   multi-instance codebuddy work
+#   multi-instance codebuddy-acp work
 #   multi-instance trae-cn 1
 #
 # An account always starts empty. Nothing is copied out of the app's existing
@@ -25,26 +25,33 @@
 let
   cfg = config.modules.agent-accounts;
 
+  codebuddyApp = {
+    executable = "codebuddy-acp";
+    stateDirectoryKey = "codebuddy";
+    paths = [
+      ".codebuddy"
+      ".local/share/CodeBuddyExtension"
+    ];
+    persist = [
+      {
+        directory = ".codebuddy";
+        mode = "0700";
+      }
+      {
+        directory = ".local/share/CodeBuddyExtension";
+        mode = "0700";
+      }
+    ];
+  };
+
   # The one table: where each app keeps its state, which of those paths survive a
   # tmpfs root, and how an account window is recognised by the desktop. An
   # account is added by changing `desktopAccounts`, not this table.
   apps = {
-    codebuddy = {
-      paths = [
-        ".codebuddy"
-        ".local/share/CodeBuddyExtension"
-      ];
-      persist = [
-        {
-          directory = ".codebuddy";
-          mode = "0700";
-        }
-        {
-          directory = ".local/share/CodeBuddyExtension";
-          mode = "0700";
-        }
-      ];
-    };
+    # `codebuddy-acp` is the canonical app key. The old CLI name is an alias
+    # below because WebMux launch-configs.json is seed-once; it does not create
+    # a second app/state declaration.
+    codebuddy-acp = codebuddyApp;
 
     # Its launcher exports these paths unconditionally.
     codearts = {
@@ -57,7 +64,7 @@ let
       ];
     };
 
-    # The shared Tencent auth (codebuddy + workbuddy) is built from os.homedir(),
+    # The shared Tencent auth (codebuddy-acp + workbuddy) is built from os.homedir(),
     # so no environment variable reaches it; mounting over each path redirects
     # all of them the same way. ~/.sheetagent holds logs only and ~/WorkBuddy is
     # an empty scaffold, so neither is preserved.
@@ -270,6 +277,7 @@ in
   # module.
   config = {
     modules.multi-instance.apps = apps;
+    modules.multi-instance.aliases.codebuddy = "codebuddy-acp";
     modules.multi-instance.enable = cfg.enable;
     modules.multi-instance.instances = cfg.desktopAccounts;
   };

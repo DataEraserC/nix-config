@@ -8,7 +8,7 @@
 #
 # State lives in ~/.workbuddy (database, settings, session cookies, plugins,
 # bundled node/python runtimes) and ~/.local/share/CodeBuddyExtension (auth
-# shared with codebuddy); on a tmpfs root, modules.agent-accounts preserves both.
+# shared with codebuddy-acp); on a tmpfs root, modules.agent-accounts preserves both.
 # ~/.sheetagent holds logs only and ~/WorkBuddy is an empty scaffold, so neither
 # is preserved.
 #

@@ -87,6 +87,13 @@ next merge. Push work outward, in this order, before writing it down here.
    is not needed yet. A commented switch documents a verified capability; an enabled one is a
    standing build and maintenance cost.
 
+## WebMux / CodeBuddy ACP 下游升级闸门
+
+修改 `modules.webmux`、`codebuddy-acp`、agent accounts、multi-instance 或对应 NUR pin 前，先读
+[NUR 下游需求文档](https://github.com/DataEraserC/nur-packages/blob/main/pkgs/uncategorized-DataEraserC/_docs/webmux-codebuddy-acp-requirements.md)，按
+`NC-*` 及关联 `WM-ACP-*`/`PKG-*`/`CB-*`
+逐项复验并在交付摘要记录结果。该文件是跨仓不变量的单一事实源，本仓库不复制正文。
+
 ## Agent-shell ownership measurements
 
 - The agent shell runs in a private user namespace (`/proc/self/uid_map` is only `1000 1000 1`), so
