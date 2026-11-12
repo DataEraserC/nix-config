@@ -7,11 +7,12 @@ ryan4yin/nix-config; keeping them separate minimizes merge conflicts when syncin
 
 Upstream [AI Disclosure](./AGENTS.md#ai-disclosure) and the Nixpkgs Automation/AI policy it cites
 stay authoritative: keep upstream's `Assisted-by:` trailer, its scope, and its "record the actual
-identifiers" rule instead of introducing a second scheme. Downstream only pins what that trailer
-must never lose: the harness that produced the change (`DeepSeek Harness`, `WorkBuddy`, `CodeBuddy`,
-or similar) together with the model it actually ran, in upstream's form -
-`Assisted-by: WorkBuddy (<model>)`. Dropping either half - a bare `Assisted-by: AI`, a harness with
-no model, or a guessed model - violates the upstream rule rather than being a formatting preference.
+identifiers" rule instead of introducing a second scheme. Downstream requires the form
+`Assisted-by: <agent harness> (<model>)`, using the harness that produced the change and the model
+it actually ran. For example, use `Assisted-by: WorkBuddy (<model>)`; for DeepSeek Harness with
+`gpt-5.6-sol`, use exactly `Assisted-by: DeepSeek Harness (gpt-5.6-sol)`. Dropping either half - a
+bare `Assisted-by: AI`, a harness with no model, or a guessed model - violates the upstream rule
+rather than being a formatting preference.
 
 ## Concurrent edits: prefer worktrees
 
