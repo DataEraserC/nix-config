@@ -60,7 +60,7 @@ in
   webmux = {
     package = "webmux-acp";
     version = "0.14.5-unstable-2026-11-11";
-    nurSourceRev = "1b4d1e7ed4ff46f85aa1b7ff2cdd21934830b3df";
+    nurSourceRev = "07d36990f1a2bed0b927de9d8865b9c45d6ccd46";
     usesPinnedPackage = true;
     declarationEnvironmentKeys = [ "WEBMUX_ACP_AGENTS" ];
     commandCount = 10;
