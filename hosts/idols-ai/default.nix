@@ -415,8 +415,8 @@ rec {
   # state (~/.codebuddy, ~/.codeartsdoer, ~/.workbuddy, ~/.workbuddy-ai,
   # ~/.local/share/CodeBuddyExtension, ~/.config/LobsterAI, ~/lobsterai,
   # ~/.trae-cn, ~/.trae, ~/.config/Trae CN, ~/.config/Trae, ~/.zcode,
-  # ~/.config/ZCode, ~/.config/office-raccoon, ~/RaccoonWork, ~/.openclaw,
-  # ~/.hermes) is persisted unconditionally in preservation-downstream.nix,
+  # ~/.config/ZCode, ~/.config/office-raccoon, ~/.box-agent, ~/RaccoonWork,
+  # ~/.openclaw, ~/.hermes) is persisted unconditionally in preservation-downstream.nix,
   # so re-enabling one keeps the login and history already on disk.
   # See modules/nixos/base/custom/ai/{codebuddy-acp,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl,zcode-cn,zcode-intl,xiaohuanxiong}.nix.
   modules.codebuddy-acp.enable = true;

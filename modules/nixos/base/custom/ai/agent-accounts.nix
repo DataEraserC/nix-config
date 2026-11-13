@@ -238,15 +238,18 @@ let
       };
     };
 
-    # The profile root is ~/.config/office-raccoon: it holds userData, the
-    # agent home, sessions and logs, and the app rejects it unless it is
-    # owner-only and not a symlink (multi-instance creates each state directory
-    # 0700 for that reason). ~/RaccoonWork is the default agent workspace and
-    # ~/.openclaw / ~/.hermes are the bundled agent runtimes' homes, all
-    # hardcoded under $HOME.
+    # The profile root is ~/.config/office-raccoon: it holds userData, sessions
+    # and logs, and the app rejects it unless it is owner-only and not a
+    # symlink (multi-instance creates each state directory 0700 for that
+    # reason). ~/.box-agent is the agent home: the login (config/auth.json),
+    # model profiles, skills, run sockets and the provisioned Python/Node
+    # runtime all live there, so without it every account opens signed in as
+    # the same user. ~/RaccoonWork is the default agent workspace and
+    # ~/.openclaw / ~/.hermes are the bundled agent runtimes' homes.
     xiaohuanxiong = {
       paths = [
         ".config/office-raccoon"
+        ".box-agent"
         "RaccoonWork"
         ".openclaw"
         ".hermes"
@@ -254,6 +257,10 @@ let
       persist = [
         {
           directory = ".config/office-raccoon";
+          mode = "0700";
+        }
+        {
+          directory = ".box-agent";
           mode = "0700";
         }
         "RaccoonWork"
