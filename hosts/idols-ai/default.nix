@@ -429,6 +429,27 @@ rec {
   modules.zcode-cn.enable = true;
   modules.zcode-intl.enable = true;
   modules.xiaohuanxiong.enable = true;
+  # Raccoon Work provisions its own CPython and Node builds into its profile
+  # directory; those are generic Linux binaries whose interpreter path is
+  # /lib64/ld-linux-x86-64.so.2. Without nix-ld the stub there refuses to run
+  # them, which surfaces as "ensurepip 失败（exit 127）" and missing Node/Python
+  # packages in the app's runtime panel.
+  programs.nix-ld = {
+    enable = true;
+    libraries = with pkgs; [
+      stdenv.cc.cc.lib
+      zlib
+      openssl
+      libffi
+      sqlite
+      readline
+      ncurses
+      xz
+      bzip2
+      libuuid
+      libxcrypt
+    ];
+  };
   # `multi-instance <app> <account>`: the same apps under bubblewrap with one
   # state directory per account; see modules/nixos/base/custom/ai/agent-accounts.nix.
   # CodeBuddy account 1 accepts the canonical `multi-instance codebuddy-acp 1`
