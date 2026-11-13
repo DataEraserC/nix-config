@@ -243,8 +243,28 @@ let
       ];
     };
 
+    # The adapter's TTY dispatch makes one multi-instance entry serve both
+    # sides: under WebMux's PTY (match argv) bin/zcode-acp opens the Martty
+    # chat TUI, over plain pipes (acp argv) it falls back to the stdio ACP
+    # server. The resume entry wraps the session id into the boot-resume
+    # environment for the same instance. All three share one state key, so a
+    # session created on either side resumes on the other.
     zcode-acp = {
-      executable = "zcode-acp-server";
+      executable = "zcode-acp";
+      stateDirectoryKey = "zcode-cli";
+      paths = [
+        ".zcode"
+      ];
+      persist = [
+        {
+          directory = ".zcode";
+          mode = "0700";
+        }
+      ];
+    };
+
+    zcode-acp-resume = {
+      executable = "zcode-acp-resume";
       stateDirectoryKey = "zcode-cli";
       paths = [
         ".zcode"

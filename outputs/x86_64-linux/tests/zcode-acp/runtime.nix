@@ -6,7 +6,10 @@ let
   fakeZcodeCli = pkgs.writeShellScriptBin "zcode-cli" ''
     exit 0
   '';
-  fakeZcodeAcpServer = pkgs.writeShellScriptBin "zcode-acp-server" ''
+  fakeZcodeAcp = pkgs.writeShellScriptBin "zcode-acp" ''
+    exit 0
+  '';
+  fakeZcodeAcpResume = pkgs.writeShellScriptBin "zcode-acp-resume" ''
     exit 0
   '';
   fakeBwrap = pkgs.writeShellScriptBin "bwrap" ''
@@ -22,7 +25,12 @@ let
     case "''${BWRAP_CASE:?BWRAP_CASE must name the expected invocation}" in
       acp-1)
         test "$#" -eq 1
-        test "$1" = ${fakeZcodeAcpServer}/bin/zcode-acp-server
+        test "$1" = ${fakeZcodeAcp}/bin/zcode-acp
+        ;;
+      acp-resume-1)
+        test "$#" -eq 2
+        test "$1" = ${fakeZcodeAcpResume}/bin/zcode-acp-resume
+        test "$2" = sess_test
         ;;
       cli-1)
         test "$#" -eq 1
@@ -48,7 +56,8 @@ pkgs.runCommandLocal "zcode-acp-multi-instance-state-test"
       pkgs.bash
       pkgs.coreutils
       fakeZcodeCli
-      fakeZcodeAcpServer
+      fakeZcodeAcp
+      fakeZcodeAcpResume
       fakeBwrap
     ];
   }
@@ -59,17 +68,21 @@ pkgs.runCommandLocal "zcode-acp-multi-instance-state-test"
     export BWRAP_TRACE="$PWD/bwrap.trace"
     mkdir -p "$HOME"
 
+    # The adapter's TTY dispatch makes one multi-instance argv serve both
+    # sides: WebMux launches it in a PTY (Martty TUI) and over pipes (stdio).
     BWRAP_CASE=acp-1 ${pkgs.bash}/bin/bash ${launcher} zcode-acp 1
+    BWRAP_CASE=acp-resume-1 ${pkgs.bash}/bin/bash ${launcher} zcode-acp-resume 1 sess_test
     BWRAP_CASE=cli-1 ${pkgs.bash}/bin/bash ${launcher} zcode-cli 1
     BWRAP_CASE=cli-resume ${pkgs.bash}/bin/bash ${launcher} zcode-cli 1 --resume
 
-    expected=$(printf 'acp-1\ncli-1\ncli-resume')
+    expected=$(printf 'acp-1\nacp-resume-1\ncli-1\ncli-resume')
     test "$(cat "$BWRAP_TRACE")" = "$expected"
 
-    # The ACP and TUI forms share one state directory per instance, so a
-    # session created through the bridge can be resumed in the TUI.
+    # Every zcode form shares one state directory per instance, so a session
+    # created on one side resumes on the other.
     test -d "$MULTI_INSTANCE_ROOT/zcode-cli/1/.zcode"
     test ! -e "$MULTI_INSTANCE_ROOT/zcode-acp"
+    test ! -e "$MULTI_INSTANCE_ROOT/zcode-acp-resume"
     # The GUI app keeps its own state key; this test never creates it.
     test ! -e "$MULTI_INSTANCE_ROOT/zcode"
     touch "$out"

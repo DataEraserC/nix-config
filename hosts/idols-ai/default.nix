@@ -365,15 +365,19 @@ rec {
     ) (lib.range 1 8);
   };
 
-  # ZCode agent, direct form. The terminal side is the bridge's own Martty
-  # chat TUI (bin/zcode-acp dispatches to it under a TTY; the official
-  # AppImage-bundled zcode-cli has no TUI of its own - see ZC-02/ZC-04 in the
-  # NUR requirements doc), the acp argv enters the stdio bridge, and resume
-  # goes through the boot-resume wrapper. The chat view discovers the same
-  # session store via session/list. bin/zcode itself is the GUI launcher, so
-  # no argv here may name it, and the icon must be one of WebMux's launch-
-  # config icon keys (an unknown icon makes the loader skip the whole
-  # declaration). Multi-instance TUI forms wait for the standalone CLI runtime.
+  # ZCode agent, mirroring the codebuddy-acp shape. One adapter argv serves
+  # both sides through TTY dispatch: under WebMux's PTY (the match/launch
+  # form) bin/zcode-acp opens the bridge's own Martty chat TUI, and over
+  # plain pipes (the acp form) the same command falls back to the stdio ACP
+  # server - the official AppImage-bundled zcode-cli has no TUI of its own
+  # (see ZC-02/ZC-04 in the NUR requirements doc). Resume goes through the
+  # boot-resume wrapper, which turns the appended session id into the TUI's
+  # boot-resume environment. Instances 1 and 2 keep isolated ~/.zcode logins
+  # (log in once with `multi-instance zcode-cli N login`); the chat view
+  # discovers the same session store via session/list. bin/zcode itself is
+  # the GUI launcher, so no argv here may name it, and the icon must be one
+  # of WebMux's launch-config icon keys (an unknown icon makes the loader
+  # skip the whole declaration).
   modules.webmux.acpAgents.zcode-acp = {
     title = "ZCode";
     icon = "terminal";
@@ -387,7 +391,31 @@ rec {
         acp = [ "zcode-acp-server" ];
         resume = [ "zcode-acp-resume" ];
       }
-    ];
+    ]
+    ++ map (
+      instance:
+      let
+        instanceName = toString instance;
+      in
+      {
+        match = [
+          "multi-instance"
+          "zcode-acp"
+          instanceName
+        ];
+        acp = [
+          "multi-instance"
+          "zcode-acp"
+          instanceName
+        ];
+        resume = [
+          "multi-instance"
+          "zcode-acp-resume"
+          instanceName
+        ];
+        launcher = "bwrap";
+      }
+    ) (lib.range 1 2);
   };
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
