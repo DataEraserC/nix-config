@@ -363,6 +363,51 @@ rec {
     ) (lib.range 1 8);
   };
 
+  # ZCode agent. The ACP bridge (zcode-acp-server) and the vendor TUI (zcode)
+  # are separate binaries sharing one state key, so the match argv launches the
+  # TUI form, the acp argv enters the bridge, and resume reopens the session in
+  # the TUI; instances 1 and 2 keep isolated ~/.zcode logins.
+  modules.webmux.acpAgents.zcode-acp = {
+    title = "ZCode";
+    icon = "zcode";
+    processExecutables = [ "node" ];
+    commands = [
+      {
+        match = [ "zcode" ];
+        acp = [ "zcode-acp-server" ];
+        resume = [
+          "zcode"
+          "--resume"
+        ];
+      }
+    ]
+    ++ map (
+      instance:
+      let
+        instanceName = toString instance;
+      in
+      {
+        match = [
+          "multi-instance"
+          "zcode-cli"
+          instanceName
+        ];
+        acp = [
+          "multi-instance"
+          "zcode-acp"
+          instanceName
+        ];
+        resume = [
+          "multi-instance"
+          "zcode-cli"
+          instanceName
+          "--resume"
+        ];
+        launcher = "bwrap";
+      }
+    ) (lib.range 1 2);
+  };
+
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
   modules.opencode2api.enable = (svc "opencode2api").enable;
   modules.opencode2api.port = (svc "opencode2api").port;
@@ -410,7 +455,8 @@ rec {
   modules.proxychains.enable = true;
 
   # Agent tools and AI IDEs from nur-DataEraserC: CodeBuddy ACP, WorkBuddy,
-  # WorkBuddy International, LobsterAI, Trae CN, ZCode CN, ZCode International,
+  # WorkBuddy International, LobsterAI, Trae CN, ZCode (one package serves the
+  # CN and international editions; the region is the account you log in with),
   # Qoder CN, AutoClaw CN, AutoClaw International and Raccoon Work are on.
   # Qoder, Qoder IDE, Qoder CN IDE, Trae International and CodeArts are packaged
   # but off. Their state (~/.codebuddy,
@@ -424,16 +470,16 @@ rec {
   # ~/RaccoonWork, ~/.openclaw, ~/.hermes) is persisted unconditionally in
   # preservation-downstream.nix, so re-enabling one keeps the login and history
   # already on disk.
-  # See modules/nixos/base/custom/ai/{codebuddy-acp,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl,zcode-cn,zcode-intl,qoder,qoder-ide,qoder-cn,qoder-cn-ide,autoclaw-cn,autoclaw-intl,xiaohuanxiong}.nix.
+  # See modules/nixos/base/custom/ai/{codebuddy-acp,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl,zcode,zcode-acp,qoder,qoder-ide,qoder-cn,qoder-cn-ide,autoclaw-cn,autoclaw-intl,xiaohuanxiong}.nix.
   modules.codebuddy-acp.enable = true;
+  modules.zcode-acp.enable = true;
   # modules.codearts.enable = true;
   modules.workbuddy.enable = true;
   modules.workbuddy-ai.enable = true;
   modules.lobsterai.enable = true;
   modules.trae-cn.enable = true;
   # modules.trae-intl.enable = true;
-  modules.zcode-cn.enable = true;
-  modules.zcode-intl.enable = true;
+  modules.zcode.enable = true;
   # modules.qoder.enable = true;
   # modules.qoder-ide.enable = true;
   modules.qoder-cn.enable = true;
@@ -453,8 +499,7 @@ rec {
     lobsterai = 2;
     trae-cn = 2;
     # trae = 6;
-    zcode-cn = 2;
-    zcode = 6;
+    zcode = 8;
     # qoder = 4;
     # qoder-ide = 4;
     qoder-cn = 2;

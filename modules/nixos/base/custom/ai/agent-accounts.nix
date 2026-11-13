@@ -193,40 +193,24 @@ let
       };
     };
 
-    # Both the CN and international builds carry productName "ZCode" and no
-    # dataFolderName, so they share the same state paths: ~/.zcode holds CLI
-    # sessions, wiki and agent runtimes; ~/.config/ZCode is the Electron user
-    # data directory. Its single-instance lock is named after the user data
+    # The CN and international editions are one AppImage (same productName, no
+    # dataFolderName), so one GUI app serves both: ~/.zcode holds CLI sessions,
+    # wiki and agent runtimes; ~/.config/ZCode is the Electron user data
+    # directory. Its single-instance lock is named after the user data
     # directory, so two accounts would share one window without userDataDir.
-    zcode-cn = {
+    zcode = {
       paths = [
         ".zcode"
         ".config/ZCode"
       ];
       userDataDir = ".config/ZCode";
       persist = [
-        ".zcode"
         {
-          directory = ".config/ZCode";
+          # 0700 so the GUI entry collapses into the zcode-cli one below
+          # (lib.unique needs identical values); .zcode holds credentials.
+          directory = ".zcode";
           mode = "0700";
         }
-      ];
-      desktop = {
-        label = "ZCode CN";
-        icon = "zcode-cn";
-        wmclass = "ZCode";
-      };
-    };
-
-    zcode = {
-      executable = "zcode-intl";
-      paths = [
-        ".zcode"
-        ".config/ZCode"
-      ];
-      userDataDir = ".config/ZCode";
-      persist = [
-        ".zcode"
         {
           directory = ".config/ZCode";
           mode = "0700";
@@ -234,9 +218,42 @@ let
       ];
       desktop = {
         label = "ZCode";
-        icon = "zcode-intl";
+        icon = "zcode";
         wmclass = "ZCode";
       };
+    };
+
+    # The ACP adapter (what WebMux drives) and the vendor TUI (what a terminal
+    # runs) are separate binaries, but both instance forms share one state key
+    # so a session created through the ACP bridge can be resumed with
+    # `zcode --resume` in the TUI and the other way round. Only ~/.zcode is
+    # redirected: the GUI app above owns ~/.config/ZCode.
+    zcode-cli = {
+      executable = "zcode";
+      stateDirectoryKey = "zcode-cli";
+      paths = [
+        ".zcode"
+      ];
+      persist = [
+        {
+          directory = ".zcode";
+          mode = "0700";
+        }
+      ];
+    };
+
+    zcode-acp = {
+      executable = "zcode-acp-server";
+      stateDirectoryKey = "zcode-cli";
+      paths = [
+        ".zcode"
+      ];
+      persist = [
+        {
+          directory = ".zcode";
+          mode = "0700";
+        }
+      ];
     };
 
     # Qoder has two product lines, each with a CN and an international build.
@@ -456,7 +473,7 @@ in
         account gets one entry labelled "<app> <account>" that starts the app
         through `multi-instance` in its own state directory. Only the GUI apps
         have a launcher: workbuddy, workbuddy-ai, lobsterai, trae-cn, trae,
-        zcode-cn, zcode, qoder, qoder-ide, qoder-cn, qoder-cn-ide,
+        zcode, qoder, qoder-ide, qoder-cn, qoder-cn-ide,
         autoclaw-cn, autoclaw-intl, xiaohuanxiong.
       '';
     };

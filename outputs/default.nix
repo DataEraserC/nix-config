@@ -261,6 +261,10 @@ rec {
           }).config;
         pkgs = nixpkgs.legacyPackages.${system};
       };
+      zcode-acp-multi-instance-state = import ./x86_64-linux/tests/zcode-acp/runtime.nix {
+        config = nixosConfigurations.ai-niri.config;
+        pkgs = nixpkgs.legacyPackages.${system};
+      };
     }
   );
 
