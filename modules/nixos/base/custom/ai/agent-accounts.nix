@@ -332,17 +332,24 @@ let
       };
     };
 
-    # The AutoClaw launchers pin XDG_CONFIG_HOME per edition, so the whole
-    # edition directory is the per-account state; the app itself keeps its
-    # Electron profile one level below (AutoClaw-official for CN,
-    # AutoClaw-oversea-official for International).
+    # The AutoClaw launchers pin XDG_CONFIG_HOME per edition; the app writes
+    # two sibling directories under it (AutoClaw plus AutoClaw-official for CN
+    # or AutoClaw-oversea-official for International), which are the per-account
+    # state.
     autoclaw-cn = {
       executable = "autoclaw-cn";
-      paths = [ ".config/autoclaw-cn" ];
+      paths = [
+        ".config/autoclaw-cn/AutoClaw"
+        ".config/autoclaw-cn/AutoClaw-official"
+      ];
       userDataDir = ".config/autoclaw-cn/AutoClaw-official";
       persist = [
         {
-          directory = ".config/autoclaw-cn";
+          directory = ".config/autoclaw-cn/AutoClaw";
+          mode = "0700";
+        }
+        {
+          directory = ".config/autoclaw-cn/AutoClaw-official";
           mode = "0700";
         }
       ];
@@ -355,11 +362,18 @@ let
 
     autoclaw-intl = {
       executable = "autoclaw-intl";
-      paths = [ ".config/autoclaw-intl" ];
+      paths = [
+        ".config/autoclaw-intl/AutoClaw"
+        ".config/autoclaw-intl/AutoClaw-oversea-official"
+      ];
       userDataDir = ".config/autoclaw-intl/AutoClaw-oversea-official";
       persist = [
         {
-          directory = ".config/autoclaw-intl";
+          directory = ".config/autoclaw-intl/AutoClaw";
+          mode = "0700";
+        }
+        {
+          directory = ".config/autoclaw-intl/AutoClaw-oversea-official";
           mode = "0700";
         }
       ];
