@@ -410,9 +410,9 @@ rec {
   modules.proxychains.enable = true;
 
   # Agent tools and AI IDEs from nur-DataEraserC: CodeBuddy ACP, WorkBuddy,
-  # WorkBuddy International, LobsterAI, Trae CN, Trae International, ZCode CN,
-  # ZCode International, Qoder, Qoder CN, AutoClaw CN, AutoClaw International
-  # and Raccoon Work are on. Qoder IDE, Qoder CN IDE and CodeArts are packaged
+  # WorkBuddy International, LobsterAI, Trae CN, ZCode CN, ZCode International,
+  # Qoder CN, AutoClaw CN, AutoClaw International and Raccoon Work are on.
+  # Qoder, Qoder IDE, Qoder CN IDE, Trae International and CodeArts are packaged
   # but off. Their state (~/.codebuddy,
   # ~/.codeartsdoer, ~/.workbuddy, ~/.workbuddy-ai,
   # ~/.local/share/CodeBuddyExtension, ~/.config/LobsterAI, ~/lobsterai,
@@ -431,10 +431,10 @@ rec {
   modules.workbuddy-ai.enable = true;
   modules.lobsterai.enable = true;
   modules.trae-cn.enable = true;
-  modules.trae-intl.enable = true;
+  # modules.trae-intl.enable = true;
   modules.zcode-cn.enable = true;
   modules.zcode-intl.enable = true;
-  modules.qoder.enable = true;
+  # modules.qoder.enable = true;
   # modules.qoder-ide.enable = true;
   modules.qoder-cn.enable = true;
   # modules.qoder-cn-ide.enable = true;
@@ -452,10 +452,10 @@ rec {
     workbuddy-ai = 6;
     lobsterai = 2;
     trae-cn = 2;
-    trae = 6;
+    # trae = 6;
     zcode-cn = 2;
     zcode = 6;
-    qoder = 4;
+    # qoder = 4;
     # qoder-ide = 4;
     qoder-cn = 2;
     # qoder-cn-ide = 2;
