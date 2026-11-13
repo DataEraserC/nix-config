@@ -77,10 +77,7 @@ in
         docsUrl = "https://example.invalid/connector-agent-acp";
       };
     };
-    agentKeys = [
-      "codebuddy-acp"
-      "zcode-acp"
-    ];
+    agentKeys = [ "codebuddy-acp" ];
     title = "CodeBuddy ACP";
     icon = "codebuddy";
     processExecutables = [

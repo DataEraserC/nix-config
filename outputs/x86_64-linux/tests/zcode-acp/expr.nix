@@ -10,7 +10,6 @@ let
   dataEraserCPackages = inputs.nur-DataEraserC.legacyPackages.${system};
   webmuxEnvironment = cfg.systemd.services.webmux.environment;
   agent = builtins.fromJSON webmuxEnvironment.WEBMUX_ACP_AGENTS;
-  zcode = agent.zcode-acp;
   directoryOf = entry: if builtins.isAttrs entry then entry.directory else entry;
   acpApp = cfg.modules.multi-instance.apps.zcode-acp;
   cliApp = cfg.modules.multi-instance.apps.zcode-cli;
@@ -50,13 +49,10 @@ in
     );
   };
 
+  # No WebMux binding for zcode: hybrid mode is TUI-locked and the bundled CLI
+  # has none (ZC-02/ZC-04). Assert the absence instead of the binding shapes.
   webmux = {
     agentKeys = lib.attrNames agent;
-    title = zcode.title;
-    icon = zcode.icon;
-    processExecutables = zcode.processExecutables;
-    commandCount = builtins.length zcode.commands;
-    directCommand = builtins.head zcode.commands;
-    instanceCommands = lib.filter (command: builtins.length command.match == 3) zcode.commands;
+    zcodeAgentAbsent = !(builtins.hasAttr "zcode-acp" agent);
   };
 }

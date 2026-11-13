@@ -365,53 +365,16 @@ rec {
     ) (lib.range 1 8);
   };
 
-  # ZCode agent. The ACP bridge (zcode-acp-server) and the vendor TUI
-  # (zcode-cli) are separate binaries sharing one state key, so the match argv
-  # launches the TUI form, the acp argv enters the bridge, and resume reopens
-  # the session in the TUI; instances 1 and 2 keep isolated ~/.zcode logins.
-  # The icon must be one of WebMux's launch-config icon keys (an unknown icon
-  # makes the loader skip the whole declaration); bin/zcode itself is the GUI
-  # launcher, so every argv here names the CLI wrapper instead.
-  modules.webmux.acpAgents.zcode-acp = {
-    title = "ZCode";
-    icon = "terminal";
-    processExecutables = [ "node" ];
-    commands = [
-      {
-        match = [ "zcode-cli" ];
-        acp = [ "zcode-acp-server" ];
-        resume = [
-          "zcode-cli"
-          "--resume"
-        ];
-      }
-    ]
-    ++ map (
-      instance:
-      let
-        instanceName = toString instance;
-      in
-      {
-        match = [
-          "multi-instance"
-          "zcode-cli"
-          instanceName
-        ];
-        acp = [
-          "multi-instance"
-          "zcode-acp"
-          instanceName
-        ];
-        resume = [
-          "multi-instance"
-          "zcode-cli"
-          instanceName
-          "--resume"
-        ];
-        launcher = "bwrap";
-      }
-    ) (lib.range 1 2);
-  };
+  # ZCode has no WebMux binding on purpose: WebMux hybrid mode launches the
+  # agent's TUI in the terminal, and the AppImage-bundled zcode-cli has no TUI
+  # (@zcode/tui only ships in the upstream standalone CLI runtime, which is not
+  # packaged yet - see ZC-02/ZC-04 in the NUR requirements doc). A declaration
+  # would only produce hybrid sessions that die on terminal start. The working
+  # zcode consumer is acb, which drives zcode-acp-server over pure ACP with
+  # session/load resume and never needs the TUI. Restore a direct + multi-
+  # instance binding here once zcode-cli gains a TUI, with icon from WebMux's
+  # launch-config icon keys (an unknown icon makes the loader skip the whole
+  # declaration) and bin/zcode left to the GUI launcher.
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
   modules.opencode2api.enable = (svc "opencode2api").enable;

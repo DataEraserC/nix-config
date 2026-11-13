@@ -34,61 +34,7 @@
   };
 
   webmux = {
-    agentKeys = [
-      "codebuddy-acp"
-      "zcode-acp"
-    ];
-    title = "ZCode";
-    icon = "terminal";
-    processExecutables = [ "node" ];
-    commandCount = 3;
-    directCommand = {
-      match = [ "zcode-cli" ];
-      acp = [ "zcode-acp-server" ];
-      resume = [
-        "zcode-cli"
-        "--resume"
-      ];
-    };
-    instanceCommands = [
-      {
-        match = [
-          "multi-instance"
-          "zcode-cli"
-          "1"
-        ];
-        acp = [
-          "multi-instance"
-          "zcode-acp"
-          "1"
-        ];
-        resume = [
-          "multi-instance"
-          "zcode-cli"
-          "1"
-          "--resume"
-        ];
-        launcher = "bwrap";
-      }
-      {
-        match = [
-          "multi-instance"
-          "zcode-cli"
-          "2"
-        ];
-        acp = [
-          "multi-instance"
-          "zcode-acp"
-          "2"
-        ];
-        resume = [
-          "multi-instance"
-          "zcode-cli"
-          "2"
-          "--resume"
-        ];
-        launcher = "bwrap";
-      }
-    ];
+    agentKeys = [ "codebuddy-acp" ];
+    zcodeAgentAbsent = true;
   };
 }
