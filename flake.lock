@@ -238,11 +238,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794363472,
-        "narHash": "sha256-9epW65+/zvuuruCM5J3C4lveCsmk5X+5ImCQ6KOT+FM=",
+        "lastModified": 1794550308,
+        "narHash": "sha256-fJc9WcBSweqE5+ou03hiLPtHggq/qoQCcdcLp52B3Vw=",
         "owner": "DataEraserC",
         "repo": "AgentChatBridge",
-        "rev": "8979640128eea9a72b75c2227be9ac6f667007b3",
+        "rev": "4840877495f8e67394668e7ad033fbe86a654b2c",
         "type": "github"
       },
       "original": {
@@ -6831,11 +6831,11 @@
         "treefmt-nix": "treefmt-nix_6"
       },
       "locked": {
-        "lastModified": 1794552023,
-        "narHash": "sha256-6adRBgFUD24kUO+/GO3fTlXaMCnenHq5zOQgNEC2KIA=",
+        "lastModified": 1794554705,
+        "narHash": "sha256-6BVLwGc52ARhHEqHg913WsSheQmSGMBUofn164JJxy8=",
         "owner": "DataEraserC",
         "repo": "nur-packages",
-        "rev": "256681baf8ffab5d776cb5809ba8f2c60715d76d",
+        "rev": "59c31ef0ea09143b3b4bdbce8e2630b2aa78a2a4",
         "type": "github"
       },
       "original": {
