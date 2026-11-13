@@ -113,7 +113,9 @@ mkdir -p "$dir"
 
 mounts=()
 for rel in "${paths[@]}"; do
-  mkdir -p "$dir/$rel"
+  # Owner-only: some programs (Raccoon Work) refuse a profile directory that
+  # grants group/other any access, and every directory here holds credentials.
+  install -d -m 700 "$dir/$rel"
   mounts+=(--bind "$dir/$rel" "$HOME/$rel")
 done
 

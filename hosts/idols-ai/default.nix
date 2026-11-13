@@ -410,14 +410,15 @@ rec {
   modules.proxychains.enable = true;
 
   # Agent tools and AI IDEs from nur-DataEraserC: CodeBuddy ACP, WorkBuddy,
-  # WorkBuddy International, LobsterAI, Trae CN, Trae International, ZCode CN
-  # and ZCode International are on, CodeArts stays parked. Their state
-  # (~/.codebuddy, ~/.codeartsdoer, ~/.workbuddy, ~/.workbuddy-ai,
+  # WorkBuddy International, LobsterAI, Trae CN, Trae International, ZCode CN,
+  # ZCode International and Raccoon Work are on, CodeArts stays parked. Their
+  # state (~/.codebuddy, ~/.codeartsdoer, ~/.workbuddy, ~/.workbuddy-ai,
   # ~/.local/share/CodeBuddyExtension, ~/.config/LobsterAI, ~/lobsterai,
   # ~/.trae-cn, ~/.trae, ~/.config/Trae CN, ~/.config/Trae, ~/.zcode,
-  # ~/.config/ZCode) is persisted unconditionally in preservation-downstream.nix,
+  # ~/.config/ZCode, ~/.config/office-raccoon, ~/RaccoonWork, ~/.openclaw,
+  # ~/.hermes) is persisted unconditionally in preservation-downstream.nix,
   # so re-enabling one keeps the login and history already on disk.
-  # See modules/nixos/base/custom/ai/{codebuddy-acp,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl,zcode-cn,zcode-intl}.nix.
+  # See modules/nixos/base/custom/ai/{codebuddy-acp,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl,zcode-cn,zcode-intl,xiaohuanxiong}.nix.
   modules.codebuddy-acp.enable = true;
   # modules.codearts.enable = true;
   modules.workbuddy.enable = true;
@@ -427,6 +428,7 @@ rec {
   modules.trae-intl.enable = true;
   modules.zcode-cn.enable = true;
   modules.zcode-intl.enable = true;
+  modules.xiaohuanxiong.enable = true;
   # `multi-instance <app> <account>`: the same apps under bubblewrap with one
   # state directory per account; see modules/nixos/base/custom/ai/agent-accounts.nix.
   # CodeBuddy account 1 accepts the canonical `multi-instance codebuddy-acp 1`
@@ -441,6 +443,7 @@ rec {
     trae = 6;
     zcode-cn = 2;
     zcode = 6;
+    xiaohuanxiong = 3;
   };
 
   # WARP tunnel + its root CA cert, replaces the connection between this

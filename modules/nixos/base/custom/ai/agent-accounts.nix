@@ -237,6 +237,41 @@ let
         wmclass = "ZCode";
       };
     };
+
+    # The profile root is ~/.config/office-raccoon: it holds userData, the
+    # agent home, sessions and logs, and the app rejects it unless it is
+    # owner-only and not a symlink (multi-instance creates each state directory
+    # 0700 for that reason). ~/RaccoonWork is the default agent workspace and
+    # ~/.openclaw / ~/.hermes are the bundled agent runtimes' homes, all
+    # hardcoded under $HOME.
+    xiaohuanxiong = {
+      paths = [
+        ".config/office-raccoon"
+        "RaccoonWork"
+        ".openclaw"
+        ".hermes"
+      ];
+      persist = [
+        {
+          directory = ".config/office-raccoon";
+          mode = "0700";
+        }
+        "RaccoonWork"
+        {
+          directory = ".openclaw";
+          mode = "0700";
+        }
+        {
+          directory = ".hermes";
+          mode = "0700";
+        }
+      ];
+      desktop = {
+        label = "Raccoon Work";
+        icon = "raccoon-ai";
+        wmclass = "raccoon-ai";
+      };
+    };
   };
 in
 {
@@ -267,7 +302,8 @@ in
         that many accounts, named "1".."N"; a list names them explicitly. Each
         account gets one entry labelled "<app> <account>" that starts the app
         through `multi-instance` in its own state directory. Only the GUI apps
-        have a launcher: workbuddy, lobsterai, trae-cn, trae, zcode-cn, zcode.
+        have a launcher: workbuddy, lobsterai, trae-cn, trae, zcode-cn, zcode,
+        xiaohuanxiong.
       '';
     };
   };
