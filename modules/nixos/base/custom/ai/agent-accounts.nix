@@ -238,6 +238,53 @@ let
       };
     };
 
+    # Qoder ships separate CN and international builds. Their product names
+    # (QoderCN vs Qoder) and dataFolderName (.qoder-cn vs .qoder) differ, so
+    # every path is per edition and an account must not share state with the
+    # other edition. The single-instance lock is named after the user data
+    # directory, so both set userDataDir.
+    qoder-cn = {
+      executable = "qoder-cn";
+      paths = [
+        ".qoder-cn"
+        ".config/QoderCN"
+      ];
+      userDataDir = ".config/QoderCN";
+      persist = [
+        ".qoder-cn"
+        {
+          directory = ".config/QoderCN";
+          mode = "0700";
+        }
+      ];
+      desktop = {
+        label = "Qoder CN";
+        icon = "qoder-cn-ide";
+        wmclass = "qoder-cn-ide";
+      };
+    };
+
+    qoder = {
+      executable = "qoder-intl";
+      paths = [
+        ".qoder"
+        ".config/Qoder"
+      ];
+      userDataDir = ".config/Qoder";
+      persist = [
+        ".qoder"
+        {
+          directory = ".config/Qoder";
+          mode = "0700";
+        }
+      ];
+      desktop = {
+        label = "Qoder";
+        icon = "qoder-ide";
+        wmclass = "qoder-ide";
+      };
+    };
+
     # The profile root is ~/.config/office-raccoon: it holds userData, sessions
     # and logs, and the app rejects it unless it is owner-only and not a
     # symlink (multi-instance creates each state directory 0700 for that
@@ -309,8 +356,8 @@ in
         that many accounts, named "1".."N"; a list names them explicitly. Each
         account gets one entry labelled "<app> <account>" that starts the app
         through `multi-instance` in its own state directory. Only the GUI apps
-        have a launcher: workbuddy, lobsterai, trae-cn, trae, zcode-cn, zcode,
-        xiaohuanxiong.
+        have a launcher: workbuddy, workbuddy-ai, lobsterai, trae-cn, trae,
+        zcode-cn, zcode, qoder-cn, qoder, xiaohuanxiong.
       '';
     };
   };

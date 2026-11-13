@@ -411,14 +411,15 @@ rec {
 
   # Agent tools and AI IDEs from nur-DataEraserC: CodeBuddy ACP, WorkBuddy,
   # WorkBuddy International, LobsterAI, Trae CN, Trae International, ZCode CN,
-  # ZCode International and Raccoon Work are on, CodeArts stays parked. Their
-  # state (~/.codebuddy, ~/.codeartsdoer, ~/.workbuddy, ~/.workbuddy-ai,
-  # ~/.local/share/CodeBuddyExtension, ~/.config/LobsterAI, ~/lobsterai,
-  # ~/.trae-cn, ~/.trae, ~/.config/Trae CN, ~/.config/Trae, ~/.zcode,
-  # ~/.config/ZCode, ~/.config/office-raccoon, ~/.box-agent, ~/RaccoonWork,
-  # ~/.openclaw, ~/.hermes) is persisted unconditionally in preservation-downstream.nix,
+  # ZCode International, Qoder CN and Raccoon Work are on, CodeArts stays
+  # parked. Their state (~/.codebuddy, ~/.codeartsdoer, ~/.workbuddy,
+  # ~/.workbuddy-ai, ~/.local/share/CodeBuddyExtension, ~/.config/LobsterAI,
+  # ~/lobsterai, ~/.trae-cn, ~/.trae, ~/.config/Trae CN, ~/.config/Trae,
+  # ~/.zcode, ~/.config/ZCode, ~/.qoder-cn, ~/.config/QoderCN,
+  # ~/.config/office-raccoon, ~/.box-agent, ~/RaccoonWork, ~/.openclaw,
+  # ~/.hermes) is persisted unconditionally in preservation-downstream.nix,
   # so re-enabling one keeps the login and history already on disk.
-  # See modules/nixos/base/custom/ai/{codebuddy-acp,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl,zcode-cn,zcode-intl,xiaohuanxiong}.nix.
+  # See modules/nixos/base/custom/ai/{codebuddy-acp,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl,zcode-cn,zcode-intl,qoder-cn,xiaohuanxiong}.nix.
   modules.codebuddy-acp.enable = true;
   # modules.codearts.enable = true;
   modules.workbuddy.enable = true;
@@ -428,6 +429,7 @@ rec {
   modules.trae-intl.enable = true;
   modules.zcode-cn.enable = true;
   modules.zcode-intl.enable = true;
+  modules.qoder-cn.enable = true;
   modules.xiaohuanxiong.enable = true;
   # `multi-instance <app> <account>`: the same apps under bubblewrap with one
   # state directory per account; see modules/nixos/base/custom/ai/agent-accounts.nix.
@@ -443,7 +445,8 @@ rec {
     trae = 6;
     zcode-cn = 2;
     zcode = 6;
-    xiaohuanxiong = 3;
+    qoder-cn = 2;
+    xiaohuanxiong = 2;
   };
 
   # WARP tunnel + its root CA cert, replaces the connection between this
