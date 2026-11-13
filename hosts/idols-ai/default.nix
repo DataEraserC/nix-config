@@ -294,9 +294,11 @@ rec {
   # Stable agent key with direct and wrapped command forms. The legacy
   # `multi-instance codebuddy 1` binding remains because launch-configs.json is
   # seeded once; canonical accounts 1 through 8 all reuse the historical
-  # codebuddy/<instance> state directories.
+  # codebuddy/<instance> state directories. The title names the proxy, not the
+  # vendor CLI: plain `codebuddy` lacks ACP session/list, so only this -acp
+  # command actually supports the chat view.
   modules.webmux.acpAgents.codebuddy-acp = {
-    title = "CodeBuddy";
+    title = "CodeBuddy ACP";
     icon = "codebuddy";
     processExecutables = [
       "codebuddy"

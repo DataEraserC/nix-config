@@ -81,7 +81,7 @@ in
       "codebuddy-acp"
       "zcode-acp"
     ];
-    title = "CodeBuddy";
+    title = "CodeBuddy ACP";
     icon = "codebuddy";
     processExecutables = [
       "codebuddy"
