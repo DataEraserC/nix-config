@@ -1,9 +1,9 @@
 # ===============================================================================
 #
-# Qoder International - Alibaba's agentic coding IDE, global edition.
+# Qoder IDE - Alibaba's agentic coding IDE, global edition.
 #
 # The derivation lives in nur-DataEraserC (pkgs/uncategorized-DataEraserC/
-# qoder-intl) together with its update script; this file only wires it up.
+# qoder-ide) together with its update script; this file only wires it up.
 # nur-DataEraserC exports no nixosModule for it, so the enable option below is
 # the only switch (there is no upstream module to import).
 #
@@ -12,7 +12,7 @@
 # MCP configs, sessions). On a tmpfs root, modules.agent-accounts preserves both.
 #
 # Check
-#   command -v qoder-intl   # GUI app, there is no --version CLI
+#   command -v qoder-ide   # GUI app, there is no --version CLI
 # ===============================================================================
 {
   config,
@@ -22,14 +22,14 @@
   ...
 }:
 let
-  cfg = config.modules.qoder-intl;
+  cfg = config.modules.qoder-ide;
 in
 {
-  options.modules.qoder-intl.enable = lib.mkEnableOption "Qoder International, Alibaba's agentic coding IDE (global edition)";
+  options.modules.qoder-ide.enable = lib.mkEnableOption "Qoder IDE, Alibaba's agentic coding IDE (global edition)";
 
   config = lib.mkIf cfg.enable {
     environment.systemPackages = [
-      nur-DataEraserC.packages.${pkgs.stdenv.hostPlatform.system}.qoder-intl
+      nur-DataEraserC.packages.${pkgs.stdenv.hostPlatform.system}.qoder-ide
     ];
   };
 }

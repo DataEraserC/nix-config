@@ -238,34 +238,14 @@ let
       };
     };
 
-    # Qoder ships separate CN and international builds. Their product names
-    # (QoderCN vs Qoder) and dataFolderName (.qoder-cn vs .qoder) differ, so
-    # every path is per edition and an account must not share state with the
-    # other edition. The single-instance lock is named after the user data
-    # directory, so both set userDataDir.
-    qoder-cn = {
-      executable = "qoder-cn";
-      paths = [
-        ".qoder-cn"
-        ".config/QoderCN"
-      ];
-      userDataDir = ".config/QoderCN";
-      persist = [
-        ".qoder-cn"
-        {
-          directory = ".config/QoderCN";
-          mode = "0700";
-        }
-      ];
-      desktop = {
-        label = "Qoder CN";
-        icon = "qoder-cn-ide";
-        wmclass = "qoder-cn-ide";
-      };
-    };
-
-    qoder = {
-      executable = "qoder-intl";
+    # Qoder has two product lines, each with a CN and an international build.
+    # The IDE stores state in ~/.qoder(-cn) + ~/.config/Qoder(CN); the Electron
+    # workbench uses ~/.qoder(-cn) + ~/.config/com.qoder(cn).app.stable. The
+    # shared ~/.qoder directory is the agent resource tree used by both
+    # products; per-app accounts still get their own copy because the app key
+    # differs.
+    qoder-ide = {
+      executable = "qoder-ide";
       paths = [
         ".qoder"
         ".config/Qoder"
@@ -279,9 +259,75 @@ let
         }
       ];
       desktop = {
-        label = "Qoder";
+        label = "Qoder IDE";
         icon = "qoder-ide";
         wmclass = "qoder-ide";
+      };
+    };
+
+    qoder = {
+      executable = "qoder";
+      stateDirectoryKey = "qoder-app";
+      paths = [
+        ".qoder"
+        ".config/com.qoder.app.stable"
+      ];
+      userDataDir = ".config/com.qoder.app.stable";
+      persist = [
+        ".qoder"
+        {
+          directory = ".config/com.qoder.app.stable";
+          mode = "0700";
+        }
+      ];
+      desktop = {
+        label = "Qoder";
+        icon = "qoder";
+        wmclass = "qoder";
+      };
+    };
+
+    qoder-cn-ide = {
+      executable = "qoder-cn-ide";
+      stateDirectoryKey = "qoder-cn";
+      paths = [
+        ".qoder-cn"
+        ".config/QoderCN"
+      ];
+      userDataDir = ".config/QoderCN";
+      persist = [
+        ".qoder-cn"
+        {
+          directory = ".config/QoderCN";
+          mode = "0700";
+        }
+      ];
+      desktop = {
+        label = "Qoder CN IDE";
+        icon = "qoder-cn-ide";
+        wmclass = "qoder-cn-ide";
+      };
+    };
+
+    qoder-cn = {
+      executable = "qoder-cn";
+      stateDirectoryKey = "qoder-cn-app";
+      paths = [
+        ".qoder-cn"
+        ".config/com.qodercn.app.stable"
+      ];
+      userDataDir = ".config/com.qodercn.app.stable";
+      persist = [
+        ".qoder-cn"
+        {
+          directory = ".config/com.qodercn.app.stable";
+          mode = "0700";
+        }
+      ];
+      desktop = {
+        label = "Qoder CN";
+        icon = "qoder-cn";
+        wmclass = "qoder-cn";
       };
     };
 
@@ -357,7 +403,8 @@ in
         account gets one entry labelled "<app> <account>" that starts the app
         through `multi-instance` in its own state directory. Only the GUI apps
         have a launcher: workbuddy, workbuddy-ai, lobsterai, trae-cn, trae,
-        zcode-cn, zcode, qoder-cn, qoder, xiaohuanxiong.
+        zcode-cn, zcode, qoder, qoder-ide, qoder-cn, qoder-cn-ide,
+        xiaohuanxiong.
       '';
     };
   };

@@ -1,13 +1,13 @@
 # ===============================================================================
 #
-# Qoder CN - Alibaba's agentic coding IDE, China edition.
+# Qoder CN IDE - Alibaba's agentic coding IDE, China edition.
 #
 # The derivation lives in nur-DataEraserC (pkgs/uncategorized-DataEraserC/
 # qoder-cn) together with its update script; this file only wires it up.
 # nur-DataEraserC exports no nixosModule for it, so the enable option below is
 # the only switch (there is no upstream module to import).
 #
-# State lives in ~/.qoder-cn (dataFolderName: canvas resources, plugins, CLI
+# State lives in ~/.qoder-cn-ide (dataFolderName: canvas resources, plugins, CLI
 # sessions) and ~/.config/QoderCN (Electron user data: login, settings, rules,
 # MCP configs, sessions). On a tmpfs root, modules.agent-accounts preserves both.
 #
@@ -22,14 +22,14 @@
   ...
 }:
 let
-  cfg = config.modules.qoder-cn;
+  cfg = config.modules.qoder-cn-ide;
 in
 {
-  options.modules.qoder-cn.enable = lib.mkEnableOption "Qoder CN, Alibaba's agentic coding IDE (China edition)";
+  options.modules.qoder-cn-ide.enable = lib.mkEnableOption "Qoder CN IDE, Alibaba's agentic coding IDE (China edition)";
 
   config = lib.mkIf cfg.enable {
     environment.systemPackages = [
-      nur-DataEraserC.packages.${pkgs.stdenv.hostPlatform.system}.qoder-cn
+      nur-DataEraserC.packages.${pkgs.stdenv.hostPlatform.system}.qoder-cn-ide
     ];
   };
 }
