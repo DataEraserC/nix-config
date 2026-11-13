@@ -26,7 +26,9 @@ in
     mainProgram = cfg.modules.zcode-acp.package.meta.mainProgram;
     usesPinnedPackage =
       toString cfg.modules.zcode-acp.package == toString dataEraserCPackages.zcode-acp;
-    vendorCliEnabled = cfg.modules.zcode.enable;
+    vendorCliPname = cfg.modules.zcode-acp.vendorCli.pname or null;
+    vendorCliInstalled = builtins.elem cfg.modules.zcode-acp.vendorCli cfg.environment.systemPackages;
+    guiModuleEnabled = cfg.modules.zcode.enable;
     guiEditionKeysRemoved =
       !(builtins.hasAttr "zcode-cn" cfg.modules) && !(builtins.hasAttr "zcode-intl" cfg.modules);
   };

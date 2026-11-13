@@ -5,7 +5,9 @@
     version = "0.84.3";
     mainProgram = "zcode-acp-server";
     usesPinnedPackage = true;
-    vendorCliEnabled = true;
+    vendorCliPname = "zcode-cli";
+    vendorCliInstalled = true;
+    guiModuleEnabled = true;
     guiEditionKeysRemoved = true;
   };
 
@@ -16,7 +18,7 @@
       "zcode-cli"
     ];
     acpExecutable = "zcode-acp-server";
-    cliExecutable = "zcode";
+    cliExecutable = "zcode-cli";
     sharedStateKey = true;
     stateDirectoryKey = "zcode-cli";
     stateRoot = ".local/state/multi-instance";
@@ -37,14 +39,14 @@
       "zcode-acp"
     ];
     title = "ZCode";
-    icon = "zcode";
+    icon = "terminal";
     processExecutables = [ "node" ];
     commandCount = 3;
     directCommand = {
-      match = [ "zcode" ];
+      match = [ "zcode-cli" ];
       acp = [ "zcode-acp-server" ];
       resume = [
-        "zcode"
+        "zcode-cli"
         "--resume"
       ];
     };

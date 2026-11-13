@@ -363,20 +363,23 @@ rec {
     ) (lib.range 1 8);
   };
 
-  # ZCode agent. The ACP bridge (zcode-acp-server) and the vendor TUI (zcode)
-  # are separate binaries sharing one state key, so the match argv launches the
-  # TUI form, the acp argv enters the bridge, and resume reopens the session in
-  # the TUI; instances 1 and 2 keep isolated ~/.zcode logins.
+  # ZCode agent. The ACP bridge (zcode-acp-server) and the vendor TUI
+  # (zcode-cli) are separate binaries sharing one state key, so the match argv
+  # launches the TUI form, the acp argv enters the bridge, and resume reopens
+  # the session in the TUI; instances 1 and 2 keep isolated ~/.zcode logins.
+  # The icon must be one of WebMux's launch-config icon keys (an unknown icon
+  # makes the loader skip the whole declaration); bin/zcode itself is the GUI
+  # launcher, so every argv here names the CLI wrapper instead.
   modules.webmux.acpAgents.zcode-acp = {
     title = "ZCode";
-    icon = "zcode";
+    icon = "terminal";
     processExecutables = [ "node" ];
     commands = [
       {
-        match = [ "zcode" ];
+        match = [ "zcode-cli" ];
         acp = [ "zcode-acp-server" ];
         resume = [
-          "zcode"
+          "zcode-cli"
           "--resume"
         ];
       }

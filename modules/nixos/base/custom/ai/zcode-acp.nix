@@ -39,10 +39,25 @@ in
         different build.
       '';
     };
+
+    vendorCli = lib.mkOption {
+      type = lib.types.nullOr lib.types.package;
+      default = nur-DataEraserC.legacyPackages.${pkgs.stdenv.hostPlatform.system}.zcode-cli or null;
+      description = ''
+        Package providing the `zcode-cli` executable (the vendor CLI wrapper
+        extracted from the desktop AppImage). Exposed on PATH because
+        multi-instance resolves its executable with `command -v` and the
+        terminal TUI is a documented direct form; the name is zcode-cli so it
+        never shadows the desktop package's bin/zcode. The adapter itself
+        reaches the vendor CLI through ZCODE_BIN, not through PATH.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
-    environment.systemPackages = lib.optional (cfg.package != null) cfg.package;
+    environment.systemPackages =
+      lib.optional (cfg.package != null) cfg.package
+      ++ lib.optional (cfg.vendorCli != null) cfg.vendorCli;
 
     assertions = [
       {

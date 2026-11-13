@@ -226,10 +226,11 @@ let
     # The ACP adapter (what WebMux drives) and the vendor TUI (what a terminal
     # runs) are separate binaries, but both instance forms share one state key
     # so a session created through the ACP bridge can be resumed with
-    # `zcode --resume` in the TUI and the other way round. Only ~/.zcode is
-    # redirected: the GUI app above owns ~/.config/ZCode.
+    # `zcode-cli --resume` in the TUI and the other way round. Only ~/.zcode is
+    # redirected: the GUI app above owns ~/.config/ZCode. The executable
+    # defaults to the app key: the desktop package owns bin/zcode, so the CLI
+    # wrapper is the separately named zcode-cli.
     zcode-cli = {
-      executable = "zcode";
       stateDirectoryKey = "zcode-cli";
       paths = [
         ".zcode"

@@ -3,7 +3,7 @@
   pkgs,
 }:
 let
-  fakeZcode = pkgs.writeShellScriptBin "zcode" ''
+  fakeZcodeCli = pkgs.writeShellScriptBin "zcode-cli" ''
     exit 0
   '';
   fakeZcodeAcpServer = pkgs.writeShellScriptBin "zcode-acp-server" ''
@@ -26,11 +26,11 @@ let
         ;;
       cli-1)
         test "$#" -eq 1
-        test "$1" = ${fakeZcode}/bin/zcode
+        test "$1" = ${fakeZcodeCli}/bin/zcode-cli
         ;;
       cli-resume)
         test "$#" -eq 2
-        test "$1" = ${fakeZcode}/bin/zcode
+        test "$1" = ${fakeZcodeCli}/bin/zcode-cli
         test "$2" = --resume
         ;;
       *)
@@ -47,7 +47,7 @@ pkgs.runCommandLocal "zcode-acp-multi-instance-state-test"
     nativeBuildInputs = [
       pkgs.bash
       pkgs.coreutils
-      fakeZcode
+      fakeZcodeCli
       fakeZcodeAcpServer
       fakeBwrap
     ];
