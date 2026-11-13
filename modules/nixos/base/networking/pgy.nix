@@ -28,7 +28,7 @@ in
   config = lib.mkIf cfg.enable {
     services.dataEraserc.pgy = {
       enable = true;
-      package = nur-DataEraserC.packages.${pkgs.system}.pgy_fhs;
+      package = nur-DataEraserC.packages.${pkgs.system}.pgy;
       stateDir = "/var/lib/pgyvpn";
       configFile = "/var/lib/pgyvpn/config.ini";
       logDir = "/var/log/oray";
