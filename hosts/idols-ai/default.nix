@@ -411,8 +411,8 @@ rec {
 
   # Agent tools and AI IDEs from nur-DataEraserC: CodeBuddy ACP, WorkBuddy,
   # WorkBuddy International, LobsterAI, Trae CN, Trae International, ZCode CN,
-  # ZCode International, Qoder, Qoder IDE, Qoder CN, Qoder CN IDE and Raccoon
-  # Work are on, CodeArts stays parked. Their state (~/.codebuddy,
+  # ZCode International, Qoder, Qoder CN and Raccoon Work are on. Qoder IDE,
+  # Qoder CN IDE and CodeArts are packaged but off. Their state (~/.codebuddy,
   # ~/.codeartsdoer, ~/.workbuddy, ~/.workbuddy-ai,
   # ~/.local/share/CodeBuddyExtension, ~/.config/LobsterAI, ~/lobsterai,
   # ~/.trae-cn, ~/.trae, ~/.config/Trae CN, ~/.config/Trae, ~/.zcode,
@@ -433,9 +433,9 @@ rec {
   modules.zcode-cn.enable = true;
   modules.zcode-intl.enable = true;
   modules.qoder.enable = true;
-  modules.qoder-ide.enable = true;
+  # modules.qoder-ide.enable = true;
   modules.qoder-cn.enable = true;
-  modules.qoder-cn-ide.enable = true;
+  # modules.qoder-cn-ide.enable = true;
   modules.xiaohuanxiong.enable = true;
   # `multi-instance <app> <account>`: the same apps under bubblewrap with one
   # state directory per account; see modules/nixos/base/custom/ai/agent-accounts.nix.
@@ -452,9 +452,9 @@ rec {
     zcode-cn = 2;
     zcode = 6;
     qoder = 4;
-    qoder-ide = 4;
+    # qoder-ide = 4;
     qoder-cn = 2;
-    qoder-cn-ide = 2;
+    # qoder-cn-ide = 2;
     xiaohuanxiong = 2;
   };
 
