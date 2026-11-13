@@ -331,6 +331,44 @@ let
       };
     };
 
+    # The AutoClaw launchers pin XDG_CONFIG_HOME per edition, so the whole
+    # edition directory is the per-account state; the app itself keeps its
+    # Electron profile one level below (AutoClaw-official for CN,
+    # AutoClaw-oversea-official for International).
+    autoclaw-cn = {
+      executable = "autoclaw-cn";
+      paths = [ ".config/autoclaw-cn" ];
+      userDataDir = ".config/autoclaw-cn/AutoClaw-official";
+      persist = [
+        {
+          directory = ".config/autoclaw-cn";
+          mode = "0700";
+        }
+      ];
+      desktop = {
+        label = "AutoClaw CN";
+        icon = "autoclaw-cn";
+        wmclass = "AutoClaw";
+      };
+    };
+
+    autoclaw-intl = {
+      executable = "autoclaw-intl";
+      paths = [ ".config/autoclaw-intl" ];
+      userDataDir = ".config/autoclaw-intl/AutoClaw-oversea-official";
+      persist = [
+        {
+          directory = ".config/autoclaw-intl";
+          mode = "0700";
+        }
+      ];
+      desktop = {
+        label = "AutoClaw";
+        icon = "autoclaw-intl";
+        wmclass = "AutoClaw";
+      };
+    };
+
     # The profile root is ~/.config/office-raccoon: it holds userData, sessions
     # and logs, and the app rejects it unless it is owner-only and not a
     # symlink (multi-instance creates each state directory 0700 for that
@@ -404,7 +442,7 @@ in
         through `multi-instance` in its own state directory. Only the GUI apps
         have a launcher: workbuddy, workbuddy-ai, lobsterai, trae-cn, trae,
         zcode-cn, zcode, qoder, qoder-ide, qoder-cn, qoder-cn-ide,
-        xiaohuanxiong.
+        autoclaw-cn, autoclaw-intl, xiaohuanxiong.
       '';
     };
   };

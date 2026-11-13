@@ -411,18 +411,20 @@ rec {
 
   # Agent tools and AI IDEs from nur-DataEraserC: CodeBuddy ACP, WorkBuddy,
   # WorkBuddy International, LobsterAI, Trae CN, Trae International, ZCode CN,
-  # ZCode International, Qoder, Qoder CN and Raccoon Work are on. Qoder IDE,
-  # Qoder CN IDE and CodeArts are packaged but off. Their state (~/.codebuddy,
+  # ZCode International, Qoder, Qoder CN, AutoClaw CN, AutoClaw International
+  # and Raccoon Work are on. Qoder IDE, Qoder CN IDE and CodeArts are packaged
+  # but off. Their state (~/.codebuddy,
   # ~/.codeartsdoer, ~/.workbuddy, ~/.workbuddy-ai,
   # ~/.local/share/CodeBuddyExtension, ~/.config/LobsterAI, ~/lobsterai,
   # ~/.trae-cn, ~/.trae, ~/.config/Trae CN, ~/.config/Trae, ~/.zcode,
   # ~/.config/ZCode, ~/.qoder, ~/.config/Qoder,
   # ~/.config/com.qoder.app.stable, ~/.qoder-cn, ~/.config/QoderCN,
-  # ~/.config/com.qodercn.app.stable, ~/.config/office-raccoon, ~/.box-agent,
+  # ~/.config/com.qodercn.app.stable, ~/.config/autoclaw-cn,
+  # ~/.config/autoclaw-intl, ~/.config/office-raccoon, ~/.box-agent,
   # ~/RaccoonWork, ~/.openclaw, ~/.hermes) is persisted unconditionally in
   # preservation-downstream.nix, so re-enabling one keeps the login and history
   # already on disk.
-  # See modules/nixos/base/custom/ai/{codebuddy-acp,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl,zcode-cn,zcode-intl,qoder,qoder-ide,qoder-cn,qoder-cn-ide,xiaohuanxiong}.nix.
+  # See modules/nixos/base/custom/ai/{codebuddy-acp,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl,zcode-cn,zcode-intl,qoder,qoder-ide,qoder-cn,qoder-cn-ide,autoclaw-cn,autoclaw-intl,xiaohuanxiong}.nix.
   modules.codebuddy-acp.enable = true;
   # modules.codearts.enable = true;
   modules.workbuddy.enable = true;
@@ -436,6 +438,8 @@ rec {
   # modules.qoder-ide.enable = true;
   modules.qoder-cn.enable = true;
   # modules.qoder-cn-ide.enable = true;
+  modules.autoclaw-cn.enable = true;
+  modules.autoclaw-intl.enable = true;
   modules.xiaohuanxiong.enable = true;
   # `multi-instance <app> <account>`: the same apps under bubblewrap with one
   # state directory per account; see modules/nixos/base/custom/ai/agent-accounts.nix.
@@ -455,6 +459,8 @@ rec {
     # qoder-ide = 4;
     qoder-cn = 2;
     # qoder-cn-ide = 2;
+    autoclaw-cn = 2;
+    autoclaw-intl = 4;
     xiaohuanxiong = 2;
   };
 
