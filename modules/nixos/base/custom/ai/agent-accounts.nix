@@ -219,6 +219,7 @@ let
     };
 
     zcode = {
+      executable = "zcode-intl";
       paths = [
         ".zcode"
         ".config/ZCode"
@@ -453,6 +454,7 @@ in
   config = {
     modules.multi-instance.apps = apps;
     modules.multi-instance.aliases.codebuddy = "codebuddy-acp";
+    modules.multi-instance.aliases.zcode-intl = "zcode";
     modules.multi-instance.enable = cfg.enable;
     modules.multi-instance.instances = cfg.desktopAccounts;
   };
