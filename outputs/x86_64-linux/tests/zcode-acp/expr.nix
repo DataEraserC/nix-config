@@ -49,10 +49,10 @@ in
     );
   };
 
-  # No WebMux binding for zcode: hybrid mode is TUI-locked and the bundled CLI
-  # has none (ZC-02/ZC-04). Assert the absence instead of the binding shapes.
+  # Direct-only binding: the terminal side is the bridge's Martty TUI
+  # (bin/zcode-acp under a TTY); the official bundled CLI has no TUI.
   webmux = {
     agentKeys = lib.attrNames agent;
-    zcodeAgentAbsent = !(builtins.hasAttr "zcode-acp" agent);
+    zcode = agent.zcode-acp;
   };
 }

@@ -34,7 +34,24 @@
   };
 
   webmux = {
-    agentKeys = [ "codebuddy-acp" ];
-    zcodeAgentAbsent = true;
+    agentKeys = [
+      "codebuddy-acp"
+      "zcode-acp"
+    ];
+    zcode = {
+      title = "ZCode";
+      icon = "terminal";
+      processExecutables = [
+        "node"
+        "bun"
+      ];
+      commands = [
+        {
+          match = [ "zcode-acp" ];
+          acp = [ "zcode-acp-server" ];
+          resume = [ "zcode-acp-resume" ];
+        }
+      ];
+    };
   };
 }
