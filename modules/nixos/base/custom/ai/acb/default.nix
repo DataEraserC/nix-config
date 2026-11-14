@@ -177,6 +177,9 @@ in
           WorkingDirectory = dataDir;
           Environment = [
             "PATH=${basePath}"
+            # 适配器自有连接库的状态根：绝对路径，桥与所有组件同源继承，
+            # 不依赖各进程 CWD（kernel 的连接注入按它解析）。
+            "ACB_DATA_DIR=${dataDir}"
             "ACB_ENDPOINT_LISTEN=${cfg.host}:${toString cfg.endpointPort}"
             "ACB_CONSOLE_LISTEN=${cfg.exposeHost}:${toString cfg.consolePort}"
             "ACB_RELAY_LISTEN=0.0.0.0:${toString cfg.relayPort}"
