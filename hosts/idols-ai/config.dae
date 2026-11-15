@@ -235,11 +235,22 @@ group {
         policy: min_moving_avg
     }
 
-    # proxy_bw = high-bandwidth group: filters out nodes whose name contains "竞速" (the latency-racing,
-    # bandwidth-oversold kind). dae's health check only measures handshake RTT and cannot measure bandwidth,
-    # so "exclude the 竞速 nodes" is used as a heuristic; within the group, nodes are still picked by latency.
+    # proxy_bw = "cheap but still usable" tier: only nodes whose name carries the 1x multiplier
+    # suffix (`...|1x`, `...|1xq`, `...|1xw`, `...|1x|NF`). Everything named 2x/3x/5x is removed
+    # at group level, so min_moving_avg can only ever pick a 1x node - there is no fallback to a
+    # high-multiplier node. 竞速 nodes stay excluded (oversold, bad for bulk transfers).
     proxy_bw {
-        filter: !name(keyword: '竞速')
+        filter: name(regex: '[|]1x') && !name(keyword: '竞速')
+        policy: min_moving_avg
+    }
+
+    # bulk_cheap = "cheap and slow is tolerable" tier: 0.x multiplier nodes first (0x / 0.01x /
+    # 0.5x / 0.8x, both the `name|0.5x` and the `name (0.01x)` naming styles); 1x nodes remain in
+    # the pool as a degraded fallback with a +3s latency penalty, so the group can never go empty
+    # and can never pick 2x or worse.
+    bulk_cheap {
+        filter: name(regex: '[|(]0([.][0-9]+)?x') && !name(keyword: '竞速')
+        filter: name(regex: '[|]1x') && !name(keyword: '竞速') [add_latency: 3s]
         policy: min_moving_avg
     }
 
@@ -390,6 +401,7 @@ routing {
     pname(cmd_must_direct) -> must_direct
     pname(cmd_proxy) -> proxy
     pname(cmd_proxy_bw) -> proxy_bw
+    pname(cmd_bulk_cheap) -> bulk_cheap
     pname(cmd_ikuuu) -> ikuuu
     pname(cmd_lajichang) -> lajichang
     pname(cmd_xxmad) -> xxmad
@@ -448,6 +460,20 @@ routing {
     ### GitHub / Docker Hub
     ### randomly select a node from the group for every connection
     ### to avoid the rate limit of GitHub API and Docker Hub API
+    # Bulk downloads: 1x nodes only (proxy_bw). These must sit above the geosite
+    # rules below, because first match wins and geosite:github / geosite:docker
+    # also contain these hosts. API endpoints keep the rate-limit-friendly group.
+    # ip-api.com egress probe loop: ~2.75M requests/day, small each but huge in count.
+    domain(full: ip-api.com) -> proxy_bw
+    # npm tarballs
+    domain(suffix: npmjs.org, npmjs.com) -> proxy_bw
+    # GitHub release / tarball downloads (raw, objects, codeload)
+    domain(suffix: githubusercontent.com) -> proxy_bw
+    domain(full: codeload.github.com) -> proxy_bw
+    # container registry pulls
+    domain(suffix: docker.io, ghcr.io, quay.io, gcr.io, registry.k8s.io) -> proxy_bw
+    domain(full: production.cloudflare.docker.com) -> proxy_bw
+
     domain(geosite:github) -> proxy-avoid-rate-limits
     domain(geosite:docker) -> proxy-avoid-rate-limits
 
@@ -497,11 +523,16 @@ routing {
 
     ### Downloads: heavy traffic goes to the high-bandwidth group (speed-race nodes excluded) or direct
     # nix substituter / channels
-    domain(regex:'.+\.nixos\.org$') -> proxy_bw
+    domain(regex:'.+\.nixos\.org$') -> bulk_cheap
     # nix source mirror (the fetch that got stuck earlier came from here)
-    domain(suffix: numtide.com) -> proxy_bw
+    domain(suffix: numtide.com) -> bulk_cheap
     # binary caches
-    domain(keyword:'cachix') -> proxy_bw
+    domain(keyword:'cachix') -> bulk_cheap
+    # other substituters declared in nix.conf
+    domain(keyword:'chaotic') -> bulk_cheap
+    domain(suffix: lantian.pub) -> bulk_cheap
+    domain(suffix: determinate.systems) -> bulk_cheap
+    domain(suffix: garnix.io) -> bulk_cheap
     # kernel.org: measured 2026-10-04 — direct 3.3 MB/s vs 168 KB/s through the proxy (20x), so route direct
     domain(suffix: kernel.org) -> direct
 
@@ -512,7 +543,7 @@ routing {
     domain(geosite:telegram) -> proxy
     domain(geosite:google) -> proxy
     domain(geosite:apple) -> proxy
-    domain(geosite:category-container) -> proxy
+    domain(geosite:category-container) -> proxy_bw
     domain(geosite:category-dev) -> proxy
     domain(geosite:google-scholar) -> proxy
     domain(geosite:category-scholar-!cn) -> proxy
