@@ -7052,11 +7052,11 @@
         "video-login": "video-login"
       },
       "locked": {
-        "lastModified": 1794846616,
-        "narHash": "sha256-VCRklxkChzLqw/cFu7MuVq77kzCFjJBog76Vqc6P1xw=",
+        "lastModified": 1794850250,
+        "narHash": "sha256-P+NWLnOKMdZS7AscvfjDo4iYogFe+Wo8mgnXDuGeJQE=",
         "owner": "DataEraserC",
         "repo": "nur-packages",
-        "rev": "802c2a44b31d5fa8d02e62f4ddb9dadf6860faad",
+        "rev": "e976eb0060a8c010f55cc68168d7c50d45ab0acf",
         "type": "github"
       },
       "original": {
@@ -7085,11 +7085,11 @@
         "video-login": "video-login_2"
       },
       "locked": {
-        "lastModified": 1794846616,
-        "narHash": "sha256-VCRklxkChzLqw/cFu7MuVq77kzCFjJBog76Vqc6P1xw=",
+        "lastModified": 1794850250,
+        "narHash": "sha256-P+NWLnOKMdZS7AscvfjDo4iYogFe+Wo8mgnXDuGeJQE=",
         "owner": "DataEraserC",
         "repo": "nur-packages",
-        "rev": "802c2a44b31d5fa8d02e62f4ddb9dadf6860faad",
+        "rev": "e976eb0060a8c010f55cc68168d7c50d45ab0acf",
         "type": "github"
       },
       "original": {
@@ -7116,11 +7116,11 @@
         "video-login": "video-login_3"
       },
       "locked": {
-        "lastModified": 1794846616,
-        "narHash": "sha256-VCRklxkChzLqw/cFu7MuVq77kzCFjJBog76Vqc6P1xw=",
+        "lastModified": 1794850250,
+        "narHash": "sha256-P+NWLnOKMdZS7AscvfjDo4iYogFe+Wo8mgnXDuGeJQE=",
         "owner": "DataEraserC",
         "repo": "nur-packages",
-        "rev": "802c2a44b31d5fa8d02e62f4ddb9dadf6860faad",
+        "rev": "e976eb0060a8c010f55cc68168d7c50d45ab0acf",
         "type": "github"
       },
       "original": {
