@@ -49,8 +49,15 @@ let
               wallpaperPath = "/home/nixos/Documents/code/wallpapers";
               passwordStorePath = "/home/nixos/nix-config/secrets/PasswordStore";
               # ACB 的 harnesses / Lua 示例：可写，改完重启对应单元生效；
-              # 指向当前开发 worktree，而不是只读的 flake store。
-              agentChatBridge = "/home/nixos/Documents/code/qq-bridge-fork/.agents/worktrees/qqab-arch";
+              # 指向开发仓库根，而不是只读的 flake store。
+              #
+              # 2026-11-17：原值指向 qq-bridge-fork/.agents/worktrees/qqab-arch，
+              # 那个多 worktree 目录已被删除（收敛成单一 clone）。路径失效后
+              # systemd 的 `ln -sfnT` 建出一个断链，opencode 插件加载报
+              # ENOENT、桥那边永远是 "no connection attempt"，症状是
+              # opencode 组件 healthy 但 harness 依赖 down。
+              # 换仓库时这个值必须跟着改，它不会自己跟随 flake input。
+              agentChatBridge = "/home/nixos/Documents/code/AgentChatBridge";
             };
           };
         }
