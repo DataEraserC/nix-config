@@ -153,6 +153,10 @@ rec {
   modules.mimocode2api.enable = (svc "mimocode2api").enable;
   modules.mimocode2api.port = (svc "mimocode2api").port;
 
+  # meoo2api gateway and console, bound to 0.0.0.0:1110.
+  modules.meoo2api.enable = (svc "meoo2api").enable;
+  modules.meoo2api.port = (svc "meoo2api").port;
+
   # new-api LLM gateway, port 1100 (upstream listens on all interfaces).
   modules.new-api.enable = (svc "new-api").enable;
   modules.new-api.port = (svc "new-api").port;

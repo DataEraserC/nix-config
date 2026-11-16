@@ -11,7 +11,7 @@
 #
 #   getent passwd gnome-remote-desktop cliproxyapi m365-copilot2api \
 #     opencode2api ollama new-api alist agent2api omniroute \
-#     our-free-model-standalone mimocode2api cpolar
+#     our-free-model-standalone mimocode2api cpolar meoo2api
 #   getent group sunshine
 #
 # They are used for the WSL hosts under the same-allocation assumption. Verify
@@ -76,6 +76,10 @@ let
     mimocode2api = {
       uid = 987;
       gid = 981;
+    };
+    meoo2api = {
+      uid = 949;
+      gid = 949;
     };
     cpolar = {
       uid = 993;

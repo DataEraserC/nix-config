@@ -48,6 +48,7 @@
   "note.opencode2api": "API 监听 1101；本卡片指向 1102 的 WebUI。",
   "note.mimocode2api": "兼容 OpenAI 的 LLM 网关。",
   "note.m365-copilot2api": "Microsoft 365 Copilot 网关。",
+  "note.meoo2api": "Meoo 网关，API 与账号控制台共用同一端口。",
   "note.cliproxyapi": "带离线管理面板的 CLI 代理。",
   "note.omniroute": "带面板的统一 LLM 网关；首次启动的引导令牌见日志。",
   "note.our-free-model-standalone": "上游要求绑定回环地址，因此仅能在其主机上访问。",

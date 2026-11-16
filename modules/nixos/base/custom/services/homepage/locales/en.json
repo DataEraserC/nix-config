@@ -48,6 +48,7 @@
   "note.opencode2api": "The API listens on 1101; this card links the WebUI on 1102.",
   "note.mimocode2api": "OpenAI-compatible LLM gateway.",
   "note.m365-copilot2api": "Microsoft 365 Copilot gateway.",
+  "note.meoo2api": "Meoo gateway with an OpenAI-compatible API and account console on the same port.",
   "note.cliproxyapi": "CLI proxy with an offline management panel.",
   "note.omniroute": "Unified LLM gateway with dashboard; the first-start bootstrap token is in the journal.",
   "note.our-free-model-standalone": "Upstream requires a loopback bind, so it is reachable only on its host.",

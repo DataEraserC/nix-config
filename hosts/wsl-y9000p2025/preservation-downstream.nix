@@ -71,6 +71,15 @@ in
         mode = "0700";
       }
 
+      # meoo2api (state.json with accounts, project keys, client API keys,
+      # usage log and settings)
+      {
+        directory = "/var/lib/meoo2api";
+        user = "meoo2api";
+        group = "meoo2api";
+        mode = "0700";
+      }
+
       # opencode2api (config.json, model caches, server key)
       {
         directory = "/var/lib/opencode2api";

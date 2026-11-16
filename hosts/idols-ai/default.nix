@@ -427,6 +427,10 @@ rec {
   modules.mimocode2api.enable = (svc "mimocode2api").enable;
   modules.mimocode2api.port = (svc "mimocode2api").port;
 
+  # meoo2api gateway and console, bound to 0.0.0.0:1110.
+  modules.meoo2api.enable = (svc "meoo2api").enable;
+  modules.meoo2api.port = (svc "meoo2api").port;
+
   # OmniRoute unified LLM gateway, bound to 0.0.0.0:1106.
   modules.omniroute.enable = (svc "omniroute").enable;
   modules.omniroute.port = (svc "omniroute").port;

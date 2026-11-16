@@ -575,6 +575,34 @@ rec {
       };
     };
 
+    meoo2api = {
+      hosts = {
+        idols-ai = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1110;
+        };
+        wsl-y9000p2025 = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1110;
+        };
+        wsl-work = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1110;
+        };
+      };
+      catalog = {
+        tags = [
+          "llm"
+          "gateway"
+          "ui"
+        ];
+        note = "meoo2api";
+      };
+    };
+
     open-webui = {
       hosts = {
         idols-ai = {
@@ -812,6 +840,7 @@ rec {
       (laptop "opencode2api-management-center" (regAi "opencode2api" "adminPort"))
       (laptop "mimocode2api" (regAi "mimocode2api" "port"))
       (laptop "M365-Copilot2API" (regAi "m365-copilot2api" "port"))
+      (laptop "meoo2api" (regAi "meoo2api" "port"))
       (laptop "Agent2API" (regAi "agent2api" "port"))
       # The laptop's browser terminal, reachable from this distro on its own
       # local port as well (31109 = base + 1109), like the gateways above.

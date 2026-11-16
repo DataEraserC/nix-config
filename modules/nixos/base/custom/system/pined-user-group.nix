@@ -22,6 +22,8 @@
     m365-copilot2api = { };
     # opencode2api
     opencode2api = { };
+    # meoo2api
+    meoo2api = { };
     # ollama
     ollama = { };
     # new-api
@@ -49,6 +51,11 @@
       isNormalUser = lib.mkDefault false;
       isSystemUser = lib.mkDefault true;
       group = "opencode2api";
+    };
+    meoo2api = {
+      isNormalUser = lib.mkDefault false;
+      isSystemUser = lib.mkDefault true;
+      group = "meoo2api";
     };
     ollama = {
       isNormalUser = lib.mkDefault false;
