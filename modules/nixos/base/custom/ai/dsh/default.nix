@@ -305,8 +305,10 @@ let
   # of the extras below breaks the composition. modsearch is the essential
   # search replacement and belongs in every profile; without it dsh's search
   # capability is crippled.
+  # Web search is built in as of the harness migration (DeepSeek Search API by
+  # default; see the upstream migration guide), so bundles.modsearch was
+  # removed and must not be selected.
   defaultBaseBundles = [
-    pkgs.dsh.bundles.modsearch
     pkgs.dsh.bundles.remote
   ];
 
@@ -436,8 +438,9 @@ let
     # and carries no runtime deps of its own.
     nur-DataEraserC.packages.${pkgs.system}.dsh-comfyui
     pkgs.dsh.bundles.harbor
-    pkgs.dsh.bundles.graph-memory
-    pkgs.dsh.bundles.notification
+    # graph-memory and notification were removed from the repository (see the
+    # upstream migration guide); use bundles.mneme/mnemon for cross-session
+    # memory.
     # Official experimental plugins, declared so the WebUI switch is durable:
     # the switch only edits the profile package.json's dsh.profile.bundles,
     # which dsh-sync-profiles reverts on every launch — the "reset after
@@ -453,7 +456,8 @@ let
     pkgs.dsh.bundles.experimental-session-search
     pkgs.dsh.bundles.experimental-session-titles-bundle
     pkgs.dsh.bundles.experimental-tool-worktree
-    pkgs.dsh.bundles.experimental-agent-team-profile
+    # experimental-agent-team-profile was removed in 0.2.2-rc.2: enable Team
+    # per session in the built-in interface instead.
     pkgs.dsh.bundles.experimental-auto-review
   ];
 
@@ -1040,6 +1044,11 @@ in
           patched = patchProfileDeps artifacts;
           base = pkgs.dsh.dsh.override (_: {
             profileSeeder = patched.seedProfiles;
+            # Newer harness revs assert that a replaced seeder carries the
+            # bundleCheckProfiles from the mkProfileArtifacts call that built
+            # it; without this the whole system evaluation throws
+            # "dsh: profileSeeder requires profileBundleCheckProfiles".
+            profileBundleCheckProfiles = patched.bundleCheckProfiles;
             profileDefaultProfile = config.programs.dsh.defaultProfile;
           });
         in
