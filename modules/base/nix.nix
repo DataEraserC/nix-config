@@ -29,6 +29,12 @@ let
     # deepseek-harness-nix cache
     "https://deepseek-harness-nix.cachix.org"
 
+    # nix-community's cache. Other Cachix caches re-serve its store paths (they
+    # keep nix-community's own signature rather than re-signing), so without
+    # this every such path produced "ignoring substitute ... not signed by any
+    # of the keys in 'trusted-public-keys'" and fell back to a slower mirror.
+    "https://nix-community.cachix.org"
+
     # "https://cache.saumon.network/proxmox-nixos"
   ];
   extra-trusted-public-keys = [
@@ -54,6 +60,7 @@ let
 
     # deepseek-harness-nix cache
     "deepseek-harness-nix.cachix.org-1:5NrkwLN9veNMhiINtU5ZeV4isXFhFsOwn6Ms7J1M+TA="
+    "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
 
     # "proxmox-nixos:D9RYSWpQQC/msZUWphOY2I5RLH5Dd6yQcaHIuug7dWM="
   ];
