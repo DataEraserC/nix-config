@@ -157,6 +157,10 @@ rec {
   modules.meoo2api.enable = (svc "meoo2api").enable;
   modules.meoo2api.port = (svc "meoo2api").port;
 
+  # workbuddy2api gateway and panel, bound to 0.0.0.0:1111.
+  modules.workbuddy2api.enable = (svc "workbuddy2api").enable;
+  modules.workbuddy2api.port = (svc "workbuddy2api").port;
+
   # new-api LLM gateway, port 1100 (upstream listens on all interfaces).
   modules.new-api.enable = (svc "new-api").enable;
   modules.new-api.port = (svc "new-api").port;

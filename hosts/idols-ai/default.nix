@@ -431,6 +431,10 @@ rec {
   modules.meoo2api.enable = (svc "meoo2api").enable;
   modules.meoo2api.port = (svc "meoo2api").port;
 
+  # workbuddy2api gateway and panel, bound to 0.0.0.0:1111.
+  modules.workbuddy2api.enable = (svc "workbuddy2api").enable;
+  modules.workbuddy2api.port = (svc "workbuddy2api").port;
+
   # OmniRoute unified LLM gateway, bound to 0.0.0.0:1106.
   modules.omniroute.enable = (svc "omniroute").enable;
   modules.omniroute.port = (svc "omniroute").port;

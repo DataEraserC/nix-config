@@ -80,6 +80,18 @@ in
         mode = "0700";
       }
 
+      # workbuddy2api (panel-owned config.json, accounts, IDE pools, request logs)
+      #
+      # The service writes its state as the workbuddy2api account, so the owner
+      # is declared here; the default root:root would revoke access when
+      # systemd-tmpfiles-resetup re-runs during a rebuild.
+      {
+        directory = "/var/lib/workbuddy2api";
+        user = "workbuddy2api";
+        group = "workbuddy2api";
+        mode = "0700";
+      }
+
       # opencode2api (config.json, model caches, server key)
       {
         directory = "/var/lib/opencode2api";
@@ -403,6 +415,7 @@ in
     "Z /var/lib/cliproxyapi - cliproxyapi cliproxyapi - -"
     "Z /var/lib/openlist - alist alist - -"
     "Z /var/lib/m365-copilot2api - m365-copilot2api m365-copilot2api - -"
+    "Z /var/lib/workbuddy2api - workbuddy2api workbuddy2api - -"
     "Z /var/lib/new-api - new-api new-api - -"
     # Sunshine state is shared by the login and greeter instances. Only the
     # group has to be converged; owner and modes stay as each instance wrote

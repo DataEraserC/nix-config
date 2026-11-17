@@ -11,7 +11,7 @@
 #
 #   getent passwd gnome-remote-desktop cliproxyapi m365-copilot2api \
 #     opencode2api ollama new-api alist agent2api omniroute \
-#     our-free-model-standalone mimocode2api cpolar meoo2api
+#     our-free-model-standalone mimocode2api cpolar meoo2api workbuddy2api
 #   getent group sunshine
 #
 # They are used for the WSL hosts under the same-allocation assumption. Verify
@@ -91,6 +91,13 @@ let
     acb-issue = {
       uid = 950;
       gid = 950;
+    };
+    # workbuddy2api: a new account, so it takes the next free id in the 950+
+    # block. Fixed because its preserved tree under /var/lib/workbuddy2api
+    # (accounts, IDE pools, request logs) is owned by this account.
+    workbuddy2api = {
+      uid = 951;
+      gid = 951;
     };
   };
 

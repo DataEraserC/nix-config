@@ -24,6 +24,8 @@
     opencode2api = { };
     # meoo2api
     meoo2api = { };
+    # workbuddy2api
+    workbuddy2api = { };
     # ollama
     ollama = { };
     # new-api
@@ -56,6 +58,11 @@
       isNormalUser = lib.mkDefault false;
       isSystemUser = lib.mkDefault true;
       group = "meoo2api";
+    };
+    workbuddy2api = {
+      isNormalUser = lib.mkDefault false;
+      isSystemUser = lib.mkDefault true;
+      group = "workbuddy2api";
     };
     ollama = {
       isNormalUser = lib.mkDefault false;

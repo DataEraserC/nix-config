@@ -7052,11 +7052,11 @@
         "video-login": "video-login"
       },
       "locked": {
-        "lastModified": 1794850250,
-        "narHash": "sha256-P+NWLnOKMdZS7AscvfjDo4iYogFe+Wo8mgnXDuGeJQE=",
+        "lastModified": 1794908942,
+        "narHash": "sha256-7nx5/HH93fjEMuYOehQ1kvdJelrtDdeb/xx6cZr5XFs=",
         "owner": "DataEraserC",
         "repo": "nur-packages",
-        "rev": "e976eb0060a8c010f55cc68168d7c50d45ab0acf",
+        "rev": "cd8de8622f80ab33974d686bd404cf6a943c3475",
         "type": "github"
       },
       "original": {

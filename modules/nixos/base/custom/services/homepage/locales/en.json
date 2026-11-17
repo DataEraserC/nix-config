@@ -59,6 +59,7 @@
   "note.alist": "File listing; the optional S3 listener is not listed.",
   "note.astrbot": "Chatbot WebUI.",
   "note.sub-store": "Subscription panel behind Basic Auth; the JSON API on 24500 is not listed.",
+  "note.workbuddy2api": "WorkBuddy / Qoder / Trae / MiniMax gateway with the API and management panel on one port.",
   "tag.llm": "LLM",
   "tag.gateway": "Gateway",
   "tag.ui": "Web UI",

@@ -603,6 +603,38 @@ rec {
       };
     };
 
+    # workbuddy2api (base/custom/ai/workbuddy2api): WorkBuddy / Qoder / Trae /
+    # MiniMax / Doubao / CodeArts gateway. The API and its management panel share
+    # this port; the gateway API key is generated into
+    # /var/lib/workbuddy2api/api-key on first start.
+    workbuddy2api = {
+      hosts = {
+        idols-ai = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1111;
+        };
+        wsl-y9000p2025 = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1111;
+        };
+        wsl-work = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1111;
+        };
+      };
+      catalog = {
+        tags = [
+          "llm"
+          "gateway"
+          "ui"
+        ];
+        note = "workbuddy2api";
+      };
+    };
+
     open-webui = {
       hosts = {
         idols-ai = {
