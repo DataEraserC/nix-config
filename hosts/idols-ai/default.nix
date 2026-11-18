@@ -505,6 +505,7 @@ rec {
   modules.autoclaw-cn.enable = true;
   modules.autoclaw-intl.enable = true;
   modules.xiaohuanxiong.enable = true;
+  modules.mobileclaw.enable = true;
   # `multi-instance <app> <account>`: the same apps under bubblewrap with one
   # state directory per account; see modules/nixos/base/custom/ai/agent-accounts.nix.
   # CodeBuddy account 1 accepts the canonical `multi-instance codebuddy-acp 1`
@@ -525,6 +526,7 @@ rec {
     autoclaw-cn = 2;
     autoclaw-intl = 4;
     xiaohuanxiong = 2;
+    mobileclaw = 2;
   };
 
   # WARP tunnel + its root CA cert, replaces the connection between this

@@ -463,6 +463,37 @@ let
         wmclass = "raccoon-ai";
       };
     };
+
+    # ~/.config/com.cmss.mobileclaw-desktop holds the config, device ID and auth
+    # token; ~/.config/MobileClaw is the Electron userData directory, whose
+    # single-instance lock is named after that path, so without `userDataDir`
+    # a second account would just hand its window to the first; and
+    # ~/Documents/MobileClaw is the default agent workspace.
+    mobileclaw = {
+      executable = "mobileclaw";
+      paths = [
+        ".config/com.cmss.mobileclaw-desktop"
+        ".config/MobileClaw"
+        "Documents/MobileClaw"
+      ];
+      userDataDir = ".config/MobileClaw";
+      persist = [
+        {
+          directory = ".config/com.cmss.mobileclaw-desktop";
+          mode = "0700";
+        }
+        {
+          directory = ".config/MobileClaw";
+          mode = "0700";
+        }
+        "Documents/MobileClaw"
+      ];
+      desktop = {
+        label = "MobileClaw";
+        icon = "mobileclaw-desktop";
+        wmclass = "MobileClaw";
+      };
+    };
   };
 in
 {
@@ -495,7 +526,7 @@ in
         through `multi-instance` in its own state directory. Only the GUI apps
         have a launcher: workbuddy, workbuddy-ai, lobsterai, trae-cn, trae,
         zcode, qoder, qoder-ide, qoder-cn, qoder-cn-ide,
-        autoclaw-cn, autoclaw-intl, xiaohuanxiong.
+        autoclaw-cn, autoclaw-intl, xiaohuanxiong, mobileclaw.
       '';
     };
   };
