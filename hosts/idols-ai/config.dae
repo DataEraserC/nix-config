@@ -406,6 +406,7 @@ routing {
     pname(cmd_lajichang) -> lajichang
     pname(cmd_xxmad) -> xxmad
     pname(cmd_mojie) -> mojie
+    pname(cmd_usa) -> usa
 
     # Put it in the front to prevent broadcast, multicast and other packets that should be sent to the LAN from being
     # forwarded by the proxy.
@@ -422,6 +423,34 @@ routing {
 
     # Disable HTTP3(QUIC) because it usually consumes too much cpu/mem resources.
     l4proto(udp) && dport(443) -> block
+
+    ### Muse from Meta
+    # Muse is region-gated. Keep its first-party API plus the exact account,
+    # Graph, Secure VM, realtime and privacy-relay dependencies on one US exit.
+    # Exact hosts avoid routing the entire *.facebook.com and *.meta.com namespaces through the US group.
+    domain(suffix: muse.ai, suffix: metaaivm.com, suffix: customer.prod.willow606.com) -> usa
+    domain(full: agent.meta.ai, full: hatch.ecto1.ai, full: node.hatch.one) -> usa
+
+    domain(full: auth.meta.com, full: od.auth.meta.com, full: accounts.meta.com) -> usa
+    domain(full: my-od.accountscenter.meta.com, full: accountscenter.meta.com, full: api.accounts.meta.com) -> usa
+    domain(full: gateway-edge.meta.com) -> usa
+    domain(full: graph.meta.com, full: od.graph.meta.com, full: meta.graph.meta.com) -> usa
+    domain(full: ar.graph.meta.com, full: ar-genai.graph.meta.com, full: payments-graph.graph.meta.com) -> usa
+
+    domain(full: www.facebook.com, full: m.facebook.com, full: secure.facebook.com) -> usa
+    domain(full: api.facebook.com, full: b-api.facebook.com, full: graph.facebook.com) -> usa
+    domain(full: b-graph.facebook.com, full: genai-graph.facebook.com, full: graph-www.facebook.com) -> usa
+    domain(full: payments-graph.facebook.com, full: gateway.facebook.com, full: gateway-fallback.facebook.com) -> usa
+    domain(full: connect.facebook.net) -> usa
+
+    domain(full: genai-hatch-realtime.facebook.com, full: genai-kepler-realtime.facebook.com) -> usa
+    domain(full: genai-waveform-realtime.facebook.com, full: meta-ai-realtime.facebook.com) -> usa
+    domain(full: wearable-ai-realtime.facebook.com, full: mo-realtime.facebook.com) -> usa
+    domain(full: shortwave.facebook.com, full: edge-stun.facebook.com) -> usa
+
+    domain(full: meta-ohttp-relay-prod.fastly-edge.com, full: meta-ohttp-relay-dev.fastly-edge.com) -> usa
+    domain(full: meta-ohttp-config-prod.fastly-edge.com) -> usa
+    domain(full: meta.privacy-gateway.cloudflare.com, full: meta.hpke-keys.privacy-gateway.cloudflare.com) -> usa
 
     # Direct access to all Chinese mainland-related IP addresses
     dip(geoip:cn) -> direct
