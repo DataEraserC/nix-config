@@ -2,7 +2,7 @@
   module = {
     enabled = true;
     package = "zcode-acp";
-    version = "0.84.3";
+    version = "0.88.0";
     mainProgram = "zcode-acp-server";
     usesPinnedPackage = true;
     vendorCliPname = "zcode-cli";

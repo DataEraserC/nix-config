@@ -59,8 +59,8 @@ in
 
   webmux = {
     package = "webmux-acp";
-    version = "0.14.5-unstable-2026-11-11";
-    nurSourceRev = "07d36990f1a2bed0b927de9d8865b9c45d6ccd46";
+    version = "0.16.0-unstable-2026-11-15";
+    nurSourceRev = "69f5212e0d0f5f99c905842a84c520e01688cf9d";
     usesPinnedPackage = true;
     declarationEnvironmentKeys = [ "WEBMUX_ACP_AGENTS" ];
     commandCount = 10;
@@ -77,7 +77,10 @@ in
         docsUrl = "https://example.invalid/connector-agent-acp";
       };
     };
-    agentKeys = [ "codebuddy-acp" ];
+    agentKeys = [
+      "codebuddy-acp"
+      "zcode-acp"
+    ];
     title = "CodeBuddy ACP";
     icon = "codebuddy";
     processExecutables = [

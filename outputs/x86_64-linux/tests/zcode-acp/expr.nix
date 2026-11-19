@@ -13,6 +13,9 @@ let
   directoryOf = entry: if builtins.isAttrs entry then entry.directory else entry;
   acpApp = cfg.modules.multi-instance.apps.zcode-acp;
   cliApp = cfg.modules.multi-instance.apps.zcode-cli;
+  # `executable = null` means "use the app key" (resolved with command -v at
+  # runtime); compare what the launcher actually runs, not the raw option.
+  resolvedExecutable = name: app: if app.executable == null then name else app.executable;
   guiApp = cfg.modules.multi-instance.apps.zcode;
   stateRoot = cfg.modules.multi-instance.stateRoot;
   preservedDirectories = map directoryOf cfg.modules.multi-instance.preserveDirectories;
@@ -36,8 +39,8 @@ in
     appKeys = lib.filter (name: lib.hasPrefix "zcode" name) (
       lib.attrNames cfg.modules.multi-instance.apps
     );
-    acpExecutable = acpApp.executable;
-    cliExecutable = cliApp.executable;
+    acpExecutable = resolvedExecutable "zcode-acp" acpApp;
+    cliExecutable = resolvedExecutable "zcode-cli" cliApp;
     sharedStateKey = acpApp.stateDirectoryKey == cliApp.stateDirectoryKey;
     stateDirectoryKey = cliApp.stateDirectoryKey;
     stateRoot = stateRoot;
