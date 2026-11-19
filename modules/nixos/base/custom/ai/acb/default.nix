@@ -43,7 +43,9 @@ let
     chmod -R u+w $out
     mkdir -p $out/examples
     cp -a ${acbSrc}/examples/lua $out/examples/
-    cp -a ${acbSrc}/deploy/opencode-serve.sh $out/deploy/
+    mkdir -p $out/deploy/components/opencode
+    cp -a ${acbSrc}/deploy/components/opencode/opencode-serve.sh \
+      $out/deploy/components/opencode/opencode-serve.sh
   '';
 
   sourceRoot = config.modules.outOfStoreSymlink.paths.agentChatBridge or null;
