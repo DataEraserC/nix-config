@@ -1,4 +1,5 @@
 {
+  lib,
   pkgs,
   ...
 }:
@@ -12,7 +13,13 @@
 
     ../base
     # ../gui/base/polkit-authentication-agent.nix
-    # ../gui/base/fcitx5
+
+    # Input method for WSLg / waypipe GUI apps. WSLg's weston only exposes
+    # text-input-v1 (no v3), so GTK/Qt must use the fcitx im-modules; see
+    # https://fcitx-im.org/wiki/Using_Fcitx_5_on_Wayland#Weston
+    ../gui/base/fcitx5
+    # flypy (小鹤音形) rime data, same as the desktop hosts.
+    ../../base/gui/rime
   ];
 
   # Application launcher shared across all WSL hosts (usable via WSLg).
@@ -20,6 +27,28 @@
     anyrun
     python313
   ];
+
+  # The shared fcitx5 module sets waylandFrontend = true, which makes Home
+  # Manager leave GTK_IM_MODULE/QT_IM_MODULE unset in favour of
+  # text-input-v3. WSLg's weston has no v3, so force the im-modules here.
+  # XMODIFIERS/SDL_IM_MODULE/GLFW_IM_MODULE already come from the HM
+  # fcitx5 module defaults.
+  home.sessionVariables = {
+    GTK_IM_MODULE = "fcitx";
+    QT_IM_MODULE = "fcitx";
+  };
+
+  # WSL has no login session and no graphical-session.target, so the HM
+  # fcitx5-daemon unit (WantedBy = graphical-session.target) never starts.
+  # Re-target it to default.target: lingering (modules/nixos/wsl/wsl_import.nix)
+  # starts the user manager at boot, which then starts fcitx5.
+  systemd.user.services.fcitx5-daemon = {
+    Unit = {
+      PartOf = lib.mkForce [ ];
+      After = lib.mkForce [ ];
+    };
+    Install.WantedBy = lib.mkForce [ "default.target" ];
+  };
 
   # `wsl-path-fix`: restore a complete PATH when it has become incomplete, e.g.
   # after ssh-ing into a WSL host (sshd only passes a minimal PATH). It first
