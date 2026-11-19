@@ -38,15 +38,28 @@
     QT_IM_MODULE = "fcitx";
   };
 
+  # WSLg's weston reserves zwp_input_method_v1 for its own RDP-side IME and
+  # rejects other clients ("permission to bind input_method denied"), which
+  # kills fcitx5 at startup when the waylandim frontend is compiled in.
+  # Turn the frontend off: GTK/Qt/XIM talk to fcitx5 over D-Bus/X11 instead,
+  # which is all the im-module setup above needs.
+  i18n.inputMethod.fcitx5.waylandFrontend = lib.mkForce false;
+
   # WSL has no login session and no graphical-session.target, so the HM
   # fcitx5-daemon unit (WantedBy = graphical-session.target) never starts.
   # Re-target it to default.target: lingering (modules/nixos/wsl/wsl_import.nix)
   # starts the user manager at boot, which then starts fcitx5.
+  # DISPLAY/WAYLAND_DISPLAY point at WSLg's sockets; without them fcitx5
+  # finds no display and exits immediately (status 0).
   systemd.user.services.fcitx5-daemon = {
     Unit = {
       PartOf = lib.mkForce [ ];
       After = lib.mkForce [ ];
     };
+    Service.Environment = [
+      "DISPLAY=:0"
+      "WAYLAND_DISPLAY=wayland-0"
+    ];
     Install.WantedBy = lib.mkForce [ "default.target" ];
   };
 
