@@ -1,4 +1,5 @@
 {
+  config,
   lib,
   pkgs,
   ...
@@ -40,9 +41,10 @@
 
   # WSLg's weston reserves zwp_input_method_v1 for its own RDP-side IME and
   # rejects other clients ("permission to bind input_method denied"), which
-  # kills fcitx5 at startup when the waylandim frontend is compiled in.
-  # Turn the frontend off: GTK/Qt/XIM talk to fcitx5 over D-Bus/X11 instead,
-  # which is all the im-module setup above needs.
+  # kills fcitx5 at startup when the waylandim addon loads. HM's
+  # waylandFrontend only controls env vars, not the compiled-in addon, so
+  # disable the addon at runtime instead. GTK/Qt/XIM talk to fcitx5 over
+  # D-Bus/X11, which is all the im-module setup above needs.
   i18n.inputMethod.fcitx5.waylandFrontend = lib.mkForce false;
 
   # WSL has no login session and no graphical-session.target, so the HM
@@ -56,10 +58,13 @@
       PartOf = lib.mkForce [ ];
       After = lib.mkForce [ ];
     };
-    Service.Environment = [
-      "DISPLAY=:0"
-      "WAYLAND_DISPLAY=wayland-0"
-    ];
+    Service = {
+      Environment = [
+        "DISPLAY=:0"
+        "WAYLAND_DISPLAY=wayland-0"
+      ];
+      ExecStart = lib.mkForce "${config.i18n.inputMethod.package}/bin/fcitx5 --disable waylandim";
+    };
     Install.WantedBy = lib.mkForce [ "default.target" ];
   };
 
