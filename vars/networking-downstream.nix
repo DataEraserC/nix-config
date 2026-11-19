@@ -873,6 +873,7 @@ rec {
       (laptop "mimocode2api" (regAi "mimocode2api" "port"))
       (laptop "M365-Copilot2API" (regAi "m365-copilot2api" "port"))
       (laptop "meoo2api" (regAi "meoo2api" "port"))
+      (laptop "workbuddy2api" (regAi "workbuddy2api" "port"))
       (laptop "Agent2API" (regAi "agent2api" "port"))
       # The laptop's browser terminal, reachable from this distro on its own
       # local port as well (31109 = base + 1109), like the gateways above.
