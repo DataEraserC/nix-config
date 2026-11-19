@@ -195,6 +195,14 @@ in
             # 2026-11-11 重启事故：这行原来只写在本机 drop-in 里，rebuild 清掉
             # drop-in 后整条桥起不来。
             "ACB_KEY_FILE=${dataDir}/secrets/acb.key"
+            # 仓库根目录：组件模板里的路径是相对仓库的片段，渲染出的
+            # supervisor.toml 落在 state/supervisor/ 而**不在仓库里**，
+            # 相对路径按配置目录解析永远指不到仓库（2026-11-20：snowluma 的
+            # compose 被解析成 state/supervisor/deploy/...，容器起不来）。
+            # 没有 sourceRoot（纯 store 部署）时不注入，代码会退到 cwd。
+          ]
+          ++ lib.optionals (sourceRoot != null) [
+            "ACB_REPO_DIR=${sourceRoot}"
           ];
           EnvironmentFile =
             lib.optional (cfg.secretsFile != null) "-${cfg.secretsFile}"
