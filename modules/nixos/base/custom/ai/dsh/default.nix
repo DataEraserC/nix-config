@@ -438,6 +438,12 @@ let
     # and carries no runtime deps of its own.
     nur-DataEraserC.packages.${pkgs.system}.dsh-comfyui
     pkgs.dsh.bundles.harbor
+    # Context insight and management: a first-level insights page, the Context
+    # and Fleet session tabs, a right-sidebar panel and the `/context` command.
+    # Its cordis patch is a single insert row (id dsh-context), so order here is
+    # irrelevant; the browser half rides package.json dsh.client, hence
+    # passthru.requiresWeb, and its peer ranges accept the pinned 0.2.2 kernel.
+    pkgs.dsh.bundles.context
     # graph-memory and notification were removed from the repository (see the
     # upstream migration guide); use bundles.mneme/mnemon for cross-session
     # memory.
