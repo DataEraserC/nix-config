@@ -425,11 +425,18 @@ let
     # package.json dsh.client declaration (web profiles, hence passthru.requiresWeb)
     # and the server half links its node_modules straight into the kernel.
     nur-DataEraserC.packages.${pkgs.system}.dsh-free-search
-    # yt-dlp video download with per-site login (bilibili QR / cookie import)
-    # and ffmpeg compression to QQ-sendable size. Server-only — no dsh.client
-    # half, so tui and web profiles both get it. yt-dlp/ffmpeg arrive via the
-    # package's own runtimeDeps, no PATH wiring needed here.
-    nur-DataEraserC.packages.${pkgs.system}.dsh-video-fetch
+    # Content extraction, not just video: per-platform extractors for video
+    # (yt-dlp + ffmpeg compression to QQ-sendable size), bilibili articles and
+    # opus posts, 完美世界电竞 community posts, 吉星派对 match replays and direct
+    # files. The caller picks the extractor — content_candidates lists who could
+    # handle a URL, content_extractor runs the chosen one — because one host
+    # serves many content kinds and guessing would send an article down the
+    # video path. Per-site login (bilibili QR / cookie import) raises quality
+    # and unlocks gated content for every extractor that benefits, not only
+    # video. Server-only — no dsh.client half, so tui and web profiles both get
+    # it. yt-dlp/ffmpeg arrive via the package's own runtimeDeps, no PATH wiring
+    # needed here.
+    nur-DataEraserC.packages.${pkgs.system}.dsh-content-extractor
     # Drive the local ComfyUI (image / video / audio generation) with the whole
     # workflow adjustable from the dsh side: parameter snapshots per saved
     # workflow plus user-added advanced parameters covering any node input,
@@ -497,11 +504,22 @@ let
         "web_search"
         "x_search"
         "read_page"
-        # dsh-video-fetch (4 tools): download, per-site login — its QR flow
-        # exists to be shown to the chat and scanned there — compression to
-        # QQ-sendable size, and the settings tool that edits the same profile
-        # patch the web card writes. Exact names; cookie values never enter
-        # context and login import takes a path, not file contents.
+        # dsh-content-extractor (7 tools). The generic pair first:
+        # content_candidates lists every extractor that could handle a URL
+        # (plural, advisory — it never picks), content_extractor runs the one
+        # named. That two-step flow is deliberate: bilibili serves video,
+        # articles and opus posts on one domain, so auto-selection would send
+        # an article to the video path. Neither tool reaches the local shell;
+        # output is confined to the session workspace.
+        "content_candidates"
+        "content_extractor"
+        "content_extractors"
+        # The video-specific trio plus settings: download with metadata, the
+        # per-site login whose QR flow exists to be shown to the chat and
+        # scanned there, compression to QQ-sendable size, and the settings tool
+        # that edits the same profile patch the web card writes. Exact names;
+        # cookie values never enter context and login import takes a path, not
+        # file contents.
         "video_fetch"
         "video_login"
         "video_compress"
