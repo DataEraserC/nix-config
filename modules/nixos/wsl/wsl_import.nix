@@ -20,6 +20,12 @@
   # WSL has no wireless hardware, disable wpa_supplicant
   networking.wireless.enable = lib.mkForce false;
 
+  # The WSL Home Manager profile imports gui/base/gtk.nix, whose activation
+  # writes GTK settings through dconf. Without the system dconf D-Bus service
+  # (normally pulled in by desktop modules WSL does not import), HM activation
+  # fails at dconfSettings with "The name is not activatable".
+  programs.dconf.enable = true;
+
   # Service accounts required by agenix secrets (cpolar.yml).
   # alist is superseded by the unconditional account in ../base/custom/services/alist.nix
   # (this stub declared group = "nogroup", which conflicts with it).
