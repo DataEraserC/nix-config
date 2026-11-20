@@ -470,7 +470,8 @@ let
     # experimental-agent-team-profile was removed in 0.2.2-rc.2: enable Team
     # per session in the built-in interface instead.
     pkgs.dsh.bundles.experimental-auto-review
-  ];
+  ]
+  ++ dshHarnessRemoteBundles;
 
   # QQ group-chat stack: unstable, so it stays out of the plain profiles and
   # ships only in the `web-qq*` combos — layered after `extraBundles` in the
@@ -755,6 +756,42 @@ let
       npmDeps = qqBridgeForkNpmDeps;
     }))
   ];
+
+  # DSHarness Remote (plugin mode) gives an Android dsh-Go client an encrypted
+  # channel to this host; SSH mode is buggy and is not used. The NUR input can
+  # still be pinned to a rev that predates the package (cross-repo rollout:
+  # push the package, then refresh the input), so keep this optional instead
+  # of breaking evaluation until that separate lock update lands.
+  dshHarnessRemoteAvailable =
+    builtins.hasAttr "ds-harness-remote"
+      nur-DataEraserC.packages.${pkgs.system};
+  dshHarnessRemoteBundles = lib.optionals dshHarnessRemoteAvailable [
+    nur-DataEraserC.packages.${pkgs.system}.ds-harness-remote
+  ];
+
+  # Seed only the namespace this module owns. The file-backed settings provider
+  # hot-reloads edits and preserves other namespaces, so an existing document
+  # and any user edits survive; no credentials are written here.
+  dshRemoteSettingsScript = lib.optionalString dshHarnessRemoteAvailable ''
+    remoteSettings="$dshHome/settings.yaml"
+    if [ ! -f "$remoteSettings" ]; then
+      install -m 600 -o ${myvars.username} -g users /dev/null "$remoteSettings"
+    fi
+    if ! grep -q '^ds-harness-remote:' "$remoteSettings"; then
+      printf '\n' >> "$remoteSettings"
+      printf '%s\n' \
+        'ds-harness-remote:' \
+        '  enabled: true' \
+        '  role: host' \
+        '  serverUrl: https://dsh.r2049.cn' \
+        '  forceRelay: false' \
+        '  logLevel: info' \
+        '  reconnect:' \
+        '    enabled: true' >> "$remoteSettings"
+    fi
+    chown ${myvars.username}:users "$remoteSettings"
+    chmod 600 "$remoteSettings"
+  '';
 
   # 可写 bundle 集合的默认值见 modules.dsh.bundleSets；这里保留原引用名，
   # profile 组合继续从同一组 option 读取，避免出现两份清单。
@@ -1044,6 +1081,8 @@ in
           install -d -m 755 -o ${myvars.username} -g users "$dshHome"
         fi
         ln -sfnT ${mylib.mklinkRelativeToRoot config "modules/nixos/base/custom/ai/dsh/common.yml"} "$dshHome/cordis.patch.yml"
+
+        ${dshRemoteSettingsScript}
 
         install -d -m 755 -o ${myvars.username} -g users "$dshHome/skills"
 
