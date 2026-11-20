@@ -756,15 +756,6 @@ let
       npmDepsHash = qqBridgeNpmDepsHash;
       npmDeps = qqBridgeForkNpmDeps;
     }))
-    # The group-chat server launch must write dsh stdout to
-    # `~/.dsh/guard/logs/server-<stamp>.out.log`: with `dsh.authToken`
-    # left empty, qq-bridge discovers the DSH launch token from the newest
-    # file matching that exact pattern, and re-discovers after a 401 or a
-    # restart. The log home, the `server-<stamp>.out.log` naming, and its
-    # retention are all provided by dsh-plugin-guard — web-qq depends on
-    # it for exactly that part. Unstable otherwise; parked commented out,
-    # enable for web-qq once validated.
-    # nur-DataEraserC.packages.${pkgs.system}.dsh-plugin-guard
   ];
 
   # 可写 bundle 集合的默认值见 modules.dsh.bundleSets；这里保留原引用名，
@@ -1030,7 +1021,6 @@ in
 
       # qq-bridge：fork 构建 + store 同步的启动层（见 qqBridgeLauncher）
       qqBridgeLauncher
-      nur-DataEraserC.packages.${pkgs.system}.dsh-plugin-guard
       # modlens is declared as a dsh bundle above and ships inside dsh's own
       # closure, but neither path links its bin into PATH, so `modlens` was
       # not runnable from a shell (the dsh tool calls it by absolute store
