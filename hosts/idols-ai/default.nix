@@ -372,7 +372,7 @@ rec {
   # server - the official AppImage-bundled zcode-cli has no TUI of its own
   # (see ZC-02/ZC-04 in the NUR requirements doc). Resume goes through the
   # boot-resume wrapper, which turns the appended session id into the TUI's
-  # boot-resume environment. Instances 1 and 2 keep isolated ~/.zcode logins
+  # boot-resume environment. Instances 1 through 6 keep isolated ~/.zcode logins
   # (log in once with `multi-instance zcode-cli N login`); the chat view
   # discovers the same session store via session/list. bin/zcode itself is
   # the GUI launcher, so no argv here may name it, and the icon must be one
@@ -415,7 +415,7 @@ rec {
         ];
         launcher = "bwrap";
       }
-    ) (lib.range 1 2);
+    ) (lib.range 1 6);
   };
 
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).

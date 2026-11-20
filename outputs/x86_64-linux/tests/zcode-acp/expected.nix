@@ -1,3 +1,24 @@
+let
+  instances = builtins.genList (index: toString (index + 1)) 6;
+  instanceCommand = instanceName: {
+    match = [
+      "multi-instance"
+      "zcode-acp"
+      instanceName
+    ];
+    acp = [
+      "multi-instance"
+      "zcode-acp"
+      instanceName
+    ];
+    resume = [
+      "multi-instance"
+      "zcode-acp-resume"
+      instanceName
+    ];
+    launcher = "bwrap";
+  };
+in
 {
   module = {
     enabled = true;
@@ -52,43 +73,8 @@
           acp = [ "zcode-acp-server" ];
           resume = [ "zcode-acp-resume" ];
         }
-        {
-          match = [
-            "multi-instance"
-            "zcode-acp"
-            "1"
-          ];
-          acp = [
-            "multi-instance"
-            "zcode-acp"
-            "1"
-          ];
-          resume = [
-            "multi-instance"
-            "zcode-acp-resume"
-            "1"
-          ];
-          launcher = "bwrap";
-        }
-        {
-          match = [
-            "multi-instance"
-            "zcode-acp"
-            "2"
-          ];
-          acp = [
-            "multi-instance"
-            "zcode-acp"
-            "2"
-          ];
-          resume = [
-            "multi-instance"
-            "zcode-acp-resume"
-            "2"
-          ];
-          launcher = "bwrap";
-        }
-      ];
+      ]
+      ++ map instanceCommand instances;
     };
   };
 }
