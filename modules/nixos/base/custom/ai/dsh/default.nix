@@ -425,15 +425,15 @@ let
     nur-DataEraserC.packages.${pkgs.system}.dsh-free-search
     # Content extraction, not just video: per-platform extractors for video
     # (yt-dlp + ffmpeg compression to QQ-sendable size), bilibili articles and
-    # opus posts, 完美世界电竞 community posts, 吉星派对 match replays and direct
-    # files. The caller picks the extractor — content_candidates lists who could
-    # handle a URL, content_extractor runs the chosen one — because one host
-    # serves many content kinds and guessing would send an article down the
-    # video path. Per-site login (bilibili QR / cookie import) raises quality
-    # and unlocks gated content for every extractor that benefits, not only
-    # video. Server-only — no dsh.client half, so tui and web profiles both get
-    # it. yt-dlp/ffmpeg arrive via the package's own runtimeDeps, no PATH wiring
-    # needed here.
+    # opus posts, Xiaohongshu notes and videos, 完美世界电竞 community posts,
+    # 吉星派对 match replays and direct files. The caller picks the extractor —
+    # content_candidates lists who could handle a URL, content_extractor runs the
+    # chosen one — because one host serves many content kinds and guessing would
+    # send an article down the video path. Per-site login (bilibili QR / cookie
+    # import) raises quality and unlocks gated content for every extractor that
+    # benefits, not only video. Server-only — no dsh.client half, so tui and web
+    # profiles both get it. yt-dlp/ffmpeg arrive via the package's own runtimeDeps,
+    # no PATH wiring needed here.
     nur-DataEraserC.packages.${pkgs.system}.dsh-content-extractor
     # Drive the local ComfyUI (image / video / audio generation) with the whole
     # workflow adjustable from the dsh side: parameter snapshots per saved
