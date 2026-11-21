@@ -17,9 +17,16 @@ core*
 !coredns*
 tmp/
 secrets/
+!secrets/.gitignore
 !secrets/README.md
+!secrets/Justfile
 !secrets/darwin.nix
+!secrets/makefile
 !secrets/nixos.nix
+!secrets/nixos_agenix.nix
+!secrets/nixos_sopsnix.nix
+!secrets/options.nix
+!secrets/sops.yaml.nix
 mysql/
 .Trash-*/
 ./*.patch
