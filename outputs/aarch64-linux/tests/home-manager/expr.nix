@@ -21,16 +21,7 @@ lib.genAttrs hosts (
   {
     homeDirectory = hm.home.homeDirectory;
     hypridleScreenOffIgnoresInhibitors = screenOff.ignore_inhibit or false;
-    hypridleScreenOffTracksActivity = lib.hasSuffix "check --timeout ${toString screenOff.timeout}" (
-      screenOff.condition_cmd or ""
-    );
-    hypridleLockTracksActivity = lib.hasSuffix "check --timeout ${toString lock.timeout}" (
-      lock.condition_cmd or ""
-    );
-    hypridleActivitySession =
-      hm.systemd.user.services.hypridle-activity.Install.WantedBy == [
-        hm.services.hypridle.systemdTarget
-      ];
+    hypridleScreenOffSkipsPlayingMedia = (screenOff.condition_cmd or "") != "";
     hypridleLockIgnoresInhibitors = lock.ignore_inhibit or false;
   }
 )

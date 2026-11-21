@@ -35,6 +35,7 @@ let
           modules.secrets.preservation.enable = true;
           modules.desktop.gaming.enable = true;
           modules.desktop.appcast.enable = true;
+          modules.archive-tools.enable = true;
           modules.dsh.enable = true;
           modules.vscode-server.enable = true;
         }

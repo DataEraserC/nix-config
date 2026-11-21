@@ -41,6 +41,10 @@
         file-manager = [ "org.gnome.Nautilus.desktop" ];
       in
       {
+        # The portal app chooser used by sandboxed apps (e.g. Telegram) lists
+        # only these and the types a desktop entry declares, never the defaults
+        # below.
+        "application/pdf" = [ "org.mozilla.firefox.desktop" ];
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document" = office;
         "application/wps-office.docx" = office;
         "application/x-php" = code;
@@ -129,12 +133,6 @@
 
         "inode/directory" = file-manager;
       };
-
-    # The portal app chooser used by sandboxed apps (e.g. Telegram) lists only these
-    # and the types a desktop entry declares, never the defaults above.
-    associations.added = {
-      "application/pdf" = [ "org.mozilla.firefox.desktop" ];
-    };
 
     associations.removed = {
       # ......

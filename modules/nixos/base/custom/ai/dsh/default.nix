@@ -941,6 +941,12 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    # The deepseek-harness NixOS module resolves `pkgs.dsh` through its own
+    # overlay, but upstream's overlays/nur-ryan4yin.nix also exports a (plain,
+    # mkDsh-less) `dsh` and lands later in the `nixpkgs.overlays` list, shadowing
+    # it. Re-import the deepseek overlay with `mkAfter` so its scoped `dsh`
+    # (which carries `mkDsh`/`mkDshDesktop`) wins the chain.
+    nixpkgs.overlays = lib.mkAfter [ (import (deepseek-harness + "/overlays/default.nix")) ];
     environment.systemPackages = [
       # pkgs.dsh.dsh-desktop
 

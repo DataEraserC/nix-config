@@ -1,4 +1,0 @@
-{
-  staticAddressMatchesWiredInterface = true;
-  noctaliaReadsHostIface = true;
-}

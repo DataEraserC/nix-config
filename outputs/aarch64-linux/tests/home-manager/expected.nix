@@ -11,8 +11,6 @@ in
 lib.genAttrs hosts (_: {
   homeDirectory = "/home/${username}";
   hypridleScreenOffIgnoresInhibitors = true;
-  hypridleScreenOffTracksActivity = true;
-  hypridleLockTracksActivity = true;
-  hypridleActivitySession = true;
+  hypridleScreenOffSkipsPlayingMedia = true;
   hypridleLockIgnoresInhibitors = true;
 })

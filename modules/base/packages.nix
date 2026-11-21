@@ -27,9 +27,8 @@
     zstd
     unzipNLS
     p7zip
-    libnatspec
-    unrar
-    rar
+    # rar/unrar are unfree and opt-in per host:
+    # modules/nixos/base/custom/system/archive-tools.nix
 
     # Text Processing
     # Docs: https://github.com/learnbyexample/Command-line-text-processing

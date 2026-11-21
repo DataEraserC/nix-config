@@ -24,11 +24,11 @@ nix-on-droid.lib.nixOnDroidConfiguration {
       # add other overlays
     ]
     ++ (import ../overlays (
-      args
-      // {
-        # tell overlays to use the nix-on-droid specific overlay
-        feat."nix-on-droid" = true;
-      }
+      # Spread the flake inputs as top-level args, mirroring what
+      # modules/base/overlays.nix provides on NixOS via module args
+      # (genSpecialArgs spreads `inputs`); overlays like
+      # overlays/nur-ryan4yin.nix take `nur-ryan4yin` directly.
+      (args // { feat."nix-on-droid" = true; }) // inputs
     ));
   };
 

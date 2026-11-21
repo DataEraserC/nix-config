@@ -75,15 +75,21 @@ in
 {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
-    nur-DataEraserC.nixosModules.aw88399-legion-audio
+    # nur-DataEraserC.nixosModules.aw88399-legion-audio
+    # The AW88399 Legion-audio patch module above was disabled when moving to
+    # nixpkgs 26.11: its archived kernel patches only cover up to 7.2, and the
+    # module's own guidance says the driver is part of mainline since 7.3, so
+    # the patched kernel package and the patch import are no longer needed.
+    # The firmware package (aw88399-legion-firmware) stays available in
+    # nur-DataEraserC if the mainline driver ever regresses.
   ];
 
-  hardware.dataEraserc.aw88399-legion-audio = {
-    enable = true;
-    patchVersion = null;
-    patchPackage = nur-DataEraserC.packages.${pkgs.system}.aw88399-legion-audio-patch;
-    firmwarePackage = nur-DataEraserC.packages.${pkgs.system}.aw88399-legion-firmware;
-  };
+  # The mainline AW88399 codec driver (kernel >= 7.3) still needs the device
+  # firmware, which the NUR audio module used to install alongside its kernel
+  # patches; keep the firmware without the obsolete patches.
+  hardware.firmware = [
+    nur-DataEraserC.packages.${pkgs.system}.aw88399-legion-firmware
+  ];
 
   boot.kernelParams = [
     # === NVMe power management (relaxed 2026-10) ===
@@ -137,8 +143,12 @@ in
   # );
 
   # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/top-level/linux-kernels.nix
-  boot.kernelPackages = pkgs.linuxPackages_7_2; # 6.19 works not well with nvidia driver
-  # boot.kernelPackages = pkgs.linuxPackages_latest;
+  # The old pin (linuxPackages_7_2) existed because 6.19 misbehaved with the
+  # NVIDIA driver and the AW88399 audio patch archive topped out at 7.2. Both
+  # reasons are gone on nixpkgs 26.11: 7.2 was dropped EOL and the AW88399
+  # driver is mainline since 7.3, so follow upstream and take the latest kernel.
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+  # boot.kernelPackages = pkgs.linuxPackages_cachyos;
   # boot.kernelPackages = pkgs.linuxPackages_xanmod_latest;
   # boot.kernelPackages = pkgs.linuxPackages_cachyos;
   # services.scx.enable = true;

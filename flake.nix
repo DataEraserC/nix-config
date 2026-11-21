@@ -212,6 +212,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     # ------------------ Downstream inputs (keep this block last) ------------------
+    # Gaming stack kept downstream (modules/nixos/desktop/gaming.nix): the
+    # pipewire low-latency + platform-optimization modules and the osu-lazer-bin
+    # package. Upstream reimplements the sysctls natively and dropped this input.
+    nix-gaming = {
+      url = "github:fufexan/nix-gaming";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     nixpkgs-latest.url = "github:nixos/nixpkgs/master";
     nixpkgs-unstable-yuzu.url = "github:nixos/nixpkgs?rev=6a59b7def496268fc32175183e4041d92586b00b";
     nixpkgs-unstable-etcher.url = "github:nixos/nixpkgs?rev=15cf1bacec81d3905d40b8005f88bb3ad8dc5a56";
