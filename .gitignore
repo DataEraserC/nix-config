@@ -1,9 +1,14 @@
+.vscode
 .Trash-1000/
 result
 result/
+result*
+result*/
 .direnv/
 .work/
 .worktrees/
+# the editor's workspace data, not a disposable cache: see AGENTS.md
+.workbuddy/
 .DS_Store
 .pre-commit-config.yaml
 logs/
@@ -11,6 +16,21 @@ core*
 !core/
 !core.nix
 !coredns*
+tmp/
+secrets/
+!secrets/.gitignore
+!secrets/README.md
+!secrets/Justfile
+!secrets/darwin.nix
+!secrets/makefile
+!secrets/nixos.nix
+!secrets/nixos_agenix.nix
+!secrets/nixos_sopsnix.nix
+!secrets/options.nix
+!secrets/sops.yaml.nix
+mysql/
+.Trash-*/
+./*.patch
 
 # =============== Python ===========================
 
@@ -37,3 +57,7 @@ htmlcov/
 # mihomo's private input and its subscription snapshots live in ~/.config/mihomo; guard a stray copy
 modules/nixos/desktop/networking/mihomo/sources.yaml
 modules/nixos/desktop/networking/mihomo/snapshots/
+
+# dsh worktree
+.dsh-worktrees/
+.tmp-sbtest/

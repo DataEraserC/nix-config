@@ -1,0 +1,13 @@
+%YAML 1.1
+---
+# Profile-level DSH patch for nix-web-qq-lan (dsh.nix key `web-qq-lan`): rows that
+# apply only to this profile, layered above the home file
+# ($DSH_HOME/cordis.patch.yml) and below CLI overlays. Nix is the source of
+# truth: programs.dsh.patch reads this file at build time, so the managed
+# profile file is a store snapshot of it - edit here, run `just local`, then
+# restart dsh. In-place edits (Settings UI or $DSH_HOME/profiles/...) are
+# reverted to the snapshot on the next launch, by design (managed fingerprint).
+# LAN profile: dsh.nix injects no rows, so these are the profile's only rows.
+# The webserver row, with its launcher-provided bind host (`--host`), comes
+# from the dsh-web-app bundle.
+[]

@@ -73,3 +73,8 @@ export def darwin-rollback [] {
     # darwin-rebuild refuses switch/activate/rollback/check unless it runs as root.
     sudo -E ./result/sw/bin/darwin-rebuild --rollback
 }
+
+# Re-export the downstream command module; see utils.d/downstream.nu.
+# Keep this at EOF: a trailing `export use ... *` overrides the same-named defs
+# above it, while a leading one loses to them (nushell resolves later bindings).
+export use ./utils.d/downstream.nu *
