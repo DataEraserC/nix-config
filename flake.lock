@@ -279,6 +279,26 @@
         "type": "github"
       }
     },
+    "agent2api-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1795265480,
+        "narHash": "sha256-F7IlbPcOflWy8mN3xAVOTBMEKnhsBUk8g2l+dwNe0jI=",
+        "owner": "desktop-tools-which-may-be-useful",
+        "repo": "agent2api.nix",
+        "rev": "9dfad982ec8fffda3a012d6ede2ccdf99981de34",
+        "type": "github"
+      },
+      "original": {
+        "owner": "desktop-tools-which-may-be-useful",
+        "repo": "agent2api.nix",
+        "type": "github"
+      }
+    },
     "android-attestation-keybox-generator": {
       "inputs": {
         "flake-utils": "flake-utils_20",
@@ -7831,6 +7851,7 @@
         "aagl": "aagl",
         "acb": "acb",
         "agenix": "agenix",
+        "agent2api-nix": "agent2api-nix",
         "android-nixpkgs": "android-nixpkgs",
         "appcast": "appcast",
         "astronvim-nod": "astronvim-nod",

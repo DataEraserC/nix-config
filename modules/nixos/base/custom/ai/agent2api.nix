@@ -3,10 +3,12 @@
 # Agent2API - multi-provider subscription accounts to OpenAI/Anthropic
 # compatible API gateway, with a web management panel.
 #
-# This wrapper uses the DataEraserC NUR module, which provides
-# `services.dataEraserc.agent2api`, and pins the headless server package
-# (`agent2api-server`) rather than the Tauri desktop build: same gateway, no
-# webkit/gtk in the closure.
+# The gateway and its provider plugins are maintained outside this repository:
+# the `agent2api-nix` flake packages the plugins (autoPatchelf'd so the native
+# ELF packs run on NixOS) and provides `services.agent2api`, including the
+# plugin sync and both systemd units. This wrapper only pins the headless
+# server package (`agent2api-server`, from the DataEraserC NUR) and maps the
+# fork's host options onto that module.
 #
 # Binds to 0.0.0.0:1108 and serves both the OpenAI-compatible API (/v1/*) and
 # the panel on that single port. The host firewall only trusts the VPN overlays
@@ -26,10 +28,15 @@
 # the credential encryption key) lives in /var/lib/agent2api, preserved by the
 # host's impermanence setup.
 #
-# Set listenAddress, panelPort or allowNoKey in the wrapper below when a host
-# needs a different split; hosts only toggle `modules.agent2api.enable` and set
-# `modules.agent2api.port` from the port registry
-# (myvars.networking.services.agent2api.hosts.<machine>.port).
+# `plugins` is empty by default. Add any of
+# `inputs.agent2api-nix.packages.${system}.*` to install provider packs:
+#   agent2api-providers       - 提供商增强 (native)
+#   agent2api-web-providers   - 网页提供商 (native)
+#   agent2api-wasm-trae       - Trae (wasm)
+#   agent2api-wasm-zcode      - ZCode 国内版 (wasm)
+# `mode = "managed"` reconciles the set (and the per-provider switches) on every
+# start; `mode = "mutable"` seeds once and then leaves the plugin directory
+# alone.
 #
 # Check Service Status
 #   systemctl status agent2api
@@ -41,6 +48,7 @@
   config,
   lib,
   pkgs,
+  inputs,
   nur-DataEraserC,
   ...
 }:
@@ -49,7 +57,7 @@ let
   system = pkgs.stdenv.hostPlatform.system;
 in
 {
-  imports = [ nur-DataEraserC.nixosModules.agent2api ];
+  imports = [ inputs.agent2api-nix.nixosModules.default ];
 
   options.modules.agent2api = {
     enable = lib.mkEnableOption "Agent2API gateway";
@@ -62,14 +70,32 @@ in
       default = null;
       description = "Serve the management panel on its own port instead of `port`, so only the API port has to be reachable; must differ from `port`.";
     };
+    mode = lib.mkOption {
+      type = lib.types.enum [
+        "managed"
+        "mutable"
+      ];
+      default = "managed";
+      description = "managed reconciles the plugin set and provider switches on every start; mutable seeds once and then leaves the plugin directory alone.";
+    };
+    plugins = lib.mkOption {
+      type = lib.types.listOf lib.types.package;
+      default = [ ];
+      description = "Agent2API provider plugin packs to install; empty by default.";
+    };
   };
 
   config = lib.mkIf cfg.enable {
-    services.dataEraserc.agent2api = {
+    services.agent2api = {
       enable = true;
       package = nur-DataEraserC.packages.${system}.agent2api-server;
+      inherit (cfg)
+        port
+        panelPort
+        mode
+        plugins
+        ;
       host = "0.0.0.0";
-      inherit (cfg) port panelPort;
       adminUser = "admin";
       adminPasswordFile = "/run/agenix/agent2api-admin-password";
       captcha = false;

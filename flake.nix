@@ -459,6 +459,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Agent2API provider plugins (autoPatchelf'd for NixOS) and the
+    # managed/mutable plugin-sync module. The server package itself stays in
+    # nur-DataEraserC; this flake only supplies plugins and the module.
+    agent2api-nix = {
+      url = "github:desktop-tools-which-may-be-useful/agent2api.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # NUR package source
 
     nur.url = "github:nix-community/NUR";
