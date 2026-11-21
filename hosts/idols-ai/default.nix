@@ -428,6 +428,47 @@ rec {
     ) (lib.range 1 6);
   };
 
+  # Qoder CN CLI, the terminal client of the Qoder CN desktop app. Only the
+  # wrapped forms are declared here: bare `qoderclicn` is already a built-in
+  # WebMux adapter (`qodercn`), and a declaration whose first matched argv names
+  # a built-in executable is dropped for shadowing it, so adding a direct form
+  # would delete this agent rather than extend it. Instances 1 and 2 match
+  # `desktopAccounts.qoder-cn`, each with its own ~/.qoder-cn login (log in once
+  # with `multi-instance qoderclicn N login`); the CLI serves ACP session/list, so
+  # the chat view finds and resumes the sessions the terminal form creates.
+  # International `qodercli` is packaged but off, like `modules.qoder`.
+  modules.webmux.acpAgents.qoder-cli-cn = {
+    title = "Qoder CLI CN";
+    icon = "qoder";
+    processExecutables = [ "qoderclicn" ];
+    commands = map (
+      instance:
+      let
+        instanceName = toString instance;
+      in
+      {
+        match = [
+          "multi-instance"
+          "qoderclicn"
+          instanceName
+        ];
+        acp = [
+          "multi-instance"
+          "qoderclicn"
+          instanceName
+          "--acp"
+        ];
+        resume = [
+          "multi-instance"
+          "qoderclicn"
+          instanceName
+          "--resume"
+        ];
+        launcher = "bwrap";
+      }
+    ) (lib.range 1 2);
+  };
+
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
   modules.opencode2api.enable = (svc "opencode2api").enable;
   modules.opencode2api.port = (svc "opencode2api").port;
@@ -485,9 +526,9 @@ rec {
   # Agent tools and AI IDEs from nur-DataEraserC: CodeBuddy ACP, WorkBuddy,
   # WorkBuddy International, LobsterAI, Trae CN, ZCode (one package serves the
   # CN and international editions; the region is the account you log in with),
-  # Qoder CN, AutoClaw CN, AutoClaw International and Raccoon Work are on.
-  # Qoder, Qoder IDE, Qoder CN IDE, Trae International and CodeArts are packaged
-  # but off. Their state (~/.codebuddy,
+  # Qoder CN, Qoder CN CLI, AutoClaw CN, AutoClaw International and Raccoon Work
+  # are on. Qoder, Qoder IDE, Qoder CN IDE, Qoder CLI, Trae International and
+  # CodeArts are packaged but off. Their state (~/.codebuddy,
   # ~/.codeartsdoer, ~/.workbuddy, ~/.workbuddy-ai,
   # ~/.local/share/CodeBuddyExtension, ~/.config/LobsterAI, ~/lobsterai,
   # ~/.trae-cn, ~/.trae, ~/.config/Trae CN, ~/.config/Trae, ~/.zcode,
@@ -498,7 +539,7 @@ rec {
   # ~/RaccoonWork, ~/.openclaw, ~/.hermes) is persisted unconditionally in
   # preservation-downstream.nix, so re-enabling one keeps the login and history
   # already on disk.
-  # See modules/nixos/base/custom/ai/{codebuddy-acp,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl,zcode,zcode-acp,qoder,qoder-ide,qoder-cn,qoder-cn-ide,autoclaw-cn,autoclaw-intl,xiaohuanxiong}.nix.
+  # See modules/nixos/base/custom/ai/{codebuddy-acp,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl,zcode,zcode-acp,qoder,qoder-ide,qoder-cn,qoder-cn-ide,qodercli,qoderclicn,autoclaw-cn,autoclaw-intl,xiaohuanxiong}.nix.
   modules.codebuddy-acp.enable = true;
   modules.zcode-acp.enable = true;
   # modules.codearts.enable = true;
@@ -512,6 +553,8 @@ rec {
   # modules.qoder-ide.enable = true;
   modules.qoder-cn.enable = true;
   # modules.qoder-cn-ide.enable = true;
+  # modules.qodercli.enable = true;
+  modules.qoderclicn.enable = true;
   modules.autoclaw-cn.enable = true;
   modules.autoclaw-intl.enable = true;
   modules.xiaohuanxiong.enable = true;

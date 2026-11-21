@@ -58,6 +58,7 @@ in
   webmux = {
     agentKeys = [
       "codebuddy-acp"
+      "qoder-cli-cn"
       "zcode-acp"
     ];
     zcode = {

@@ -60,7 +60,7 @@ in
   webmux = {
     package = "webmux-acp";
     version = "0.16.0-unstable-2026-11-15";
-    nurSourceRev = "002477a05f9825c20f4f6cba8cf5c870871968ef";
+    nurSourceRev = "ea1d297134c2594636dd9db2ae5fd04b4418c0f4";
     usesPinnedPackage = true;
     declarationEnvironmentKeys = [ "WEBMUX_ACP_AGENTS" ];
     commandCount = 10;
@@ -79,6 +79,7 @@ in
     };
     agentKeys = [
       "codebuddy-acp"
+      "qoder-cli-cn"
       "zcode-acp"
     ];
     title = "CodeBuddy ACP";

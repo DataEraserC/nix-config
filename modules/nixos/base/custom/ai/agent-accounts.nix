@@ -370,6 +370,25 @@ let
       };
     };
 
+    # The terminal clients repeat the desktop split: the brand decides the user
+    # config root, `~/.qoder` for the international build and `~/.qoder-cn` for
+    # the CN one, and the login, the sessions under `projects`, the skills and
+    # the plugins all hang below it. Each gets its own state key, so a CLI
+    # account is independent of the desktop account that shares its directory.
+    # The `persist` items stay plain strings so they collapse into the entries
+    # above instead of declaring the same path twice.
+    qodercli = {
+      stateDirectoryKey = "qoder-cli";
+      paths = [ ".qoder" ];
+      persist = [ ".qoder" ];
+    };
+
+    qoderclicn = {
+      stateDirectoryKey = "qoder-cn-cli";
+      paths = [ ".qoder-cn" ];
+      persist = [ ".qoder-cn" ];
+    };
+
     # The AutoClaw launchers pin XDG_CONFIG_HOME per edition; the app writes
     # two sibling directories under it (AutoClaw plus AutoClaw-official for CN
     # or AutoClaw-oversea-official for International), which are the per-account
