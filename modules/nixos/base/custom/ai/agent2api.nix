@@ -49,7 +49,6 @@
   lib,
   pkgs,
   inputs,
-  nur-DataEraserC,
   ...
 }:
 let
@@ -88,7 +87,7 @@ in
   config = lib.mkIf cfg.enable {
     services.agent2api = {
       enable = true;
-      package = nur-DataEraserC.packages.${system}.agent2api-server;
+      package = inputs.agent2api-nix.packages.${system}.agent2api-server;
       inherit (cfg)
         port
         panelPort
