@@ -423,6 +423,15 @@ routing {
     # Disable HTTP3(QUIC) because it usually consumes too much cpu/mem resources.
     l4proto(udp) && dport(443) -> block
 
+    # CodeBuddy international: v2fly marks codebuddy.ai @cn (Tencent-owned), but it is the
+    # international CodeBuddy endpoint and resolves to EdgeOne international edges with mixed
+    # reachability from CN ISPs: 43.168.20.186 dials fine while 43.168.22.113 is blackholed
+    # (50 dae dial timeouts in 3h on 2026-11-21), so direct kills ~half the login attempts
+    # with ERR_SOCKET_CLOSED in the CLI (dae accepts the tproxy conn, dial times out, socket
+    # closed). Route the whole suffix through proxy; must stay above the geosite:cn rule
+    # below, which would otherwise win.
+    domain(suffix: codebuddy.ai) -> proxy
+
     # Direct access to all Chinese mainland-related IP addresses
     dip(geoip:cn) -> direct
     domain(geosite:cn) -> direct
