@@ -260,6 +260,12 @@ in
           owner = "new-api";
           group = "new-api";
         };
+        "workbuddy2api-api-key" = mkIf config.modules.workbuddy2api.enable {
+          file = "${mysecrets}/workbuddy2api-api-key.age";
+          mode = "0600";
+          owner = "workbuddy2api";
+          group = "workbuddy2api";
+        };
       };
 
       # place secrets in /etc/

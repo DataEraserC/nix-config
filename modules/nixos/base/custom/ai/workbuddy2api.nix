@@ -12,11 +12,15 @@
 # Upstream has no TLS, so keep it behind an authenticated reverse proxy when
 # reaching it from an untrusted network.
 #
-# The gateway API key is generated on first start into
-# /var/lib/workbuddy2api/api-key (0600, owned by the service account) instead of
-# being a Nix store value; read it with
-#   sudo cat /var/lib/workbuddy2api/api-key
-# Deleting that file and restarting rotates it.
+# The gateway API key is maintained in agenix
+# (secrets/agenix/workbuddy2api-api-key.age, one shared key for every host
+# that enables this module) and decrypted to /run/agenix/workbuddy2api-api-key
+# (0600, owned by the service account); read it with
+#   sudo cat /run/agenix/workbuddy2api-api-key
+# The NUR module loads it as a systemd credential and exports WB2A_API_KEY, so
+# auto-generation into ${stateDir}/api-key is skipped. Rotate with
+#   just -f secrets/Justfile edit agenix/workbuddy2api-api-key.age   (sudo)
+# followed by a service restart - the env-passed key is fixed at process start.
 #
 # Mutable state lives in /var/lib/workbuddy2api: config.json (seeded once, then
 # owned by the panel), auths/ (WorkBuddy account files), data/ (state, usage,
@@ -58,6 +62,8 @@ in
       listenAddress = "0.0.0.0";
       port = cfg.port;
       openFirewall = false;
+      # agenix-managed key, loaded via systemd LoadCredential (agent2api style).
+      apiKeyFile = "/run/agenix/workbuddy2api-api-key";
     };
   };
 }
