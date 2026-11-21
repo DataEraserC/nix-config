@@ -7,6 +7,7 @@
   mysecrets,
   nur-DataEraserC,
   nixGL,
+  inputs,
   ...
 }@args:
 #############################################################
@@ -285,6 +286,15 @@ rec {
   # Agent2API gateway, bound to 0.0.0.0:1108 (API and management panel).
   modules.agent2api.enable = (svc "agent2api").enable;
   modules.agent2api.port = (svc "agent2api").port;
+  # Provider packs from the agent2api-nix flake; managed mode reconciles this
+  # set (and the provider switches) on every start.
+  modules.agent2api.plugins = with inputs.agent2api-nix.packages.${pkgs.stdenv.hostPlatform.system}; [
+    agent2api-providers
+    agent2api-web-providers
+    agent2api-wasm-trae
+    agent2api-wasm-zcode
+    agent2api-wasm-zcode-intl
+  ];
 
   # WebMux browser terminal server, bound to 0.0.0.0:1109 (runs as this host's
   # login user so sessions reach its agent logins and HOME).
