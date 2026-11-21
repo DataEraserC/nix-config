@@ -35,7 +35,6 @@ rec {
     ./netdev-mount.nix
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
-    # ./nvidia.nix
     ./packages.nix
     ./ai
 
@@ -43,7 +42,6 @@ rec {
     ./preservation-downstream.nix
     ../service-user-ids.nix
     ./impermanence_addon.nix
-    # ./secureboot.nix
     # ./dae.nix
 
     # wsl related

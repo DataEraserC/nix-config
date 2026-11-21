@@ -13,8 +13,6 @@
     ../base/user-group.nix
     ../base/custom
     ./apparmor-workaround.nix
-
-    # ./vscode-remote-workaround.nix
   ];
 
   # WSL has no wireless hardware, disable wpa_supplicant
@@ -26,33 +24,9 @@
   # fails at dconfSettings with "The name is not activatable".
   programs.dconf.enable = true;
 
-  # Service accounts required by agenix secrets (cpolar.yml).
-  # alist is superseded by the unconditional account in ../base/custom/services/alist.nix
-  # (this stub declared group = "nogroup", which conflicts with it).
-  users.users.cpolar = {
-    isSystemUser = true;
-    group = "cpolar";
-  };
-  users.groups.cpolar = { };
-
-  users.users.cliproxyapi = {
-    isSystemUser = true;
-    group = "cliproxyapi";
-  };
-  users.groups.cliproxyapi = { };
-
-  users.users.m365-copilot2api = {
-    isSystemUser = true;
-    group = "m365-copilot2api";
-  };
-  users.groups.m365-copilot2api = { };
-
-  users.users.opencode2api = {
-    isSystemUser = true;
-    group = "opencode2api";
-  };
-  users.groups.opencode2api = { };
-
+  # Service accounts (cpolar, cliproxyapi, m365-copilot2api, opencode2api, ...)
+  # are not declared here: every WSL host imports the shared pinned table
+  # hosts/service-user-ids.nix, which declares them with fixed uid/gid.
   # The OpenSSH agent remembers private keys for you
   # so that you don’t have to type in passphrases every time you make an SSH connection.
   # Use `ssh-add` to add a key to the agent.

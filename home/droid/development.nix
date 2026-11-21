@@ -5,9 +5,11 @@
 let
 in
 {
+  # Dev-only tools. Anything also shipped by ./system-tools.nix or the shared
+  # home/base/tui/dev-tools.nix (direnv, editors, archive tools, gnupg, ...)
+  # lives there, not here, so each package is declared exactly once.
   home.packages = with pkgs; [
-    rsync # File Copy/Snyc
-    ranger # Terminal FileManager
+    rsync # File Copy/Sync
     proxychains
     tmux # Background Shell process
 
@@ -16,11 +18,6 @@ in
     helix # An editor with lots of functions out of box
     git # Version Manager
     patch
-    direnv
-
-    # 'neofetch' has been removed because it is unmaintained upstream.
-    # neofetch
-    fastfetch
     openssh
     curl
     gnumake
@@ -31,24 +28,15 @@ in
     killall
     diffutils
     findutils
-    utillinux
+    util-linux
     tzdata
     hostname
-    gnupg
-    gnused
-    gnutar
     bzip2
     gzip
-    xz
-    zip
-    unzipNLS
     ncurses # command clear
-    which
     htop
-    tree
     netcat # nc
     procps # command ps/pgrep and ...
-    lsof
     time
   ];
   programs = {

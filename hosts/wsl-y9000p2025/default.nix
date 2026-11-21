@@ -41,7 +41,6 @@ rec {
     ./preservation-downstream.nix
     ../service-user-ids.nix
     ./impermanence_addon.nix
-    # ./secureboot.nix
     # ./dae.nix
 
     # wsl related

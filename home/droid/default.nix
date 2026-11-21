@@ -1,13 +1,7 @@
 {
-  config,
-  catppuccin-urxvt,
-  ...
-}@args:
-{
   imports = [
     ./font.nix
     ./development.nix
-    # ./creative.nix
     ./menu.nix
     ./dewm.nix
     ./browsers.nix

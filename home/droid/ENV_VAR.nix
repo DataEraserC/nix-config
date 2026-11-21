@@ -1,14 +1,10 @@
 {
-  pkgs,
   config,
   ...
 }:
 {
   home.sessionPath = [
-    "$HOME/.local/bin"
-    "$HOME/go/bin"
+    "${config.home.homeDirectory}/.local/bin"
+    "${config.home.homeDirectory}/go/bin"
   ];
-  home.sessionVariables = {
-    home_sessionVariables_enable = 1;
-  };
 }
