@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, pkgs-latest, ... }:
 {
   home.packages = with pkgs; [
     # nix related
@@ -44,6 +44,8 @@
     enable = true;
     # atuin (sourced after fzf) owns Ctrl-R; keep fzf from binding it too
     historyWidget.command = "";
+    # TODO: remove this when it is fixed
+    # enableNushellIntegration = false;
   };
 
   # very fast version of tldr in Rust
@@ -91,6 +93,7 @@
   # Additionally, it provides optional and fully encrypted
   # synchronisation of your history between machines, via an Atuin server.
   programs.atuin = {
+    # package = pkgs-latest.atuin;
     enable = true;
     enableBashIntegration = true;
     enableZshIntegration = true;

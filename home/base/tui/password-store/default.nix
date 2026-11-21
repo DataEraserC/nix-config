@@ -2,12 +2,18 @@
   pkgs,
   config,
   lib,
+  mylib,
+  mysecrets,
   ...
 }:
 let
   passwordStoreDir = "${config.xdg.dataHome}/password-store";
 in
 {
+  home.file.".local/share/password-store".source =
+    mylib.mkSymlinkOrFallback config "passwordStorePath" ""
+      "${mysecrets}/PasswordStore";
+
   programs.password-store = {
     enable = true;
     package = pkgs.pass.withExtensions (exts: [
@@ -25,14 +31,14 @@ in
       # Hexadecimal key signature is recommended.
       # Multiple keys may be specified separated by spaces.
       PASSWORD_STORE_KEY = lib.strings.concatStringsSep " " [
-        "51976F7777BE4C99DBE39205311ACB2ABE0597DC" # E - Ryan Yin (pass) <ryan4yin@linux.com>
+        "C0CEBF41DF515DDD" # E - Ryan Yin (For pass & ssh only) <ryan4yin@linux.com>
       ];
       # all .gpg-id files and non-system extension files must be signed using a detached signature using the GPG key specified by
       #   the full 40 character upper-case fingerprint in this variable.
       # If multiple fingerprints are specified, each separated by a whitespace character, then signatures must match at least one.
       # The init command will keep signatures of .gpg-id files up to date.
       PASSWORD_STORE_SIGNING_KEY = lib.strings.concatStringsSep " " [
-        "BB8DFBAC2E9BE8F15649E3AA1F2440D500288E48" # C - Ryan Yin (pass) <ryan4yin@linux.com>
+        "8A24187A88B7F2B4" # S - Ryan Yin (For pass & ssh only) <ryan4yin@linux.com>
       ];
       PASSWORD_STORE_CLIP_TIME = "60";
       PASSWORD_STORE_GENERATED_LENGTH = "12";

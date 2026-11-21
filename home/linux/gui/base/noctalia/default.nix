@@ -1,12 +1,21 @@
 {
   config,
+  mylib,
   lib,
   pkgs,
   wallpapers,
+  noctalia-shell,
   ...
 }:
 
-{
+let
+  cfgNiri = config.modules.desktop.niri;
+  package = noctalia-shell.packages.${pkgs.system}.default;
+  mklinkWallpaperPath =
+    config: FilePath: mylib.mkSymlinkOrFallback config "wallpaperPath" FilePath wallpapers;
+  wallpapers_dir = mklinkWallpaperPath config "dark";
+in
+lib.mkIf cfgNiri.enable {
   # Use the upstream Home Manager module (shipped by home-manager itself) for
   # the package. The config file is not deployed through `programs.noctalia.settings`:
   # that writes a store symlink, so every edit needs a home-manager switch.
@@ -19,7 +28,11 @@
   # volatile runtime data (wallpaper rotation, widget geometry) out of the repo.
   # Host-specific tweaks are separate config-layer files (~/.config/noctalia/host-<host>.toml).
   xdg.configFile."noctalia/config.toml".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/home/linux/gui/base/noctalia/config/config.toml";
+    let
+      mkSymlink = mylib.mklinkRelativeToRoot;
+      confPath = "home/linux/gui/base/noctalia/config/config.toml";
+    in
+    mkSymlink config "${confPath}";
 
   # Noctalia v5 is started by niri's spawn-at-startup (see the niri conf), so
   # app2unit is still used to launch desktop entries as systemd user units.
@@ -33,5 +46,5 @@
     pkgs.gpu-screen-recorder # recoding screen
   ]);
 
-  home.file."Pictures/Wallpapers".source = wallpapers;
+  home.file."Pictures/Wallpapers".source = wallpapers_dir;
 }

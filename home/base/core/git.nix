@@ -9,7 +9,7 @@
   options.modules.git.githubSsh.enable = lib.mkOption {
     type = lib.types.bool;
     default = true;
-    description = "Rewrite https://github.com/ryan4yin remotes to SSH with the owner's key.";
+    description = "Rewrite https://github.com/DataEraserC remotes to SSH with the owner's key.";
   };
 
   config = {
@@ -57,10 +57,14 @@
 
         # replace https with ssh
         url = lib.mkIf config.modules.git.githubSsh.enable {
-          "ssh://git@github.com/ryan4yin" = {
-            insteadOf = "https://github.com/ryan4yin";
+          "ssh://git@github.com/DataEraserC" = {
+            insteadOf = "https://github.com/DataEraserC";
           };
         };
+
+        safe.directory = [
+          "/run/media/nixos/windows/"
+        ];
 
         alias = {
           # common aliases

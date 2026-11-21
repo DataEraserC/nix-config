@@ -8,6 +8,9 @@
     loadSessionVariables = true;
     configFile.source = ./config.nu;
   };
+  programs.fish = {
+    enable = true;
+  };
 
   # Tools installed outside Nix.
   home.sessionPath = [

@@ -27,8 +27,9 @@
       font-family = "Maple Mono NF CN";
       font-size = lib.mkDefault 13; # macOS overrides this in home/darwin/terminal.nix
 
-      # hide title bar/header bar (Linux only; on macOS it would remove the traffic lights too)
-      window-decoration = pkgs.stdenv.hostPlatform.isDarwin;
+      # we move this to ../niri/defaults.nix
+      # # hide title bar/header bar (Linux only; on macOS it would remove the traffic lights too)
+      # window-decoration = pkgs.stdenv.hostPlatform.isDarwin;
 
       # transparency
       background-opacity = 0.85;

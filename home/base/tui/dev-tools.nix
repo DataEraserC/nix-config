@@ -27,6 +27,10 @@
 
     # embedded development
     minicom
+    rkdeveloptool
+    rkflashtool
+    dtc
+    screen
 
     # ai related
     python313Packages.huggingface-hub # huggingface-cli

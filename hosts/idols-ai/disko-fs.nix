@@ -27,7 +27,7 @@
 
     disk.nixos-ai = {
       type = "disk";
-      device = "/dev/disk/by-id/nvme-KINGBANK_KP260_CN092BH3203917";
+      device = "/dev/disk/by-id/nvme-ZHITAI_TiPlus7100_2TB_ZTA42T0BA233530VAL";
       content = {
         type = "gpt";
         partitions = {
@@ -117,8 +117,12 @@
                   # requirements), so it consumes its full size on the pool.
                   "@swap" = {
                     mountpoint = "/swap";
-                    swap.swapfile.size = "32G";
+                    swap.swapfile.size = "96G";
                   };
+                  # "root" = {
+                  #   mountpoint = "/"; # Mounted by initrd; not used directly by systemd
+                  #   mountOptions = [ "subvol=root" ]; # Subvolume for root filesystem; used by initrd
+                  # };
                 };
               };
             };
@@ -127,4 +131,15 @@
       };
     };
   };
+  imports = [
+    ./impermanence_addon.nix
+  ];
+  modules.desktop.impermanence-rootfs.enable = true;
+  modules.desktop.impermanence-rootfs.fsType = "btrfs";
+  # modules.desktop.impermanence-rootfs.btrfsBlockDevice = "/dev/disk/by-uuid/17df699e-6502-4205-955f-c456eb378d48";
+  modules.desktop.impermanence-rootfs.btrfsBlockDevice = "/dev/mapper/nixos-luks";
+  modules.desktop.impermanence-rootfs.retentionPeriod = 7;
+  modules.desktop.impermanence-rootfs.preBackupCommand = ''
+    [ -d /btrfs_tmp/root/etc/agenix ] && rm -rf /btrfs_tmp/root/etc/agenix || true
+  '';
 }

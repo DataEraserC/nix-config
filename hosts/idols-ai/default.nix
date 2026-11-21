@@ -1,29 +1,54 @@
 {
+  config,
+  pkgs,
+  lib,
   disko,
   myvars,
-  lib,
-  pkgs,
+  mysecrets,
+  nur-DataEraserC,
+  nixGL,
+  inputs,
   ...
-}:
+}@args:
 #############################################################
 #
-#  Ai - my gaming and daily-use desktop. Hardware and the platform history:
-#  ./README.md.
+#  Ai - my main computer, with NixOS + AMD Ryzen 9 8945HX + RTX 5070 Laptop GPU, for gaming & daily use.
 #
 #############################################################
 let
   hostName = "ai"; # Define your hostname.
 
+  macAddress = "02:d7:de:84:1e:e9";
   inherit (myvars.networking) mainGateway mainGateway6 nameservers;
   inherit (myvars.networking.hostsAddr.${hostName}) iface ipv4 ipv6;
   ipv4WithMask = "${ipv4}/24";
   ipv6WithMask = "${ipv6}/64";
+
+  # One ping-based condition per overlay endpoint; addresses come from named
+  # vars only, never hardcoded.
+  pingCondition = name: ip: {
+    inherit name;
+    command = pkgs.writeShellScript "auto-shutdown-${lib.replaceStrings [ " " ] [ "-" ] name}" ''
+      exec ${pkgs.iputils}/bin/ping -c 1 -W 2 ${ip}
+    '';
+  };
+
+  # This machine's key in the port registry (myvars.networking.services.*.hosts):
+  # the flake host name, which is not `hostName` (`ai` here).
+  serviceHost = "idols-ai";
+  # One service's row on this machine - `svc "new-api"` is
+  # myvars.networking.services.new-api.hosts.idols-ai - so the key above is the
+  # only place it is spelled out.
+  svc = service: myvars.networking.services.${service}.hosts.${serviceHost};
+
 in
-{
+rec {
   imports = [
     disko.nixosModules.default
     # disks
     ./disko-fs.nix
+    # ./disko-fs-data.nix
+    # ./netdev-mount.nix
 
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -31,67 +56,129 @@ in
     ./hardware-nvidia.nix
 
     ./preservation.nix
+    ./preservation-downstream.nix
+    ../service-user-ids.nix
     ./secureboot.nix
-    ./openrgb
+    ./sunshine.nix
 
     ./restic.nix
 
-    # WA-035: neighbour-probe fallback for the Mesh WiFi backhaul to the homelab.
-    ./neighbour-probe.nix
-
     # others
     ./ai
+    ./proxmox.nix
+    # ./tpm_luks.nix
   ];
 
+  # dae transparent proxy - the shared module lives in
+  # modules/nixos/base/custom/network/dae.nix and is only enabled on this host for now.
+  # Its main config is the host-local ./config.dae, the subscription comes from agenix.
+  modules.dae = {
+    enable = true;
+    # dae fetches subscriptions only at startup/reload, so reload once an hour to
+    # pick up Sub-Store's refreshed node lists; the oneshot skips while dae is
+    # stopped (e. while it is kept off to avoid a rebuild failure).
+    autoReload = {
+      enable = true;
+      interval = "60min";
+    };
+    installFiles = [
+      {
+        source = ./config.dae;
+        target = "/etc/dae/config.dae";
+      }
+      {
+        source = config.age.secrets."dae-subscription.dae".path;
+        target = "/etc/dae/config.d/subscription.dae";
+      }
+    ];
+  };
+
+  # CyIME's IBus component has to be merged into the directory the ibus-daemon
+  # wrapper pins via IBUS_COMPONENT_PATH, otherwise the engine never shows up
+  # in `ibus list-engine`. Commented out together with the cyime switch in
+  # home/hosts/linux/idols-ai.nix so no component is left on fcitx5.
+  # modules.cyime-ibus.enable = lib.mkIf config.modules.desktop.gnome-wayland.enable true;
+
+  # Static service overview page (modules/nixos/base/custom/services/homepage).
+  # Port, bind address and enable state come from services.homepage.hosts.idols-ai;
+  # the page lists every registry service that carries a catalog block.
+  modules.homepage = {
+    enable = (svc "homepage").enable;
+    host = (svc "homepage").host;
+    port = (svc "homepage").port;
+    hostKey = serviceHost;
+  };
+
+  # Sub-Store converts Clash-format subscriptions into base64 v2ray URI lists
+  # that dae can fetch (dae has no Clash-YAML parser). Caddy fronts API 24500 and
+  # web panel 24501 with Basic Auth (agenix secret sub-store.caddy), the panel
+  # calling its API on the same 24501 origin (no cross-port CORS); Sub-Store
+  # itself sits on loopback internal ports behind it. Passwordless on purpose:
+  # loopback (dae, local panel) and every GET /download/* subscription link.
+  # The host firewall still only trusts tailscale/zerotier/easytier, so
+  # openFirewall stays off - flip it on later to reach the ports from the campus
+  # LAN (asserted to require auth.enable).
+  # See modules/nixos/base/custom/network/sub-store/default.nix.
+  modules.sub-store = {
+    enable = (svc "sub-store").enable;
+    host = (svc "sub-store").host;
+    auth = {
+      enable = true;
+      file = config.age.secrets."sub-store.caddy".path;
+    };
+    # Re-fetch every registered upstream hourly so /download/<name>/v2ray always
+    # serves fresh nodes plus a #cacheKey disk fallback for dae's cold start.
+    autoRefresh = {
+      enable = true;
+      interval = "60min";
+      subs = [
+        "GarbageDump1"
+        "iKuuu1"
+        "iKuuu2"
+        "Mojie1"
+        "Xxmad1"
+      ];
+    };
+  };
+
+  # ACB：开关、绑定地址和端口全部读 services.acb 注册表。
+  modules.acb = {
+    enable = (svc "acb").enable;
+    host = (svc "acb").host;
+    exposeHost = (svc "acb").exposeHost;
+    endpointPort = (svc "acb").ports.endpoint;
+    consolePort = (svc "acb").ports.console;
+    relayPort = (svc "acb").ports.relay;
+    secretsFile = config.age.secrets."acb.env".path;
+  };
+
+  # ACB 的 dsh preset 不再静态声明：由 dsh-presets 组件在 dsh 就绪后安装动态 bundle。
+
   # Zram consumes physical memory for compression, which can cause a deadlock and system hang if the model size approaches the physical memory limit.
-  # Disable the whole module (zram device + its swappiness=180 sysctl tunings); this host uses a
-  # disk swapfile instead, created by disko at /swap (see ./disko-fs.nix). The two must move together.
+  # Disable the whole module (zram device + its swappiness=180 sysctl tunings); this host uses a disk swapfile instead.
   modules.zram.enable = false;
 
-  # 32G of RAM against aquamarine's 96G, so builds go to the server first.
-  modules.remote-builders.enable = true;
-
-  # zswap: compressed writeback cache in front of the disk swapfile, so cold
-  # anonymous pages stay in RAM instead of hitting the SSD. Safe here: the disk
-  # swapfile remains the real backing store, no zram deadlock structure.
-  # - zstd: ~2.5x the ratio of lz4 for ~5us decompress, which is noise against
-  #   the ~100us SSD fault it avoids; the CPU is not the bottleneck.
-  # - 10% pool (~3G on 32G): the module default 25% would compete with the page
-  #   cache that games and VMs rely on.
+  # zswap: compressed writeback cache in front of the disk swapfile.
+  # Keeps swapped cold anon pages compressed in RAM instead of the SSD, which frees more
+  # page cache for the ~78GB mmap'd LLM weights (mmap file pages never go through zswap).
+  # Safe here: disk swapfile remains the real backing store, no zram deadlock structure.
+  # - zstd: CPU is not the bottleneck here (llama.cpp peaks ~30% util); its ~2.5x ratio
+  #   keeps ~5G more anon bytes in the capped pool than lz4, and ~5us decompress is noise
+  #   vs the ~100us SSD fault it avoids.
+  # - 10% pool (~13G on 128G): the module default 25% (~32G) would compete with the weight
+  #   cache.
   boot.zswap = {
     enable = true;
     compressor = "zstd";
     maxPoolPercent = 10;
   };
 
-  # zswap has no notion of "eager": it only compresses pages that reclaim has
-  # already decided to evict (Documentation/admin-guide/mm/zswap.rst). Tuning the
-  # reclaim policy, not zswap, is what keeps a long-running desktop responsive:
-  # - swappiness 20 (kernel default 60): drop page cache first instead of
-  #   compressing the compositor's and Firefox's anonymous pages, which then come
-  #   back as a fault plus a decompress every time. Not 0: at 0 the kernel only
-  #   swaps once free+file pages drop below the high watermark, so an anon spike
-  #   ends in an OOM kill instead of overflowing into zswap.
-  # - watermark_scale_factor 100 (default 10): wake kswapd earlier so it drains
-  #   cache ahead of allocation bursts, instead of the allocating app stalling in
-  #   direct reclaim (the path behind allocstall_movable and
-  #   kswapd_low_wmark_hit_quickly, both elevated after ~20h uptime here).
-  # - watermark_boost_factor 0 (default 15000): skip the fragmentation-triggered
-  #   extra reclaim that otherwise keeps evicting cache and anon pages on an
-  #   aging system. Same value modules/nixos/base/zram.nix uses.
-  boot.kernel.sysctl = {
-    "vm.swappiness" = 20;
-    "vm.watermark_scale_factor" = 100;
-    "vm.watermark_boost_factor" = 0;
-  };
-
   services.sunshine.enable = true;
+  services.tuned.ppdSettings.main.default = lib.mkForce "performance";
 
   modules.btrbk.enable = true;
 
-  # Give the desktop user the render group outright instead of relying only on
-  # the logind seat ACL, so local ASR keeps its /dev/dri access in sessions
-  # that have no seat (the Sunshine headless session, for example).
+  # Permit the desktop user to access Intel accelerator devices for local ASR.
   users.users.${myvars.username}.extraGroups = [ "render" ];
 
   # systemd-journal - cap disk usage
@@ -110,67 +197,451 @@ in
   # QEMU/KVM(HostCpuOnly) for local VMs.
   environment.systemPackages = [
     pkgs.qemu_kvm
-    pkgs.ddcutil # external monitor control over DDC/CI (brightness, input source)
+  ]
+  # NTFS3G for windows disk
+  ++ [ pkgs.ntfs3g ];
+
+  # Re-evaluate after the Insta360 Link firmware or the kernel's uvcvideo changes.
+  powerManagement.resumeCommands = ''
+    # Insta360 Link may stay enumerated with a stalled UVC endpoint after S3 resume.
+    ${pkgs.coreutils}/bin/sleep 1
+    ${pkgs.usbutils}/bin/usbreset 2e1a:4c01 || true
+  '';
+
+  # NTFS mounts use ntfs-3g (userspace FUSE) instead of the kernel ntfs3 driver.
+  # The blacklist stops udisks/GNOME automounts and `mount -t ntfs` from picking
+  # ntfs3, so they fall back to the mount.ntfs-3g helper; static mounts use
+  # fsType "ntfs3g" (see hardware-configuration.nix). Needed for reliable
+  # read/write on removable media and dirty/hibernated Windows volumes.
+  boot.blacklistedKernelModules = [
+    "ntfs3"
   ];
 
-  # The external monitors answer DDC/CI on /dev/i2c-*: this loads i2c-dev and installs the
-  # udev rules that grant the i2c group and locally logged-in users access, so `ddcutil`
-  # works without sudo.
-  hardware.i2c.enable = true;
+  # ntfy notifications on network up/down events(NM dispatcher, shared script)
+  modules.network-event-notify = {
+    enable = true;
+    inherit hostName;
+  };
 
-  # Insta360 Link: reset instead of resume, or its UVC endpoint stalls after S3 (WA-010).
-  boot.kernelParams = [ "usbcore.quirks=2e1a:4c01:b" ];
+  # periodic host liveness heartbeat via ntfy
+  modules.host-heartbeat = {
+    enable = true;
+    interval = "30min";
+    inherit hostName;
+    username = myvars.username;
+  };
+
+  # ntfy warnings when the AC power supply is unplugged/restored(udev-driven)
+  modules.power-event-notify = {
+    enable = true;
+    inherit hostName;
+  };
+
+  # one-shot cpolar tunnel status report after boot
+  modules.cpolar-status = {
+    enable = true;
+    inherit hostName;
+    username = myvars.username;
+  };
+
+  # Oray PgyVisitor SDN client
+  modules.pgy.enable = true;
+
+  # EasyTier decentralized P2P VPN
+  modules.easytier.enable = true;
+
+  # Authenticated SOCKS5 + HTTP proxy (shared
+  # modules/nixos/base/custom/network/gost-proxy.nix).
+  # Two listeners on every interface, but the firewall only trusts the overlay
+  # interfaces (easytier/tailscale/zerotier) and openFirewall stays off, so the
+  # campus LAN cannot connect - proxy credentials are clear text there.
+  # Credentials come from the agenix secret gost-proxy.auth.
+  #   - idols-ai-socks5 (1080): for curl / ssh / proxychains. This is also the
+  #     chained upstream of wsl-work's idols-ai-socks5 (31080) and
+  #     idols-ai-http (31081) entry points, whose clients reach this host's
+  #     loopback (dsh GUI on 127.0.0.1:3080) through it.
+  #   - idols-ai-http (1081): the same proxy for browsers, which cannot send
+  #     SOCKS5 credentials (Chromium not at all, Firefox only via about:config).
+  # They are independent instances, so either one can be retired later with
+  # `instances.<name>.enable = false` without touching the other.
+  modules.gost-proxy = {
+    enable = (svc "gost-proxy").enable;
+    instances = {
+      idols-ai-socks5.port = (svc "gost-proxy").ports.idols-ai-socks5;
+      idols-ai-http = {
+        port = (svc "gost-proxy").ports.idols-ai-http;
+        protocol = "http";
+      };
+    };
+  };
+
+  # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:1105.
+  modules.cliproxyapi.enable = (svc "cliproxyapi").enable;
+  modules.cliproxyapi.port = (svc "cliproxyapi").port;
+
+  # M365 Copilot2API gateway, bound to 0.0.0.0:1104.
+  modules.m365-copilot2api.enable = (svc "m365-copilot2api").enable;
+  modules.m365-copilot2api.port = (svc "m365-copilot2api").port;
+
+  # Agent2API gateway, bound to 0.0.0.0:1108 (API and management panel).
+  modules.agent2api.enable = (svc "agent2api").enable;
+  modules.agent2api.port = (svc "agent2api").port;
+  # Provider packs from the agent2api-nix flake; managed mode reconciles this
+  # set (and the provider switches) on every start.
+  modules.agent2api.plugins = with inputs.agent2api-nix.packages.${pkgs.stdenv.hostPlatform.system}; [
+    # The native pack already provides trae/zcode/zcode-intl; the wasm
+    # packs need a wasm-capable gateway and fail on the headless 3.4.2
+    # server with "Exec format error".
+    agent2api-providers
+    agent2api-web-providers
+  ];
+
+  # WebMux browser terminal server, bound to 0.0.0.0:1109 (runs as this host's
+  # login user so sessions reach its agent logins and HOME).
+  modules.webmux.enable = (svc "webmux").enable;
+  modules.webmux.host = (svc "webmux").host;
+  modules.webmux.port = (svc "webmux").port;
+  # Stable agent key with direct and wrapped command forms. The legacy
+  # `multi-instance codebuddy 1` binding remains because launch-configs.json is
+  # seeded once; canonical accounts 1 through 8 all reuse the historical
+  # codebuddy/<instance> state directories. The title names the proxy, not the
+  # vendor CLI: plain `codebuddy` lacks ACP session/list, so only this -acp
+  # command actually supports the chat view.
+  modules.webmux.acpAgents.codebuddy-acp = {
+    title = "CodeBuddy ACP";
+    icon = "codebuddy";
+    processExecutables = [
+      "codebuddy"
+      "cbc"
+    ];
+    commands = [
+      {
+        match = [ "codebuddy-acp" ];
+        acp = [
+          "codebuddy-acp"
+          "--acp"
+        ];
+        resume = [
+          "codebuddy-acp"
+          "--resume"
+        ];
+      }
+      {
+        match = [
+          "multi-instance"
+          "codebuddy"
+          "1"
+        ];
+        acp = [
+          "multi-instance"
+          "codebuddy"
+          "1"
+          "--acp"
+        ];
+        resume = [
+          "multi-instance"
+          "codebuddy"
+          "1"
+          "--resume"
+        ];
+        launcher = "bwrap";
+      }
+    ]
+    ++ map (
+      instance:
+      let
+        instanceName = toString instance;
+      in
+      {
+        match = [
+          "multi-instance"
+          "codebuddy-acp"
+          instanceName
+        ];
+        acp = [
+          "multi-instance"
+          "codebuddy-acp"
+          instanceName
+          "--acp"
+        ];
+        resume = [
+          "multi-instance"
+          "codebuddy-acp"
+          instanceName
+          "--resume"
+        ];
+        launcher = "bwrap";
+      }
+    ) (lib.range 1 8);
+  };
+
+  # ZCode agent, mirroring the codebuddy-acp shape. One adapter argv serves
+  # both sides through TTY dispatch: under WebMux's PTY (the match/launch
+  # form) bin/zcode-acp opens the bridge's own Martty chat TUI, and over
+  # plain pipes (the acp form) the same command falls back to the stdio ACP
+  # server - the official AppImage-bundled zcode-cli has no TUI of its own
+  # (see ZC-02/ZC-04 in the NUR requirements doc). Resume goes through the
+  # boot-resume wrapper, which turns the appended session id into the TUI's
+  # boot-resume environment. Instances 1 through 6 keep isolated ~/.zcode logins
+  # (log in once with `multi-instance zcode-cli N login`); the chat view
+  # discovers the same session store via session/list. bin/zcode itself is
+  # the GUI launcher, so no argv here may name it, and the icon must be one
+  # of WebMux's launch-config icon keys (an unknown icon makes the loader
+  # skip the whole declaration).
+  modules.webmux.acpAgents.zcode-acp = {
+    title = "ZCode";
+    icon = "terminal";
+    processExecutables = [
+      "node"
+      "bun"
+    ];
+    commands = [
+      {
+        match = [ "zcode-acp" ];
+        acp = [ "zcode-acp-server" ];
+        resume = [ "zcode-acp-resume" ];
+      }
+    ]
+    ++ map (
+      instance:
+      let
+        instanceName = toString instance;
+      in
+      {
+        match = [
+          "multi-instance"
+          "zcode-acp"
+          instanceName
+        ];
+        acp = [
+          "multi-instance"
+          "zcode-acp"
+          instanceName
+        ];
+        resume = [
+          "multi-instance"
+          "zcode-acp-resume"
+          instanceName
+        ];
+        launcher = "bwrap";
+      }
+    ) (lib.range 1 6);
+  };
+
+  # Qoder CN CLI, the terminal client of the Qoder CN desktop app. Only the
+  # wrapped forms are declared here: bare `qoderclicn` is already a built-in
+  # WebMux adapter (`qodercn`), and a declaration whose first matched argv names
+  # a built-in executable is dropped for shadowing it, so adding a direct form
+  # would delete this agent rather than extend it. Instances 1 and 2 match
+  # `desktopAccounts.qoder-cn`, each with its own ~/.qoder-cn login (log in once
+  # with `multi-instance qoderclicn N login`); the CLI serves ACP session/list, so
+  # the chat view finds and resumes the sessions the terminal form creates.
+  # International `qodercli` is packaged but off, like `modules.qoder`.
+  modules.webmux.acpAgents.qoder-cli-cn = {
+    title = "Qoder CLI CN";
+    icon = "qoder";
+    processExecutables = [ "qoderclicn" ];
+    commands = map (
+      instance:
+      let
+        instanceName = toString instance;
+      in
+      {
+        match = [
+          "multi-instance"
+          "qoderclicn"
+          instanceName
+        ];
+        acp = [
+          "multi-instance"
+          "qoderclicn"
+          instanceName
+          "--acp"
+        ];
+        resume = [
+          "multi-instance"
+          "qoderclicn"
+          instanceName
+          "--resume"
+        ];
+        launcher = "bwrap";
+      }
+    ) (lib.range 1 2);
+  };
+
+  # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
+  modules.opencode2api.enable = (svc "opencode2api").enable;
+  modules.opencode2api.port = (svc "opencode2api").port;
+  modules.opencode2api.webUiPort = (svc "opencode2api").adminPort;
+
+  # mimocode2api gateway, bound to 0.0.0.0:1103 (VPN interfaces only).
+  modules.mimocode2api.enable = (svc "mimocode2api").enable;
+  modules.mimocode2api.port = (svc "mimocode2api").port;
+
+  # meoo2api gateway and console, bound to 0.0.0.0:1110.
+  modules.meoo2api.enable = (svc "meoo2api").enable;
+  modules.meoo2api.port = (svc "meoo2api").port;
+
+  # workbuddy2api gateway and panel, bound to 0.0.0.0:1111.
+  modules.workbuddy2api.enable = (svc "workbuddy2api").enable;
+  modules.workbuddy2api.port = (svc "workbuddy2api").port;
+
+  # OmniRoute unified LLM gateway, bound to 0.0.0.0:1106.
+  modules.omniroute.enable = (svc "omniroute").enable;
+  modules.omniroute.port = (svc "omniroute").port;
+
+  # new-api LLM gateway, port 1100 (upstream listens on all interfaces).
+  modules.new-api.enable = (svc "new-api").enable;
+  modules.new-api.port = (svc "new-api").port;
+
+  # Our Free Model standalone gateway, 127.0.0.1:1107 (loopback only).
+  modules.our-free-model-standalone.enable = (svc "our-free-model-standalone").enable;
+  modules.our-free-model-standalone.port = (svc "our-free-model-standalone").port;
+
+  # Open WebUI chat frontend, 0.0.0.0:1120 (shared modules.open-webui) - disabled.
+  modules.open-webui.enable = (svc "open-webui").enable;
+  modules.open-webui.port = (svc "open-webui").port;
+
+  # alist (openlist) file listing, bound to 0.0.0.0:5244.
+  modules.alist.enable = (svc "alist").enable;
+  modules.alist.port = (svc "alist").port;
+  modules.alist.s3Port = (svc "alist").s3Port;
+
+  # AstrBot chatbot + WebUI, bound to 0.0.0.0:6185 (shared modules.astrbot).
+  # Native deployment: the pinned upstream source runs on Nix's python312 with a
+  # uv-provisioned venv under /var/lib/astrbot (see the module header); the
+  # first start downloads the wheel set, so give it a few minutes.
+  modules.astrbot.enable = (svc "astrbot").enable;
+  modules.astrbot.port = (svc "astrbot").port;
+
+  # Clash Verge Rev GUI client (shared modules/nixos/base/custom/network/clash-verge.nix,
+  # nixpkgs programs.clash-verge with the package from nixpkgs-master). Service
+  # mode runs the mihomo core as a root systemd unit; autoStart and TUN stay off
+  # (dae owns transparent proxying here, so no second TUN stack).
+  modules.clash-verge.enable = true;
+
+  # Route CLI traffic through the local / LAN SOCKS proxies.
+  modules.proxychains.enable = true;
+
+  # Agent tools and AI IDEs from nur-DataEraserC: CodeBuddy ACP, WorkBuddy,
+  # WorkBuddy International, LobsterAI, Trae CN, ZCode (one package serves the
+  # CN and international editions; the region is the account you log in with),
+  # Qoder CN, Qoder CN CLI, AutoClaw CN, AutoClaw International and Raccoon Work
+  # are on. Qoder, Qoder IDE, Qoder CN IDE, Qoder CLI, Trae International and
+  # CodeArts are packaged but off. Their state (~/.codebuddy,
+  # ~/.codeartsdoer, ~/.workbuddy, ~/.workbuddy-ai,
+  # ~/.local/share/CodeBuddyExtension, ~/.config/LobsterAI, ~/lobsterai,
+  # ~/.trae-cn, ~/.trae, ~/.config/Trae CN, ~/.config/Trae, ~/.zcode,
+  # ~/.config/ZCode, ~/.qoder, ~/.config/Qoder,
+  # ~/.config/com.qoder.app.stable, ~/.qoder-cn, ~/.config/QoderCN,
+  # ~/.config/com.qodercn.app.stable, ~/.config/autoclaw-cn,
+  # ~/.config/autoclaw-intl, ~/.config/office-raccoon, ~/.box-agent,
+  # ~/RaccoonWork, ~/.openclaw, ~/.hermes) is persisted unconditionally in
+  # preservation-downstream.nix, so re-enabling one keeps the login and history
+  # already on disk.
+  # See modules/nixos/base/custom/ai/{codebuddy-acp,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl,zcode,zcode-acp,qoder,qoder-ide,qoder-cn,qoder-cn-ide,qodercli,qoderclicn,autoclaw-cn,autoclaw-intl,xiaohuanxiong}.nix.
+  modules.codebuddy-acp.enable = true;
+  modules.zcode-acp.enable = true;
+  # modules.codearts.enable = true;
+  modules.workbuddy.enable = true;
+  modules.workbuddy-ai.enable = true;
+  modules.lobsterai.enable = true;
+  modules.trae-cn.enable = true;
+  # modules.trae-intl.enable = true;
+  modules.zcode.enable = true;
+  # modules.qoder.enable = true;
+  # modules.qoder-ide.enable = true;
+  modules.qoder-cn.enable = true;
+  # modules.qoder-cn-ide.enable = true;
+  # modules.qodercli.enable = true;
+  modules.qoderclicn.enable = true;
+  modules.autoclaw-cn.enable = true;
+  modules.autoclaw-intl.enable = true;
+  modules.xiaohuanxiong.enable = true;
+  modules.mobileclaw.enable = true;
+  # `multi-instance <app> <account>`: the same apps under bubblewrap with one
+  # state directory per account; see modules/nixos/base/custom/ai/agent-accounts.nix.
+  # CodeBuddy account 1 accepts the canonical `multi-instance codebuddy-acp 1`
+  # and the seed-once legacy `multi-instance codebuddy 1`; both use the
+  # historical ~/.local/state/multi-instance/codebuddy/1 directory.
+  modules.agent-accounts.enable = true;
+  modules.agent-accounts.desktopAccounts = {
+    workbuddy = 2;
+    workbuddy-ai = 6;
+    lobsterai = 2;
+    trae-cn = 2;
+    # trae = 6;
+    zcode = 8;
+    # qoder = 4;
+    # qoder-ide = 4;
+    qoder-cn = 2;
+    # qoder-cn-ide = 2;
+    autoclaw-cn = 2;
+    autoclaw-intl = 4;
+    xiaohuanxiong = 2;
+    mobileclaw = 2;
+  };
+
+  # WARP tunnel + its root CA cert, replaces the connection between this
+  # device and the Internet. Download:
+  # https://developers.cloudflare.com/cloudflare-one/connections/connect-devices/warp/install-cloudflare-cert/
+  features.cloudflare-warp = {
+    enable = true;
+    certificate = "${mysecrets}/public/Cloudflare_CA.pem";
+  };
+
+  # firmware update tool
+  services.fwupd.enable = true;
+
+  # Power off when NO channel to reach this device remains for 30min. The
+  # offline-assessment is "do I still have any channel to connect in through",
+  # so every overlay channel gets its own probe and `mode = "any"` keeps the
+  # machine on while even one channel answers. All endpoints come from
+  # myvars.networking.peers (easytier/zerotier/tailscale).
+  # For temporary live tweaks without a rebuild use
+  # `sudo auto-shutdown {disable|enable|grace|reset}`(changes reset on reboot).
+  # See modules/nixos/base/custom/system/auto-shutdown/default.nix.
+  modules.auto-shutdown = {
+    enable = true;
+    mode = "any";
+    conditions = [
+      # easytier: the primary and most stable channel -> probe both peers
+      (pingCondition "easytier infiniti" myvars.networking.peers.infiniti.easytier)
+      (pingCondition "easytier wsl-work" myvars.networking.peers.work.easytier)
+      # tailscale: the android peer answers `tailscale ping` but not ICMP,
+      # so probe at the tailscale layer(exit 0 on pong, non-zero on timeout)
+      {
+        name = "tailscale infiniti";
+        command = pkgs.writeShellScript "auto-shutdown-tailscale-infiniti" ''
+          exec ${pkgs.tailscale}/bin/tailscale ping -c 1 ${myvars.networking.peers.infiniti.tailscale}
+        '';
+      }
+      # zerotier: ICMP probe of the android endpoint(passes while that device
+      # is online on the zerotier network; zerotier-cli cannot map IP->node)
+      (pingCondition "zerotier infiniti" myvars.networking.peers.infiniti.zerotier)
+    ];
+    gracePeriod = "30min";
+    checkInterval = "10min";
+    verbose = true;
+  };
 
   networking = {
     inherit hostName;
+    # hostName = "DESKTOP-GM6XG0X";
 
-    # off: this host uses networkd (below). NetworkManager would otherwise
-    # provide nmcli/nmtui for wifi adjustment.
-    networkmanager.enable = false;
-    useDHCP = false;
+    # we use networkd instead
+    # networkmanager.enable = false; # provides nmcli/nmtui for wifi adjustment
+    # useDHCP = false;
+
+    # desktop need its cli for status bar
+    networkmanager.enable = true;
+    networkmanager.wifi.macAddress = macAddress;
+    networkmanager.ethernet.macAddress = macAddress;
+    extraHosts = myvars.networking.genericHosts;
   };
 
-  networking.useNetworkd = true;
-  systemd.network.enable = true;
-
-  # networkd removes routing policy rules not defined in .network files
-  # (ManageForeignRoutingPolicyRules defaults to yes) each time it reconfigures
-  # a link. On S3 resume it reconfigures the NIC, which wiped mihomo's
-  # (9000-9010) and Tailscale's rules and briefly broke routing. Keep foreign
-  # rules so the VPN/TUN rules survive.
-  systemd.network.config.networkConfig.ManageForeignRoutingPolicyRules = false;
-
-  # Predictable names follow the PCIe topology, so a board or slot change renames the
-  # wired NIC. Match the `en*` prefix instead of a name; one wired port, so one link.
-  systemd.network.networks."10-lan" = {
-    matchConfig.Name = [ "en*" ];
-    networkConfig = {
-      Address = [
-        ipv4WithMask
-        ipv6WithMask
-      ];
-      DNS = nameservers;
-      DHCP = "ipv6"; # enable DHCPv6 only, so we can get a GUA.
-      IPv6AcceptRA = true; # for Stateless IPv6 Autoconfiguration (SLAAC)
-      LinkLocalAddressing = "ipv6";
-      # r8169 drops carrier on S3 resume; without this, networkd tears down the
-      # static address/route and mihomo's TUN auto-detect briefly loses its
-      # outbound interface, leaving routing broken until mihomo is restarted.
-      IgnoreCarrierLoss = "10s";
-    };
-    routes = [
-      {
-        Destination = "0.0.0.0/0";
-        Gateway = mainGateway;
-      }
-      {
-        Destination = "::/0";
-        Gateway = mainGateway6;
-        GatewayOnLink = true; # it's a gateway on local link.
-      }
-    ];
-    linkConfig.RequiredForOnline = "routable";
-  };
+  # conflict with feature: containerd-snapshotter
+  # virtualisation.docker.storageDriver = "btrfs";
 
   # Point this link's DNS at mihomo while it runs, and revert it when it stops.
   #
@@ -185,8 +656,6 @@ in
   # parsing is where missing geodata gets fetched. Flipping at fork time pointed
   # that fetch at a port nobody was listening on -- SERVFAIL, a fatal config
   # error, a unit that could never start.
-  # The hook names the link with `hostsAddr.ai.iface`: networkd matches an `en*`
-  # prefix, but `resolvectl` takes one name or index, not a pattern.
   systemd.services.mihomo.serviceConfig = {
     ExecStartPost = lib.mkDefault "+${pkgs.writeShellScript "mihomo-dns-takeover" ''
       probe() { (exec 3<>/dev/tcp/127.0.0.1/1053) 2>/dev/null; }
@@ -210,5 +679,10 @@ in
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "25.11"; # Did you read the comment?
+  system.stateVersion = "26.11"; # Did you read the comment?
+  features.bigdata_hadoop = {
+    enable = false;
+    package = pkgs.hadoop_3_3;
+    impermanence.enable = true;
+  };
 }

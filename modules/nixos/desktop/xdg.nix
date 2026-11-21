@@ -31,7 +31,7 @@
   xdg.portal = {
     enable = true;
 
-    config = {
+    config = lib.mkDefault {
       common = {
         # Prefer the GTK portal for interfaces it implements.
         default = [

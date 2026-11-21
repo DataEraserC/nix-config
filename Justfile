@@ -152,7 +152,7 @@ local mode="switch" verbosity="normal":
 # Deploy the niri nixosConfiguration by hostname match
 [linux]
 [group('desktop')]
-niri mode="switch" verbosity="normal":
+niri mode="switch-notify" verbosity="normal":
   #!/usr/bin/env nu
   use {{utils_nu}} *;
   nixos-switch $"(hostname)-niri" {{mode}} {{verbosity}}
@@ -432,3 +432,5 @@ pkg-test pr pname:
 [group('nixpkgs')]
 pkg-summary:
   gh workflow view review.yml --repo ryan4yin/nixpkgs-review-gha
+
+import "justfile.d/downstream.just"

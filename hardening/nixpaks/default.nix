@@ -1,13 +1,28 @@
 {
+  config,
   pkgs,
   pkgs-master,
   pkgs-stable,
   pkgs-blender,
   nixpak,
+  myvars,
+  mysecrets,
   ...
 }:
 let
+  # effective password store directory shared with the sandboxed apps
+  passwordStore =
+    if
+      (
+        config.modules.outOfStoreSymlink.enable
+        && (config.modules.outOfStoreSymlink.paths ? passwordStorePath)
+      )
+    then
+      "/home/${myvars.username}/.local/share/password-store"
+    else
+      "${mysecrets}/PasswordStore";
   callArgs = {
+    inherit passwordStore;
     mkNixPak = nixpak.lib.nixpak {
       inherit (pkgs) lib;
       inherit pkgs;

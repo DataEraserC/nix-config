@@ -2,6 +2,8 @@
   pkgs,
   config,
   lib,
+  pkgs-unstable-yuzu,
+  suyu,
   ...
 }:
 with lib;
@@ -20,30 +22,64 @@ in
     # Other Optimizations
     # Usage:
     #  UMU game launchers use MangoHud by default; set ENABLE_MANGOHUD=0 in their conf to disable.
-    #  Steam - add this as a launch option: `mangohud %command%`. GameMode does not reach
-    #  sandboxed games (see hardening/README.md), so `gamemoderun` is not available there.
+    #  Steam - add this as a launch option: `mangohud %command%` / `gamemoderun %command%`
     # ==========================================================================
 
-    home.packages = with pkgs; [
-      # https://github.com/flightlessmango/MangoHud
-      # a simple overlay program for monitoring FPS, temperature, CPU and GPU load, and more.
-      mangohud
+    # The nix-config-umu-game skill and the launchers it generates rely on
+    # umu-launcher, mangohud, winetricks and bbe from this list.
 
-      # https://github.com/Open-Wine-Components/umu-launcher
-      # a unified launcher for Windows games on Linux, sandboxed with
-      # ~/Gaming as its home and only writable host directory. umu-run, winetricks,
-      # bbe and mangohud live inside it; the nix-config-umu-game skill and
-      # the launchers it generates run through `umu-sandbox`.
-      nixpaks.umu
+    home.packages =
+      (with pkgs; [
+        # https://github.com/flightlessmango/MangoHud
+        # a simple overlay program for monitoring FPS, temperature, CPU and GPU load, and more.
+        mangohud
 
-      # Steam and Heroic share the same sandbox policy and the same ~/Gaming
-      # home, so their libraries, prefixes and Proton builds stay inside it.
-      # Steam runs its own pressure-vessel container inside the sandbox; see
-      # modules/nixos/desktop/gaming.nix for what replacing programs.steam costs.
-      nixpaks.steam
-      # Heroic Games Launcher - primarily for Epic Games & GOG
-      # https://heroicgameslauncher.com/
-      nixpaks.heroic
-    ];
+        # Script to install various redistributable runtime libraries in Wine.
+        winetricks
+        # https://github.com/Open-Wine-Components/umu-launcher
+        # a unified launcher for Windows games on Linux
+        umu-launcher
+
+        # Sed-like editor for binary files
+        # required by some games to fix problems
+        bbe
+
+        # Mayuri Spec
+
+        # a GUI game launcher for Steam/GoG/Epic
+        # lutris
+        bottles
+
+        # Wine related
+        protonup-qt
+        wineWow64Packages.waylandFull
+        # wine-staging
+        # wine64Packages.stagingFull
+        # winePackages.stagingFull
+        # proton-ge-bin should not be installed into environments. Please use programs.steam.extraCompatPackages instead.
+        # playonlinux
+
+        # Switch related
+        # pkgs-unstable-yuzu.yuzu # Switch games
+        # broken so I disable it
+        suyu.packages.${pkgs.system}.suyu # Switch games
+        ryubing # Switch games
+
+        # Steam related
+        steamcmd # steam command line
+
+        # Ons related
+        onscripter
+      ])
+      ++ (with pkgs; [
+        # Heroic Games Launcher - primarily for Epic Games & GOG
+        # https://heroicgameslauncher.com/
+        (heroic.override {
+          extraPkgs = _pkgs: [
+            pkgs.gamescope
+          ];
+        })
+      ]);
+
   };
 }

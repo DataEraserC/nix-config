@@ -4,6 +4,10 @@ Temporary workarounds, version pins, carried patches, and known gaps are collect
 type, each with the condition under which it can be removed. Review the list periodically so
 obsolete workarounds get rolled back instead of lingering.
 
+Downstream-only entries for this fork live in
+[WORKAROUNDS_downstream.md](../WORKAROUNDS_downstream.md); this file stays identical to upstream, so
+syncs never conflict on row content.
+
 ## How to use
 
 - **Adding** — a change that introduces a workaround, pin, carried patch, or known gap adds a row

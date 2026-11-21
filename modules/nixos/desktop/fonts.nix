@@ -1,4 +1,9 @@
-{ pkgs, ... }:
+{
+  pkgs,
+  pkgs-latest,
+  wpsFonts,
+  ...
+}:
 {
   # all fonts are linked to /nix/var/nix/profiles/system/sw/share/X11/fonts
   fonts = {
@@ -14,7 +19,7 @@
       # host configuration into their sandboxes, so host and sandboxed apps
       # share one font stack; do not duplicate these families there.
       # https://catcat.cc/post/2021-03-07/
-      defaultFonts = {
+      defaultFonts = rec {
         serif = [
           # 西文: 衬线字体（笔画末端有修饰(衬线)的字体，通常用于印刷。）
           "Source Serif 4"
@@ -49,7 +54,12 @@
           # 西文
           "JetBrainsMono Nerd Font"
         ];
-        emoji = [ "Noto Color Emoji" ];
+        emoji = [
+          "Noto Color Emoji"
+          "Noto Emoji"
+          "Symbols Nerd Font"
+          "Twemoji"
+        ];
       };
       # 日文、韩文环境优先使用对应字形；中文环境仍使用上面的 SC 默认栈。
       localConf =

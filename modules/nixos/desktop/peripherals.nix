@@ -55,6 +55,14 @@
       # openfpgaloader
     ];
 
+    # MediaTek MT7925 bluetooth lives on the same USB device (0489:e111) that
+    # gvfs/libmtp misdetects as an MTP player and resets, unbinding btusb.
+    # Clear the media-player tags so gvfsd-mtp ignores it.
+    udev.extraRules = ''
+      # Foxconn/MediaTek Wireless_Device (MT7925 BT over USB): not an MTP device
+      SUBSYSTEM=="usb", ATTRS{idVendor}=="0489", ATTRS{idProduct}=="e111", ENV{ID_MEDIA_PLAYER}="", ENV{ID_MTP_DEVICE}=""
+    '';
+
     # A key remapping daemon for linux.
     # https://github.com/rvaiya/keyd
     keyd = {

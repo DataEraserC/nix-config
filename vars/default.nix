@@ -12,19 +12,54 @@ let
 in
 {
   inherit canokeySshKeys;
-  username = "ryan";
-  userfullname = "Ryan Yin";
-  useremail = "xiaoyin_c@qq.com";
-  networking = import ./networking.nix { inherit lib; };
+  username = "nixos";
+  userfullname = "DataEraserC";
+  useremail = "102341238+DataEraserC@users.noreply.github.com";
+  networking =
+    let
+      base = import ./networking.nix { inherit lib; };
+    in
+    lib.recursiveUpdate base (
+      import ./networking-downstream.nix {
+        inherit lib;
+        upstream = base;
+      }
+    );
   ports = import ./ports.nix;
   # Generated using: mkpasswd -m yescrypt --rounds=11
   # Password: long, strong random string (full charset)
   # Rotation policy: changed annually
   # Purpose: system login password only
   # https://man.archlinux.org/man/crypt.5.en
-  initialHashedPassword = "$y$jFT$RBapCH3F6bc0uSF.FaUGB.$rvhiVvcCKxkkumDFLONV5zFP1lsv1VyZ1ErH.r2rNk3";
-  # Public keys that log in to all my PCs, Macbooks, and servers.
-  mainSshAuthorizedKeys = canokeySshKeys;
+  initialHashedPassword = "$7$CU..../....lO1U0fsl954fC3porcCY41$OXiwbYrYuY4Z3KSFQ6IM04D9yFBExkENIewhjyTqN7C";
+  hashedPassword = "$7$CU..../....lO1U0fsl954fC3porcCY41$OXiwbYrYuY4Z3KSFQ6IM04D9yFBExkENIewhjyTqN7C";
+  # Public Keys that can be used to login to all my PCs, Macbooks, and servers.
+  #
+  # Since its authority is so large, we must strengthen its security:
+  # 1. The corresponding private key must be:
+  #    1. Generated locally on every trusted client via:
+  #      ```bash
+  #      # KDF: bcrypt with 256 rounds, takes 2s on Apple M2):
+  #      # Passphrase: digits + letters + symbols, 12+ chars
+  #      ssh-keygen -t ed25519 -a 256 -C "ryan@xxx" -f ~/.ssh/xxx
+  #      ```
+  #    2. Never leave the device and never sent over the network.
+  # 2. Or just use hardware security keys like Yubikey/CanoKey.
+  mainSshAuthorizedKeys = [
+    # The main ssh keys for daily usage
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBiYaQw5Zd3zph4ESSmzTeThQs4mUvQl6VmAgwhFQeIj nix-on-droid@pstar"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIESZxsPpUfvzrLVVu7O1QYnUvSKWG4U6Fcv3kdxiLQTg termux@pstar"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMKycQztUbwaCQnvF6wiQz+WukpAXbkubMMMp4VUtwt/ nix-on-droid@mondrian"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBPciOhklQslFUU2Y+ARt+HvBLLScjQ+c+3S2ZX9NGOK termux@mondrian"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAII7NyZi1fs1EubesSvFA16UI6E3dut1XL+6F4PYqIJZ7 termux@infiniti"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOZ5jg4mJdPLLwQqY5DFJwSAaQtTO6UFoPW5Z18pZroe nix-on-droid@fily_pad_f12"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBO0+WOKwK9EcRj2Bcdt/VpiB9MvZYqk4JKxlcQElskx nixos@idols-ai"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOa/B+wRm8FtHaYuQ9hNQy8FL91FVjF5hLGk4FoCY9Ix ec@DESKTOP-BOTVVJ6"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFak7BMP5b8HDe63AfaR2FmwVUgrQyg5+Uqiqd+/Jj3q openpgp:0x8B7537BE"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFGcZXWoZPVMpf2dx6a8Kw3UsTSr2Ba5ZruCER+FwNv2 braxtonj\\futang@XA-7GjSQ81EiOf4"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPdiLAS0Gwc1FIDVs5gyp0fQyJZm5KRXjR/oPZ6cezfL nixos@work"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLeL1APZhRXbWFBoemc9deWf6s6tfmp3H/S4/D71fIA root@wsl-work"
+  ];
   # CanoKey U2F registrations for sudo (modules/nixos/desktop/canokey.nix).
   # Key handles and public keys only, so they are safe to commit.
   canokeyU2fKeys = [

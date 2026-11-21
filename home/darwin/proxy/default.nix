@@ -1,5 +1,6 @@
 {
   config,
+  mylib,
   pkgs,
   ...
 }:
@@ -9,5 +10,5 @@
   ];
 
   home.file.".proxychains/proxychains.conf".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/home/darwin/proxy/proxychains.conf";
+    mylib.mklinkRelativeToRoot config "home/darwin/proxy/proxychains.conf";
 }

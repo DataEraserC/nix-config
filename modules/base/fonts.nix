@@ -1,4 +1,6 @@
 {
+  pkgs-latest,
+  wpsFonts,
   pkgs,
   config,
   lib,
@@ -34,6 +36,7 @@ in
       #
       # Noto 系列字族覆盖西文与其他文字；noto-fonts 本身不含汉字。
       noto-fonts # 大部分文字的常见样式，不包含汉字
+      # noto-fonts-emoji # 表情符号字体
       noto-fonts-color-emoji # 彩色的表情符号字体
       # Noto CJK 与 Adobe 的 Source Han 系列是同一套字形，区别只在发行名称。
       # Noto 在 Linux 生态中更常见，也是更多应用直接请求的字体族名称；
@@ -52,5 +55,19 @@ in
       # Full version, embed with nerdfonts icons, Chinese and Japanese glyphs
       # https://github.com/subframe7536/maple-font
       maple-mono.NF-CN-unhinted
+
+      # Mayuri spec
+
+      julia-mono
+      dejavu_fonts
+      vista-fonts-chs # ms yahei
+      # Maple Mono (Ligature TTF unhinted)
+      # pkgs-latest.maple-mono.truetype
+      # Maple Mono NF (Ligature unhinted)
+      # pkgs-latest.maple-mono.NF-unhinted
+      sarasa-gothic
+      wpsFonts.packages.${system}.default
+      corefonts
+
     ];
 }

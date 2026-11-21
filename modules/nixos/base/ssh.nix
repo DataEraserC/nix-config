@@ -16,6 +16,12 @@
       PasswordAuthentication = false; # disable password login
       # nixpkgs defaults it to true, and PAM then still accepts the Unix password
       KbdInteractiveAuthentication = false;
+      Macs = [
+        "hmac-sha2-512" # Required for ServerBox
+        "hmac-sha2-512-etm@openssh.com"
+        "hmac-sha2-256-etm@openssh.com"
+        "umac-128-etm@openssh.com"
+      ];
     };
     # Only keys declared in Nix log in; a hand- or intruder-added key is ignored
     authorizedKeysInHomedir = false;

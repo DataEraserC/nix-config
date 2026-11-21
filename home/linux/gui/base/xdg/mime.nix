@@ -10,18 +10,74 @@
   #  ls /etc/profiles/per-user/ryan/share/applications/
   xdg.mimeApps = {
     enable = true;
-    # let `xdg-open` to open the url with the correct application.
-    defaultApplications =
+    associations.added =
       let
         browser = [
-          "com.google.Chrome.desktop"
-          "org.mozilla.firefox.desktop"
+          "google-chrome-unstable.desktop"
+          "google-chrome.desktop"
+          "firefox.desktop"
         ];
         editor = [
           "dev.zed.Zed.desktop"
           "nvim.desktop"
           "Helix.desktop"
+          "code-insiders.desktop"
+          "code.desktop"
         ];
+        picture = [ "imv-dir.desktop" ];
+        video = [ "mpv.desktop" ];
+        audio = [ "mpv.desktop" ];
+        office = [
+          "onlyoffice-desktopeditors.desktop"
+          "writer.desktop"
+        ];
+        code = [
+          "dev.zed.Zed.desktop"
+          "nvim.desktop"
+          "code-insiders.desktop"
+          "code.desktop"
+          "Helix.desktop"
+        ];
+        file-manager = [ "org.gnome.Nautilus.desktop" ];
+      in
+      {
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" = office;
+        "application/wps-office.docx" = office;
+        "application/x-php" = code;
+        "text/plain" = editor;
+        "text/x-makefile" = editor;
+        "application/x-wine-extension-ini" = editor;
+      };
+    # let `xdg-open` to open the url with the correct application.
+    defaultApplications =
+      let
+        browser = [
+          "google-chrome-unstable.desktop"
+          "google-chrome.desktop"
+          "firefox.desktop"
+        ];
+        editor = [
+          "dev.zed.Zed.desktop"
+          "nvim.desktop"
+          "code-insiders.desktop"
+          "code.desktop"
+          "Helix.desktop"
+        ];
+        picture = [ "imv-dir.desktop" ];
+        video = [ "mpv.desktop" ];
+        audio = [ "mpv.desktop" ];
+        office = [
+          "onlyoffice-desktopeditors.desktop"
+          "writer.desktop"
+        ];
+        code = [
+          "dev.zed.Zed.desktop"
+          "nvim.desktop"
+          "code-insiders.desktop"
+          "code.desktop"
+          "Helix.desktop"
+        ];
+        file-manager = [ "org.gnome.Nautilus.desktop" ];
       in
       {
         "application/json" = browser;
@@ -40,6 +96,8 @@
         "application/x-extension-shtml" = browser;
         "application/x-extension-xht" = browser;
         "application/x-extension-xhtml" = browser;
+        "application/x-shellscript" = editor;
+        "application/x-php" = code;
         "application/x-wine-extension-ini" = editor;
 
         # define default applications for some url schemes.
@@ -57,15 +115,19 @@
         "x-scheme-handler/tg" = [ "org.telegram.desktop.desktop" ];
         "x-scheme-handler/weixin" = [ "wechat.desktop" ];
 
-        "audio/*" = [ "mpv.desktop" ];
-        "video/*" = [ "mpv.desktop" ];
-        "image/*" = [ "imv-dir.desktop" ];
-        "image/gif" = [ "imv-dir.desktop" ];
-        "image/jpeg" = [ "imv-dir.desktop" ];
-        "image/png" = [ "imv-dir.desktop" ];
-        "image/webp" = [ "imv-dir.desktop" ];
+        "audio/*" = audio;
+        "video/*" = video;
+        "image/*" = picture;
+        "image/gif" = picture;
+        "image/jpeg" = picture;
+        "image/png" = picture;
+        "image/webp" = picture;
+        "image/bmp" = picture;
+        "image/tiff" = picture;
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" = office;
+        "application/wps-office.docx" = office;
 
-        "inode/directory" = [ "yazi.desktop" ];
+        "inode/directory" = file-manager;
       };
 
     # The portal app chooser used by sandboxed apps (e.g. Telegram) lists only these

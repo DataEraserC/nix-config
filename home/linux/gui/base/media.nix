@@ -17,6 +17,9 @@
       # music
       go-musicfox # TUI NetEase Cloud Music client; plays through mpv (configured below)
 
+      # video players
+      vlc # cross-platform media player and streaming server
+
       # video/audio tools
       libva-utils
       vdpauinfo

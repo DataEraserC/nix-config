@@ -1,8 +1,10 @@
 {
   pkgs,
   config,
+  mylib,
   lib,
   pyclipsync,
+  nur-DataEraserC,
   ...
 }@args:
 let
@@ -12,6 +14,7 @@ in
   imports = [
     # provides `services.pyclipsync.enable`
     pyclipsync.homeModules.default
+    ./values
   ];
 
   options.modules.desktop.niri = {
@@ -24,19 +27,24 @@ in
         home.packages = with pkgs; [
           # Niri v25.08 will create X11 sockets on disk, export $DISPLAY, and spawn `xwayland-satellite` on-demand when an X11 client connects
           xwayland-satellite
+          nur-DataEraserC.packages.${pkgs.system}.ndrop # a tool to switch windows status (foreground/background)
         ];
+
+        # niri is tiling: windows are moved/closed via keybindings, so ghostty
+        # can drop its title bar here. GNOME/KDE sessions keep the DE default.
+        programs.ghostty.settings.window-decoration = false;
 
         xdg.configFile =
           let
-            mkSymlink = config.lib.file.mkOutOfStoreSymlink;
-            confPath = "${config.home.homeDirectory}/nix-config/home/linux/gui/niri/conf";
+            mkSymlink = mylib.mklinkRelativeToRoot;
+            confPath = "home/linux/gui/niri/conf";
           in
           {
-            "niri/config.kdl".source = mkSymlink "${confPath}/config.kdl";
-            "niri/keybindings.kdl".source = mkSymlink "${confPath}/keybindings.kdl";
-            "niri/noctalia-shell.kdl".source = mkSymlink "${confPath}/noctalia-shell.kdl";
-            "niri/spawn-at-startup.kdl".source = mkSymlink "${confPath}/spawn-at-startup.kdl";
-            "niri/windowrules.kdl".source = mkSymlink "${confPath}/windowrules.kdl";
+            "niri/config.kdl".source = mkSymlink config "${confPath}/config.kdl";
+            "niri/keybindings.kdl".source = mkSymlink config "${confPath}/keybindings.kdl";
+            "niri/noctalia-shell.kdl".source = mkSymlink config "${confPath}/noctalia-shell.kdl";
+            "niri/spawn-at-startup.kdl".source = mkSymlink config "${confPath}/spawn-at-startup.kdl";
+            "niri/windowrules.kdl".source = mkSymlink config "${confPath}/windowrules.kdl";
           };
 
         systemd.user.services.niri-flake-polkit = {
@@ -50,7 +58,7 @@ in
           Install.WantedBy = [ "niri.service" ];
           Service = {
             Type = "simple";
-            ExecStart = "${pkgs.kdePackages.polkit-kde-agent-1}/libexec/polkit-kde-authentication-agent-1";
+            ExecStart = "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
             Restart = "on-failure";
             RestartSec = 1;
             TimeoutStopSec = 10;

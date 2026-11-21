@@ -1,25 +1,41 @@
 {
   config,
+  lib,
+  mylib,
   ...
 }:
 let
-  mkSymlink = config.lib.file.mkOutOfStoreSymlink;
+  mkSymlink = mylib.mklinkRelativeToRoot;
+  cfgNiri = config.modules.desktop.niri;
+  cfgGnomeWayland = config.modules.desktop.gnome-wayland;
 in
 {
   imports = [
     ../../linux/gui.nix
+    ./jetbrains.nix
   ];
 
   modules.desktop.vinput.enable = true;
 
-  modules.desktop.gaming.enable = true;
-  modules.desktop.niri.enable = true;
+  # 暂时切回 fcitx5；取消注释即可重新启用 cyime（仅 GNOME Wayland 变体）。
+  # modules.desktop.cyime.enable = lib.mkIf cfgGnomeWayland.enable true;
+  # modules.cyime-ice.enable = lib.mkIf cfgGnomeWayland.enable true;
+
+  programs.ssh.settings."github.com".identityFile =
+    "${config.home.homeDirectory}/.ssh/idols-ai_id_ed25519";
+
+  # We set this in outputs
+  # modules.desktop.gaming.enable = true;
+  # modules.desktop.niri.enable = true;
 
   # PC: keep the screen on longer than on the laptop.
   modules.desktop.hypridle = {
-    keyboardBacklightTimeout = 900;
-    screenOffTimeout = 1200;
-    lockTimeout = 1800;
+    # Niri requires this module, and this module requires Niri to provide functionality.
+    enable = cfgNiri.enable;
+    keyboardDevice = "platform::kbd_backlight";
+    keyboardBacklightTimeout = 180;
+    screenOffTimeout = 120;
+    lockTimeout = 600;
   };
 
   programs.zed-editor.userSettings = {
@@ -29,11 +45,16 @@ in
     agent_buffer_font_size = 17.0;
   };
 
-  xdg.configFile."niri/niri-hardware.kdl".source =
-    mkSymlink "${config.home.homeDirectory}/nix-config/hosts/idols-ai/niri-hardware.kdl";
+  programs.jetbrains.enable = true;
 
-  # Keep Noctalia's network widgets on the physical uplink, not the Mihomo TUN
-  # (the interface name is in ./idols-ai/noctalia.toml and `hostsAddr.ai.iface`).
+  xdg.configFile."niri/niri-hardware.kdl".source =
+    mkSymlink config "hosts/idols-ai/niri-hardware.kdl";
+
+  xdg.configFile."monitors.xml" = lib.mkIf cfgGnomeWayland.enable {
+    source = mkSymlink config "hosts/idols-ai/monitors.xml";
+  };
+
+  # Keep Noctalia's network widgets on the physical uplink, not the Mihomo TUN.
   xdg.configFile."noctalia/host-ai.toml".source = ./idols-ai/noctalia.toml;
 
   # The desktop speakers are already loud, so use the broadcast-standard -23 dB.

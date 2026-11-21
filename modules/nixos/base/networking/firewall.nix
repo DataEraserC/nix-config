@@ -61,6 +61,8 @@ in
       # LAN. Kept after the drop above so neither can reach node_exporter.
       iifname "podman0" accept
       iifname "tailscale0" accept
+      iifname "zt5u4z6wb4" accept
+      iifname "easytier0" accept
 
       # The home LAN is the trusted core.
       ip  saddr ${lanCidr} accept
