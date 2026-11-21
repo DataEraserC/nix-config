@@ -4753,10 +4753,10 @@
     "mysecrets": {
       "flake": false,
       "locked": {
-        "lastModified": 1794985516,
-        "narHash": "sha256-hSW6THY48IFqd8F2mJtOuD3OZQrzZjzgamQRLsmXQ08=",
+        "lastModified": 1795275072,
+        "narHash": "sha256-5WNXeh4TwCrdqCJ0TBWL6Qzf895gNWgswc4UMwgRF2Q=",
         "ref": "refs/heads/master",
-        "rev": "178a101e97db26c01411faa62e49d0046d040584",
+        "rev": "c894b4285e6360cc8bc9ed44a0173524f126e24a",
         "shallow": true,
         "type": "git",
         "url": "file:////home/nixos/nix-config/secrets"
