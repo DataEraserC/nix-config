@@ -289,11 +289,11 @@ rec {
   # Provider packs from the agent2api-nix flake; managed mode reconciles this
   # set (and the provider switches) on every start.
   modules.agent2api.plugins = with inputs.agent2api-nix.packages.${pkgs.stdenv.hostPlatform.system}; [
+    # The native pack already provides trae/zcode/zcode-intl; the wasm
+    # packs need a wasm-capable gateway and fail on the headless 3.4.2
+    # server with "Exec format error".
     agent2api-providers
     agent2api-web-providers
-    agent2api-wasm-trae
-    agent2api-wasm-zcode
-    agent2api-wasm-zcode-intl
   ];
 
   # WebMux browser terminal server, bound to 0.0.0.0:1109 (runs as this host's
