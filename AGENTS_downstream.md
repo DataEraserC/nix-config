@@ -22,6 +22,35 @@ history caused by concurrent edits to one working tree, make changes in a dedica
 result back into the main repository, rather than touching the main working tree directly. Editing
 the main working tree directly is acceptable only when no concurrent modification is expected.
 
+## Maintained hosts and deploy recipes
+
+Downstream actively maintains **exactly** these hosts, and nothing else:
+
+- the **idols-ai desktop** - primary `nixosConfiguration` is `ai-gnome-wayland` (variants
+  `ai-kde-wayland` and `ai-niri` exist for the same machine);
+- the **wsl series** - `wsl-work` and `wsl-y9000p2025`;
+- the **droid series** - the nix-on-droid configuration `mondrian` (termux on the same devices
+  receives secrets only, it is not a managed configuration).
+
+Every other configuration inherited from upstream (`akane`, `kana`, `ruby`, `shoryu`, `shushou`,
+`youko`, `shoukei-*`, `k3s-test-*`) is not maintained here: do not validate changes against it and
+do not extend it downstream.
+
+Deploy and validate the primary host:
+
+- `just gnome-wayland` (`justfile.d/downstream.just` hardcodes the name; default mode
+  `switch-notify`) deploys the desktop; validate config changes with
+  `just build-host ai-gnome-wayland`.
+- `just niri` from upstream [AGENTS.md](./AGENTS.md) deploys `ai-niri`, a secondary variant of the
+  same machine - not the primary.
+- Bare-hostname `just local` resolves to `.#ai`, which does not exist as a configuration, so it
+  fails on this machine despite what the upstream doc implies.
+- The WSL hosts have their own recipes (`just wsl-work`, `just wsl-y9000p2025`); `just kde-wayland`
+  switches the `ai-kde-wayland` variant.
+- Some eval tests and docs reference `ai-niri` (for example
+  `outputs/x86_64-linux/tests/codebuddy-acp/expr.nix`); that is fine - they exercise the same shared
+  modules, but a host build for acceptance work should use `ai-gnome-wayland`.
+
 ## Secrets: the two agenix lists move together
 
 Upstream keeps two agenix module variants side by side: `secrets/nixos.nix`, imported by the older
