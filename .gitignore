@@ -65,3 +65,6 @@ modules/nixos/desktop/networking/mihomo/snapshots/
 # agent workspace data and one-off task prompts, kept local
 /.zcode/
 /UPSTREAM_SYNC_PROMPT.md
+
+# scratch review patches generated at the repo root
+/*.patch
