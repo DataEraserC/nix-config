@@ -3,59 +3,9 @@
 // probe order. Run `niri msg outputs` to read the exact "make model serial"
 // string.
 //
-// Downstream (y9000p2025): the machine has TWO GPUs - the Intel iGPU renders
-// the desktop, the RTX 5070 drives the physical outputs over cross-GPU
-// scanout. The renderer-pinning debug block below is therefore a real option
-// here (it was upstream's pre-4090 setup); it stays disabled until wanted.
+// No renderer pinning: the RTX 4090 is the only GPU here, so niri's own device
+// choice and the outputs' scanout are the same card.
 
-// debug {
-//     // Keep desktop rendering and ordinary applications on the Intel iGPU.
-//     // Physical outputs remain on the NVIDIA GPU and use cross-GPU scanout.
-//     render-drm-device "/dev/dri/by-path/pci-0000:00:02.0-render"
-// }
-
-// Upstream's external 4K panel (Ryan's desk). Kept as comments: this serial
-// does not exist on the downstream machine.
-// output "Beihai Century Joint Innovation Technology Co.,Ltd P32A2V 0000000000000" {
-//     // Uncomment this line to disable this output.
-//     // off
-//
-//     // Scale is a floating-point number, but at the moment only integer values work.
-//     scale 1.5
-//
-//     // Transform allows to rotate the output counter-clockwise, valid values are:
-//     // normal, 90, 180, 270, flipped, flipped-90, flipped-180 and flipped-270.
-//     transform "normal"
-//
-//     // Resolution and, optionally, refresh rate of the output.
-//     // The format is "<width>x<height>" or "<width>x<height>@<refresh rate>".
-//     // If the refresh rate is omitted, niri will pick the highest refresh rate
-//     // for the resolution.
-//     // If the mode is omitted altogether or is invalid, niri will pick one automatically.
-//     // Run `niri msg outputs` while inside a niri instance to list all outputs and their modes.
-//     // Pin the exact value from `niri msg outputs` on this host: niri matches
-//     // refresh rates exactly, so a nominal "144" can miss and fall back silently
-//     // (this panel's 120 Hz mode, for example, is 119.880, not 120).
-//     mode "3840x2160@144.000"
-//
-//     // Adaptive sync only while a game window requests it. The desktop then
-//     // stays fixed-rate, avoiding VRR flicker during low-load desktop work.
-//     // The game window rule below opts in with variable-refresh-rate true.
-//     variable-refresh-rate on-demand=true
-//
-//     // Position of the output in the global coordinate space.
-//     // This affects directional monitor actions like "focus-monitor-left", and cursor movement.
-//     // The cursor can only move between directly adjacent outputs.
-//     // Output scale has to be taken into account for positioning:
-//     // outputs are sized in logical, or scaled, pixels.
-//     // For example, a 3840×2160 output with scale 2.0 will have a logical size of 1920×1080,
-//     // so to put another output directly adjacent to it on the right, set its x to 1920.
-//     // It the position is unset or results in an overlap, the output is instead placed
-//     // automatically.
-//     position x=0 y=0
-// }
-
-// Downstream's laptop panel (Lenovo y9000p2025 internal display).
 output "eDP-1" {
     // Uncomment this line to disable this output.
     // off
@@ -74,8 +24,14 @@ output "eDP-1" {
     // If the mode is omitted altogether or is invalid, niri will pick one automatically.
     // Run `niri msg outputs` while inside a niri instance to list all outputs and their modes.
     // Pin the exact value from `niri msg outputs` on this host: niri matches
-    // refresh rates exactly, so a nominal "240" can miss and fall back silently.
+    // refresh rates exactly, so a nominal "144" can miss and fall back silently
+    // (this panel's 120 Hz mode, for example, is 119.880, not 120).
     mode "2560x1600@240"
+
+    // Adaptive sync only while a game window requests it. The desktop then
+    // stays fixed-rate, avoiding VRR flicker during low-load desktop work.
+    // The game window rule below opts in with variable-refresh-rate true.
+    variable-refresh-rate on-demand=true
 
     // Position of the output in the global coordinate space.
     // This affects directional monitor actions like "focus-monitor-left", and cursor movement.
@@ -89,9 +45,6 @@ output "eDP-1" {
     position x=0 y=0
 }
 
-// External 4K panel template (upstream's Guangxi 27D1U; kept as comments in
-// case the same panel gets connected - the serial must be read from
-// `niri msg outputs` on this host).
 // output "Guangxi Century Innovation Display Electronics Co., Ltd 27D1U 0000000000000" {
 //     scale 1.5
 //     transform "normal"
@@ -99,12 +52,21 @@ output "eDP-1" {
 //     position x=2560 y=0 // on the right of DP-2
 // }
 
-output "Virtual-1" {
-    // Created by vkms in hardware-intel.nix. Sunshine captures this output when
-    // the NVIDIA-attached physical monitors are off. It remains available in
-    // normal physical sessions, with minor idle GPU and framebuffer overhead.
-    scale 1.5
-    transform "normal"
-    mode "2560x1600"
-    position x=0 y=0
-}
+// output "Virtual-1" {
+//     // Created by vkms in hardware-intel.nix. Sunshine captures this output when
+//     // the NVIDIA-attached physical monitors are off. It remains available in
+//     // normal physical sessions, with minor idle GPU and framebuffer overhead.
+//     scale 1.5
+//     transform "normal"
+//     mode "2560x1600"
+//     position x=0 y=0
+// }
+
+// // ============= Named Workspaces =============
+// workspace "4entertainment" { open-on-output "Beihai Century Joint Innovation Technology Co.,Ltd P32A2V 0000000000000"; }
+// workspace "2browser" { open-on-output "Beihai Century Joint Innovation Technology Co.,Ltd P32A2V 0000000000000"; }
+// workspace "5utility" { open-on-output "Beihai Century Joint Innovation Technology Co.,Ltd P32A2V 0000000000000"; }
+
+// workspace "3chat" { open-on-output "Guangxi Century Innovation Display Electronics Co., Ltd 27D1U 0000000000000"; }
+// workspace "1terminal" { open-on-output "Guangxi Century Innovation Display Electronics Co., Ltd 27D1U 0000000000000"; }
+// workspace "0other" { open-on-output "Guangxi Century Innovation Display Electronics Co., Ltd 27D1U 0000000000000"; }
