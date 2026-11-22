@@ -216,6 +216,16 @@ group {
         policy: min_moving_avg
     }
 
+    # free = 免费下载组：xxmad 与 ikuuu 两个订阅的节点合池，供 cmd_free 标记
+    # 的下载命令专用。ExpireAt 占位节点排除；竞速节点本就不在这两个订阅的
+    # tag 里，无需再滤。
+    free {
+        filter: subtag(xxmad_1) && !name(keyword: 'ExpireAt:')
+        filter: subtag(ikuuu_1) && !name(keyword: 'ExpireAt:')
+        filter: subtag(ikuuu_2) && !name(keyword: 'ExpireAt:')
+        policy: min_moving_avg
+    }
+
     # proxy = low-latency group (the default group, behavior unchanged): min_moving_avg tends to pick the
     # "竞速" (speed-race) nodes, which feel snappy for interactive traffic; but those nodes oversell their
     # bandwidth and are slow on large downloads, so download rules use proxy_bw instead.
@@ -406,10 +416,7 @@ routing {
     pname(cmd_lajichang) -> lajichang
     pname(cmd_xxmad) -> xxmad
     pname(cmd_mojie) -> mojie
-    # Downloads get their own semantic marker even though the outbound is the
-    # xxmad group: a distinct pname keeps bulk transfers identifiable and
-    # killable separately from other xxmad-routed traffic.
-    pname(cmd_download) -> xxmad
+    pname(cmd_free) -> free
 
     # Put it in the front to prevent broadcast, multicast and other packets that should be sent to the LAN from being
     # forwarded by the proxy.
