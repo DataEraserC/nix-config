@@ -44,7 +44,7 @@
     # nixpaks.qq
     qq
     # nixpaks.telegram-desktop
-    bwraps.wechat
+    nixpaks.wechat
 
     #-- instant messaging
 

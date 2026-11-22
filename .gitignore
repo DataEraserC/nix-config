@@ -61,3 +61,7 @@ modules/nixos/desktop/networking/mihomo/snapshots/
 # dsh worktree
 .dsh-worktrees/
 .tmp-sbtest/
+
+# agent workspace data and one-off task prompts, kept local
+/.zcode/
+/UPSTREAM_SYNC_PROMPT.md

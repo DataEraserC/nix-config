@@ -38,7 +38,6 @@ in
           "secrets/nixos_sopsnix.nix"
           # nixos hardening
           "hardening/nixpaks"
-          "hardening/bwraps"
         ])
         ++ [
           inputs.nixos-wsl.nixosModules.default
