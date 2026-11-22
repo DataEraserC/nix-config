@@ -5159,11 +5159,11 @@
         "systems": "systems_19"
       },
       "locked": {
-        "lastModified": 1791627670,
-        "narHash": "sha256-6lHLPkcFv2QvltefRVjzJnCEc+LHrAa1F68kV9a20pc=",
+        "lastModified": 1795259076,
+        "narHash": "sha256-VWuPWde1tAAD0Tu4KA2ZfhW6nhk9x/tkbv0hi47v1R8=",
         "owner": "nix-community",
         "repo": "nix-jetbrains-plugins",
-        "rev": "62faf8647f8902a7df0d0336015be99abe2cbd99",
+        "rev": "1cb423def1692e4840be3378176ff159ee7c8cae",
         "type": "github"
       },
       "original": {
@@ -8099,11 +8099,11 @@
     },
     "systems_19": {
       "locked": {
-        "lastModified": 1681028828,
-        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "lastModified": 1791244623,
+        "narHash": "sha256-uuanbkFk8a313Zfrxdcz8Us/yQtaxNnKJtX8v0ZPpd8=",
         "owner": "nix-systems",
         "repo": "default",
-        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "rev": "d36eeed142f88b5a636f2e3856a53c61654cf29b",
         "type": "github"
       },
       "original": {

@@ -23,9 +23,7 @@ rec {
       root = config.modules.outOfStoreSymlink.paths.${key} or null;
     in
     if config.modules.outOfStoreSymlink.enable && root != null then
-      (lib.warn "mkOutOfStoreSymlink ${root}/${subpath}" config.lib.file.mkOutOfStoreSymlink (
-        if subpath == "" then root else "${root}/${subpath}"
-      ))
+      (config.lib.file.mkOutOfStoreSymlink (if subpath == "" then root else "${root}/${subpath}"))
     else
       (lib.warn "direct use ${defaultSource}" defaultSource);
 

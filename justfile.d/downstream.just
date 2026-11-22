@@ -58,13 +58,6 @@ build-limited *args:
 
 [linux]
 [group('desktop')]
-s-hypr mode="default":
-  #!/usr/bin/env nu
-  use {{utils_nu}} *;
-  nixos-switch shoukei-hyprland {{mode}}
-
-[linux]
-[group('desktop')]
 gnome-wayland mode="switch-notify" verbosity="normal":
   #!/usr/bin/env nu
   use {{utils_nu}} *;

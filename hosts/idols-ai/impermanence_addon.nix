@@ -105,7 +105,9 @@ in
         };
       })
 
-      (mkIf (cfg.enable && cfg.fsType == "btrfs" && config.boot.initrd.systemd.enable) {
+      # nixpkgs 26.11 removed the scripted initrd; systemd initrd is the only
+      # implementation left, so the service branch needs no condition on it.
+      (mkIf (cfg.enable && cfg.fsType == "btrfs") {
         boot.initrd.systemd.services.impermanence-setup = lib.mkForce {
           description = "Impermanence setup for btrfs root subvolume";
           wantedBy = [ "initrd.target" ];
@@ -146,36 +148,6 @@ in
             umount /btrfs_tmp
           '';
         };
-      })
-      (mkIf (cfg.enable && cfg.fsType == "btrfs" && !config.boot.initrd.systemd.enable) {
-        boot.initrd.postDeviceCommands = (
-          lib.mkAfter ''
-            mkdir -p /btrfs_tmp
-            mount -t btrfs ${cfg.btrfsBlockDevice} /btrfs_tmp
-            if [ -e /btrfs_tmp/root ]; then
-                ${cfg.preBackupCommand}
-                mkdir -p /btrfs_tmp/old_roots
-                timestamp=$(date --date="@$(stat -c %Y /btrfs_tmp/root)" "+%Y-%m-%d_%H:%M:%S")
-                mv /btrfs_tmp/root "/btrfs_tmp/old_roots/$timestamp"
-                ${cfg.postBackupCommand}
-            fi
-
-            delete_subvolume_recursively() {
-                IFS=$'\n'
-                for i in $(btrfs subvolume list -o "$1" | cut -f 9- -d ' '); do
-                    delete_subvolume_recursively "/btrfs_tmp/$i"
-                done
-                btrfs subvolume delete "$1"
-            }
-
-            for i in $(find /btrfs_tmp/old_roots/ -maxdepth 1 -mtime +${toString cfg.retentionPeriod}); do
-                delete_subvolume_recursively "$i"
-            done
-
-            btrfs subvolume create /btrfs_tmp/root
-            umount /btrfs_tmp
-          ''
-        );
       })
     ];
 }

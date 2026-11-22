@@ -19,6 +19,11 @@ nix-on-droid.lib.nixOnDroidConfiguration {
   pkgs = import nixpkgs {
     inherit system;
 
+    # Unfree packages are allowed on the same terms as the NixOS/darwin
+    # instances (outputs/default.nix nixpkgsConfig): the droid home profile
+    # ships corefonts and other unfree-redistributable packages.
+    config.allowUnfree = true;
+
     overlays = [
       nix-on-droid.overlays.default
       # add other overlays

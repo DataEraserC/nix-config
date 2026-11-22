@@ -14,6 +14,17 @@ let
   # fetchNpmDeps (package-lock tarballs and registry packuments).
   nixpkgsConfig = {
     allowUnfree = true;
+    # EOL electron runtime dependencies pulled by unfree desktop apps on the
+    # main pkgs instance (the stable instance lists its own below)
+    permittedInsecurePackages = [
+      "electron-39.8.10"
+      "electron-40.10.5"
+      "electron-41.10.7"
+      "ventoy-1.1.18"
+      "pnpm-10.29.2"
+      "intellij-idea-oss-with-plugins-2025.3.4"
+      "intellij-idea-oss-2025.3.4"
+    ];
     # Only Huawei works here: npmmirror 404s on prefetch-npm-deps' doubled
     # slash, and Tencent answers 567 to its concurrent fetches.
     npmRegistryOverrides = {
@@ -35,8 +46,17 @@ let
       pkgs-stable = import inputs.nixpkgs-stable {
         inherit system;
         config.allowUnfree = true;
-        # logseq pins electron_39 (EOL) as a runtime dependency
-        config.permittedInsecurePackages = [ "electron-39.8.10" ];
+        # EOL electron runtime dependencies: 39.8.10 and 41.10.7 are pulled by
+        # different consumers (logseq and friends) on the stable branch
+        config.permittedInsecurePackages = [
+          "electron-39.8.10"
+          "electron-40.10.5"
+          "electron-41.10.7"
+          "ventoy-1.1.18"
+          "pnpm-10.29.2"
+          "intellij-idea-oss-with-plugins-2025.3.4"
+          "intellij-idea-oss-2025.3.4"
+        ];
       };
 
     in

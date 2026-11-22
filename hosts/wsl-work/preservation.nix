@@ -14,8 +14,9 @@ in
   ];
 
   preservation.enable = true;
-  # pverservation required initrd using systemd.
-  boot.initrd.systemd.enable = true;
+  # nixpkgs 26.11 removed the scripted initrd, so the historical
+  # `boot.initrd.systemd.enable = true` line is gone: systemd initrd is the
+  # only implementation left.
 
   environment.systemPackages = [
     # Whole-filesystem disk usage (`-x` stays on one filesystem):

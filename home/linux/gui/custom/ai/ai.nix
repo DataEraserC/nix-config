@@ -19,8 +19,8 @@
     # comfyui-nix.packages.${pkgs.system}.rocm   # ROCm (Linux/AMD)
     # comfyui-nix.packages.${pkgs.system}.xpu    # Intel XPU
 
-    (pkgs-cuda.comfyui.override {
-      withManager = true;
-    })
+    # nixpkgs' comfyui packaging no longer takes `withManager`; the manager
+    # ships in the default build.
+    pkgs-cuda.comfyui
   ];
 }

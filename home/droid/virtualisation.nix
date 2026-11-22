@@ -5,6 +5,8 @@
   home.packages = with pkgs; [
     docker
     podman
-    lxd
+    # lxd was removed from nixpkgs (unmaintained upstream); its successor
+    # incus has no termux packaging, and the daemons do not run on droid
+    # anyway - these CLIs only talk to contexts on other machines.
   ];
 }

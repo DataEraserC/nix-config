@@ -44,7 +44,7 @@ in
     assertions = [
       # Not strictly required but probably a good assertion to have
       {
-        assertion = cfg.fsType == "btrfs" && cfg.btrfsBlockDevice == "";
+        assertion = cfg.fsType == "btrfs" -> cfg.btrfsBlockDevice != "";
         message = "cfg.fsType == btrfs requires cfg.btrfsBlockDevice not empty";
       }
     ];

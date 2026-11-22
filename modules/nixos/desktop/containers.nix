@@ -31,10 +31,12 @@
 
     # Containers registries configuration (shared by Docker and Podman)
     # https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md
+    # Podman 6.0 dropped the V1 registry.conf options (registries.block /
+    # registries.insecure); the free-form `settings` table is the replacement.
     containers = {
-      registries = {
+      registries.settings = {
         # Unqualified image names (e.g. "nginx") will be searched in these registries in order
-        search = [
+        unqualified-search-registries = [
           "docker.io"
           "quay.io"
           "ghcr.io"
@@ -42,10 +44,10 @@
           "mcr.microsoft.com"
           "gcr.io"
         ];
-        # Insecure registries (HTTP instead of HTTPS) - add as needed
-        insecure = [ ];
-        # Blocked registries - block any known malicious or unused registries
-        block = [ ];
+        # Insecure registries (HTTP instead of HTTPS): [[registry]] entries with
+        # `insecure = true` under settings.registries, added as needed
+        # Blocked registries: [[registry]] entries with `prefix` + `blocked = true`
+
       };
     };
 
