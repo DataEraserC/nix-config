@@ -7,15 +7,7 @@
   "license": "MIT",
   "repository": "https://github.com/noctalia-dev/noctalia-plugins",
   "description": "Universal keyboard shortcuts keymap that automatically detects and displays keybindings for Hyprland, Niri, or MangoWC compositors.",
-  "tags": [
-    "Bar",
-    "Panel",
-    "System",
-    "Indicator",
-    "Hyprland",
-    "Niri",
-    "MangoWC"
-  ],
+  "tags": ["Bar", "Panel", "System", "Indicator", "Hyprland", "Niri", "MangoWC"],
   "entryPoints": {
     "main": "Main.qml",
     "barWidget": "BarWidget.qml",
