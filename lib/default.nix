@@ -11,6 +11,7 @@ rec {
   genMicrovmGuestModule = import ./genMicrovmGuestModule.nix;
 
   systemdHardening = import ./systemdHardening.nix { inherit lib; };
+  tools = import ./tools.nix;
 
   # use path relative to the root of the project
   relativeToRoot = lib.path.append ../.;
