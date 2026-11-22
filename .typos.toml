@@ -9,6 +9,9 @@ ignore-files = true
 extend-exclude = [
   "data/",
   "rime-data/",
+  # archived sync diff (a git patch snapshot); its bytes must stay exact, and
+  # patch content (index hashes, code being patched) is not prose
+  "docs/sync/",
   # small-duck flypy user dictionary: entries are pinyin codes ("delt", "juli"),
   # not English words, so the spell checker flags every one of them
   "home/base/gui/rime/flypy_user.txt",
