@@ -29,10 +29,12 @@ in
   # modules.desktop.niri.enable = true;
   modules.gaming-stack.enable = true;
 
-  # PC: keep the screen on longer than on the laptop.
+  # PC: keep the screen on longer than on the laptop. The downstream variant
+  # (Noctalia lock + niri power-off listeners) is selected for the niri variants.
   modules.desktop.hypridle = {
     # Niri requires this module, and this module requires Niri to provide functionality.
     enable = cfgNiri.enable;
+    implementation = "downstream";
     keyboardDevice = "platform::kbd_backlight";
     keyboardBacklightTimeout = 180;
     screenOffTimeout = 120;

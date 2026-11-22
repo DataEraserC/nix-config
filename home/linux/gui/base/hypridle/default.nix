@@ -1,20 +1,27 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 let
   cfg = config.modules.desktop.hypridle;
+  python = pkgs.python3.withPackages (ps: [
+    ps.evdev
+    ps.pulsectl
+    ps.pyudev
+  ]);
+  activityMonitor = pkgs.writeShellApplication {
+    name = "hypridle-activity";
+    runtimeInputs = [ pkgs.playerctl ];
+    text = ''
+      exec ${python}/bin/python3 ${./activity_monitor.py} "$@"
+    '';
+  };
+  activityCheck = timeout: "${lib.getExe activityMonitor} check --timeout ${toString timeout}";
 in
 {
   options.modules.desktop.hypridle = {
-    enable = lib.mkEnableOption "hypridle idle daemon";
-
-    keyboardDevice = lib.mkOption {
-      type = lib.types.str;
-      default = "kbd_backlight";
-      description = "Keyboard backlight device name used by brightnessctl (see `brightnessctl --list`).";
-    };
     keyboardBacklightTimeout = lib.mkOption {
       type = lib.types.int;
       description = "Seconds of idle before turning off the keyboard backlight.";
@@ -27,9 +34,38 @@ in
       type = lib.types.int;
       description = "Seconds of idle before locking the screen.";
     };
+
+    # Downstream addition: the hosts pick whether the (upstream-shaped) idle
+    # management runs at all; the y9000p2025 GNOME variants keep it off.
+    enable = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Whether the hypridle idle daemon is managed here.";
+    };
   };
 
   config = lib.mkIf cfg.enable {
+    home.packages = [ activityMonitor ];
+    systemd.user.services.hypridle-activity = {
+      Unit = {
+        Description = "Gamepad and media activity monitor for hypridle";
+        After = [
+          config.services.hypridle.systemdTarget
+          "pipewire-pulse.service"
+        ];
+        PartOf = [ config.services.hypridle.systemdTarget ];
+      };
+      Service = {
+        ExecStart = "${lib.getExe activityMonitor} daemon";
+        Restart = "on-failure";
+        RestartSec = 3;
+        RuntimeDirectory = "hypridle-activity";
+        RuntimeDirectoryMode = "0700";
+        UMask = "0077";
+      };
+      Install.WantedBy = [ config.services.hypridle.systemdTarget ];
+    };
+
     # Hyprland/niri idle daemon. Declared in Nix (instead of a raw
     # hypridle.conf) so each host can tune the timeouts below.
     services.hypridle = {
@@ -48,18 +84,15 @@ in
         listener = [
           {
             timeout = cfg.keyboardBacklightTimeout;
-            # brightnessctl --list / -d <device>
-            on-timeout = "brightnessctl --save --device=${cfg.keyboardDevice} set 0";
-            on-resume = "brightnessctl --restore --device=${cfg.keyboardDevice}";
+            # brightnessctl --list / -d kbd_backlight
+            on-timeout = "brightnessctl --save --device=kbd_backlight set 0";
+            on-resume = "brightnessctl --restore --device=kbd_backlight";
           }
           {
             timeout = cfg.screenOffTimeout;
             ignore_inhibit = true;
-            # Some apps keep idle-inhibit active even when they are only sitting
-            # on a page, which can prevent screen-off forever. Ignore those
-            # inhibitors for screen-off, but skip while an MPRIS player reports
-            # active playback.
-            condition_cmd = "! playerctl -a status 2>/dev/null | grep -q '^Playing$'";
+            # App inhibitors can outlive playback; use observed activity instead.
+            condition_cmd = activityCheck cfg.screenOffTimeout;
             condition_retry = 30;
             on-timeout = "niri msg action power-off-monitors";
             on-resume = "niri msg action power-on-monitors";
@@ -67,8 +100,7 @@ in
           {
             timeout = cfg.lockTimeout;
             ignore_inhibit = true;
-            # Skip while media is playing, same as screen-off above.
-            condition_cmd = "! playerctl -a status 2>/dev/null | grep -q '^Playing$'";
+            condition_cmd = activityCheck cfg.lockTimeout;
             condition_retry = 30;
             on-timeout = "noctalia msg session lock";
           }
