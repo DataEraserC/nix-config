@@ -88,7 +88,9 @@ in
       group = "warp";
       capabilities = "cap_net_bind_service,cap_net_raw,cap_net_admin,cap_dac_override+p";
 
-      source = "${pkgs.cloudflare-warp}/bin/warp-svc";
+      # nixpkgs wraps bin/warp-svc in a bash script that prepends lsof/nftables
+      # to PATH; security.wrappers requires the real ELF instead
+      source = "${pkgs.cloudflare-warp}/bin/.warp-svc-wrapped";
     };
 
     users.groups = mkIf (cfg.group == "warp") {
@@ -103,6 +105,10 @@ in
         enable = true;
         description = "Cloudflare Zero Trust Client Daemon";
         after = [ "pre-network.target" ];
+        path = [
+          pkgs.lsof
+          pkgs.nftables
+        ];
         serviceConfig = {
           Type = "simple";
           DynamicUser = "no";
