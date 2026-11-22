@@ -25,6 +25,8 @@ let
 
   # Downstream enable flags shared by both WSL hosts.
   downstream-enable-modules = {
+    # WSL hosts run an impermanent tmpfs root (fsType defaults to tmpfs).
+    modules.system.rootfs.enable = true;
     modules.secrets.desktop.enable = true;
     modules.secrets.preservation.enable = true;
     modules.vscode-server.enable = true;

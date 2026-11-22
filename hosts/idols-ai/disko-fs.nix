@@ -131,15 +131,13 @@
       };
     };
   };
-  imports = [
-    ./impermanence_addon.nix
-  ];
-  modules.desktop.impermanence-rootfs.enable = true;
-  modules.desktop.impermanence-rootfs.fsType = "btrfs";
-  # modules.desktop.impermanence-rootfs.btrfsBlockDevice = "/dev/disk/by-uuid/17df699e-6502-4205-955f-c456eb378d48";
-  modules.desktop.impermanence-rootfs.btrfsBlockDevice = "/dev/mapper/nixos-luks";
-  modules.desktop.impermanence-rootfs.retentionPeriod = 7;
-  modules.desktop.impermanence-rootfs.preBackupCommand = ''
+  modules.system.rootfs.enable = true;
+  modules.system.rootfs.fsType = "btrfs";
+  # modules.system.rootfs.btrfsBlockDevice = "/dev/disk/by-uuid/17df699e-6502-4205-955f-c456eb378d48";
+  modules.system.rootfs.btrfsBlockDevice = "/dev/mapper/nixos-luks";
+  modules.system.rootfs.afters = [ "dev-mapper-nixos\\x2dluks.device" ];
+  modules.system.rootfs.retentionPeriod = 7;
+  modules.system.rootfs.preBackupCommand = ''
     [ -d /btrfs_tmp/root/etc/agenix ] && rm -rf /btrfs_tmp/root/etc/agenix || true
   '';
 }

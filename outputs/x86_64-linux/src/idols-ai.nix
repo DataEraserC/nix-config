@@ -22,7 +22,10 @@ let
     modules.desktop.wayland.enable = true;
     modules.secrets.desktop.enable = true;
     modules.secrets.preservation.enable = true;
-    modules.desktop.gaming.enable = true;
+    modules.gaming-stack.enable = true;
+    modules.linyaps.enable = true;
+    modules.ollama.enable = true;
+    modules.ollama.cuda = true;
     modules.desktop.appcast.enable = true;
     modules.archive-tools.enable = true;
     modules.dsh.enable = true;

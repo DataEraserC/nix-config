@@ -27,6 +27,7 @@ in
   # We set this in outputs
   # modules.desktop.gaming.enable = true;
   # modules.desktop.niri.enable = true;
+  modules.gaming-stack.enable = true;
 
   # PC: keep the screen on longer than on the laptop.
   modules.desktop.hypridle = {

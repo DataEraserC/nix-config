@@ -40,7 +40,6 @@ rec {
     ./preservation.nix
     ./preservation-downstream.nix
     ../service-user-ids.nix
-    ../wsl-common/impermanence_addon.nix
     # ./dae.nix
 
     # wsl related
@@ -82,6 +81,7 @@ rec {
 
   # EasyTier decentralized P2P VPN
   modules.easytier.enable = false;
+  modules.ollama.enable = true;
 
   # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:1105.
   modules.cliproxyapi.enable = (svc "cliproxyapi").enable;

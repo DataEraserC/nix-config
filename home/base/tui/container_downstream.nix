@@ -8,8 +8,10 @@
 {
   # `kubernetes-helm`: WA-002-era note - the pinned nixpkgs-2505 input upstream
   # used for helm regressions is gone; helm comes from current nixpkgs now.
-  home.packages = [
-    docker-compose
-  ]
-  ++ (if pkgs.stdenv.hostPlatform.isLinux then [ distrobox ] else [ ]);
+  home.packages =
+    with pkgs;
+    [
+      docker-compose
+    ]
+    ++ (if pkgs.stdenv.hostPlatform.isLinux then [ distrobox ] else [ ]);
 }
