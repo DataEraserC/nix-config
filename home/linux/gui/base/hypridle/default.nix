@@ -8,13 +8,6 @@ let
 in
 {
   options.modules.desktop.hypridle = {
-    enable = lib.mkEnableOption "hypridle idle daemon";
-
-    keyboardDevice = lib.mkOption {
-      type = lib.types.str;
-      default = "kbd_backlight";
-      description = "Keyboard backlight device name used by brightnessctl (see `brightnessctl --list`).";
-    };
     keyboardBacklightTimeout = lib.mkOption {
       type = lib.types.int;
       description = "Seconds of idle before turning off the keyboard backlight.";
@@ -29,7 +22,7 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
+  config = {
     # Hyprland/niri idle daemon. Declared in Nix (instead of a raw
     # hypridle.conf) so each host can tune the timeouts below.
     services.hypridle = {
@@ -48,9 +41,9 @@ in
         listener = [
           {
             timeout = cfg.keyboardBacklightTimeout;
-            # brightnessctl --list / -d <device>
-            on-timeout = "brightnessctl --save --device=${cfg.keyboardDevice} set 0";
-            on-resume = "brightnessctl --restore --device=${cfg.keyboardDevice}";
+            # brightnessctl --list / -d kbd_backlight
+            on-timeout = "brightnessctl --save --device=kbd_backlight set 0";
+            on-resume = "brightnessctl --restore --device=kbd_backlight";
           }
           {
             timeout = cfg.screenOffTimeout;

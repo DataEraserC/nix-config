@@ -8,10 +8,6 @@
 with lib;
 let
   cfgWayland = config.modules.desktop.wayland;
-  cfgHyprland = config.modules.desktop.hyprland;
-  cfgNiri = config.modules.desktop.niri;
-  cfgGnomeWayland = config.modules.desktop.gnome-wayland;
-  cfgKdeWayland = config.modules.desktop.kde-wayland;
 in
 {
   imports = [
@@ -39,7 +35,7 @@ in
       modules.locate.enable = true;
     }
 
-    (mkIf (cfgWayland.enable && !cfgKdeWayland.enable && !cfgGnomeWayland.enable) {
+    (mkIf cfgWayland.enable {
       ####################################################################
       #  NixOS's Configuration for Wayland based Window Manager
       ####################################################################
@@ -48,7 +44,6 @@ in
         # https://wiki.archlinux.org/title/Greetd
         greetd = {
           enable = true;
-          restart = false;
           settings = {
             default_session = {
               # Wayland Desktop Manager is installed only for user ryan via home-manager!
@@ -58,19 +53,10 @@ in
               command = "${pkgs.tuigreet}/bin/tuigreet --time --cmd $HOME/.wayland-session"; # start wayland session with a TUI login manager
               # command = "$HOME/.wayland-session"; # start a wayland session directly without a login manager
             };
-            # autologin
-            initial_session = {
-              command = "$HOME/.wayland-session";
-              user = myvars.username;
-            };
           };
         };
       };
 
-      security.pam.services.greetd.enableGnomeKeyring = true;
-    })
-    (mkIf (cfgNiri.enable && cfgWayland.enable) {
-      security.pam.services.swaylock = { };
     })
   ];
 }

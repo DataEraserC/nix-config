@@ -1,8 +1,6 @@
 {
   config,
   pkgs,
-  mylib,
-  nur-DataEraserC,
   ...
 }:
 {
@@ -24,12 +22,8 @@
       '';
       force = true;
     };
-    "fcitx5/conf/pinyin.conf".source =
-      mylib.mklinkRelativeToRoot config "home/linux/gui/base/fcitx5/pinyin.conf";
-    "fcitx5/conf/cloudpinyin.conf".source =
-      mylib.mklinkRelativeToRoot config "home/linux/gui/base/fcitx5/cloudpinyin.conf";
     "mozc/config1.db".source =
-      mylib.mklinkRelativeToRoot config "home/linux/gui/base/fcitx5/mozc-config1.db";
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/home/linux/gui/base/fcitx5/mozc-config1.db";
   };
 
   i18n.inputMethod = {
@@ -51,15 +45,6 @@
 
       # Korean
       fcitx5-hangul
-
-      # Chinese
-      qt6Packages.fcitx5-chinese-addons # we use rime instead
-
-      # Chinese Word Dictionaries
-      fcitx5-material-color
-      fcitx5-pinyin-moegirl
-      fcitx5-pinyin-zhwiki
-      nur-DataEraserC.packages.${pkgs.system}.fcitx5-pinyin-CustomPinyinDictionary
     ];
   };
 }

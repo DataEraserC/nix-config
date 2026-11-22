@@ -8,7 +8,6 @@
     enableBashIntegration = true;
     enableNushellIntegration = true;
     shellWrapperName = "yy";
-    enableFishIntegration = true;
     settings = {
       mgr = {
         show_hidden = true;

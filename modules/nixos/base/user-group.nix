@@ -35,7 +35,7 @@
 
   users.users."${myvars.username}" = {
     # we have to use initialHashedPassword here when using tmpfs for /
-    inherit (myvars) initialHashedPassword hashedPassword;
+    inherit (myvars) initialHashedPassword;
     home = "/home/${myvars.username}";
     isNormalUser = true;
     extraGroups = [
@@ -46,13 +46,6 @@
       "wireshark"
       "adbusers" # android debugging
       "fileshare"
-
-      # fork-owned services below; each group is declared by its own module
-      # and is a no-op on hosts where that module is disabled
-      "warp"
-      "ollama"
-      "open-webui"
-      "vboxusers"
     ];
   };
 

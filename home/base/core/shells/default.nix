@@ -10,7 +10,4 @@
     enable = true;
     configFile.source = ./config.nu;
   };
-  programs.fish = {
-    enable = true;
-  };
 }

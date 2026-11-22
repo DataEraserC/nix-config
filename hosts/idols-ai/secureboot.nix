@@ -1,6 +1,5 @@
 {
   pkgs,
-  pkgs-stable,
   lib,
   lanzaboote,
   ...
@@ -21,8 +20,6 @@
   environment.systemPackages = [
     # For debugging and troubleshooting Secure Boot.
     pkgs.sbctl
-    pkgs-stable.efitools
-    pkgs.efibootmgr
   ];
 
   # Lanzaboote replaces the systemd-boot module. NixOS's generated

@@ -1,5 +1,3 @@
-> **Fork-specific rules**: This repository is a DataEraserC fork of [ryan4yin/nix-config](https://github.com/ryan4yin/nix-config). Fork-specific rules (AI contribution attribution, etc.) are in [global-rules_downstream.md](./global-rules_downstream.md). This file preserves the upstream original content to minimize merge conflicts.
-
 # Global rules and skills evaluation
 
 Use these scenarios after changing `agents/global-rules.md` or a custom skill in `agents/skills/`,

@@ -1,12 +1,10 @@
-{ pkgs, pkgs-stable, ... }:
+{ pkgs, ... }:
 {
   home.packages =
     with pkgs;
     (lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [
       # https://joplinapp.org/help/
-      # joplin # joplin-cli
+      joplin # joplin-cli
       # joplin-desktop
-      # anytype
-      pkgs-stable.logseq
     ]);
 }

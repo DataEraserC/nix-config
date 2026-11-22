@@ -18,9 +18,7 @@ let
     nixos-modules =
       (map mylib.relativeToRoot [
         # common
-        "secrets/options.nix"
-        "secrets/nixos_agenix.nix"
-        "secrets/nixos_sopsnix.nix"
+        "secrets/nixos.nix"
         "modules/nixos/desktop.nix"
         # host specific
         "hosts/idols-${name}"
@@ -35,119 +33,32 @@ let
           modules.secrets.desktop.enable = true;
           modules.secrets.preservation.enable = true;
           modules.desktop.gaming.enable = true;
-          modules.desktop.appcast.enable = true;
-          modules.dsh.enable = true;
-          modules.vscode-server.enable = true;
-        }
-        # daeuniverse (dae/daed) modules are imported by modules/nixos/base/custom/network/dae.nix
-        inputs.chaotic.nixosModules.default
-        {
-          modules.outOfStoreSymlink = {
-            enable = true;
-            paths = {
-              configPath = "/home/nixos/nix-config";
-              wallpaperPath = "/home/nixos/Documents/code/wallpapers";
-              passwordStorePath = "/home/nixos/nix-config/secrets/PasswordStore";
-              # ACB 的 harnesses / Lua 示例：可写，改完重启对应单元生效；
-              # 指向开发仓库根，而不是只读的 flake store。
-              #
-              # 2026-11-17：原值指向 qq-bridge-fork/.agents/worktrees/qqab-arch，
-              # 那个多 worktree 目录已被删除（收敛成单一 clone）。路径失效后
-              # systemd 的 `ln -sfnT` 建出一个断链，opencode 插件加载报
-              # ENOENT、桥那边永远是 "no connection attempt"，症状是
-              # opencode 组件 healthy 但 harness 依赖 down。
-              # 换仓库时这个值必须跟着改，它不会自己跟随 flake input。
-              agentChatBridge = "/home/nixos/Documents/code/AgentChatBridge";
-            };
-          };
+          modules.desktop.canokey.enable = true;
+          # Native mihomo core + local web dashboard instead of the Clash Verge
+          # GUI; its config is ~/.config/mihomo/config.yaml (out of the store).
+          modules.networking.mihomo.enable = true;
         }
       ];
-    home-modules =
-      map mylib.relativeToRoot [
-        "home/hosts/linux/idols-${name}.nix"
-      ]
-      ++ [
-        {
-          modules.outOfStoreSymlink = {
-            enable = true;
-            paths = {
-              configPath = "/home/nixos/nix-config";
-              wallpaperPath = "/home/nixos/Documents/code/wallpapers";
-              passwordStorePath = "/home/nixos/nix-config/secrets/PasswordStore";
-            };
-          };
-          modules.desktop.gaming.enable = true;
-          # modules.desktop.canokey.enable = true;
-          # # Native mihomo core + local web dashboard instead of the Clash Verge
-          # # GUI; its config is ~/.config/mihomo/config.yaml (out of the store).
-          # modules.networking.mihomo.enable = true;
-        }
-      ];
+    home-modules = map mylib.relativeToRoot [
+      "home/hosts/linux/idols-${name}.nix"
+    ];
   };
 
   modules-niri = {
     nixos-modules = [
-      {
-        programs.niri.enable = true;
-        modules.desktop.niri.enable = true;
-      }
+      { programs.niri.enable = true; }
     ]
     ++ base-modules.nixos-modules;
-    home-modules = [
-      { modules.desktop.niri.enable = true; }
-    ]
-    ++ base-modules.home-modules;
+    home-modules = base-modules.home-modules;
   };
-
-  modules-gnome-wayland = {
-    nixos-modules = [
-      {
-        modules.desktop.fonts.enable = true;
-        modules.desktop.wayland.enable = true;
-        modules.secrets.desktop.enable = true;
-        modules.secrets.preservation.enable = true;
-        modules.desktop.gnome-wayland.enable = true;
-      }
-    ]
-    ++ base-modules.nixos-modules;
-    home-modules = [
-      { modules.desktop.gnome-wayland.enable = true; }
-    ]
-    ++ base-modules.home-modules;
-  };
-  modules-kde-wayland = {
-    nixos-modules = [
-      {
-        modules.desktop.fonts.enable = true;
-        modules.desktop.wayland.enable = true;
-        modules.secrets.desktop.enable = true;
-        modules.secrets.preservation.enable = true;
-        modules.desktop.kde-wayland.enable = true;
-      }
-    ]
-    ++ base-modules.nixos-modules;
-    home-modules = [
-      { modules.desktop.kde-wayland.enable = true; }
-    ]
-    ++ base-modules.home-modules;
-  };
-
 in
 {
   nixosConfigurations = {
-    # with gnome-wayland window manager
-    "${name}-gnome-wayland" = mylib.nixosSystem (modules-gnome-wayland // args);
-    # with kde-wayland window manager
-    "${name}-kde-wayland" = mylib.nixosSystem (modules-kde-wayland // args);
     "${name}-niri" = mylib.nixosSystem (modules-niri // args);
   };
 
   # generate iso image for hosts with desktop environment
   packages = {
-    "${name}-gnome-wayland" =
-      inputs.self.nixosConfigurations."${name}-gnome-wayland".config.system.build.images.iso;
-    "${name}-kde-wayland" =
-      inputs.self.nixosConfigurations."${name}-kde-wayland".config.system.build.images.iso;
     "${name}-niri" = inputs.self.nixosConfigurations."${name}-niri".config.system.build.images.iso;
   };
 }

@@ -629,7 +629,6 @@ radius = 10
 dim = 75
 edge = 'hard'
 shake = false
-enabled = false
 
 [hints]
 builtins = 'all'

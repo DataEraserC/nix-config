@@ -18,7 +18,7 @@
     let
       sshUser = myvars.username;
       # ssh key's path on local machine; a decrypted secret AI agents must not read
-      sshKey = "/etc/agenix/idols-ai_id_ed25519";
+      sshKey = "/etc/agenix/ssh-key-romantic";
       systems = [
         # native arch
         "x86_64-linux"

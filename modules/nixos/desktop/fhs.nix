@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ pkgs, ... }:
 {
   # FHS environment, flatpak, appImage, etc.
   environment.systemPackages = [
@@ -20,11 +20,6 @@
     )
   ];
 
-  programs.appimage = {
-    enable = true;
-    binfmt = lib.mkDefault true;
-  };
-
   # https://github.com/Mic92/nix-ld
   #
   # nix-ld will install itself at `/lib64/ld-linux-x86-64.so.2` so that
@@ -45,11 +40,9 @@
   # You can overwrite `NIX_LD_LIBRARY_PATH` in the environment where you run the non-NixOS binaries to customize the
   # search path for shared libraries.
   programs.nix-ld = {
-    enable = lib.mkDefault false;
+    enable = true;
     libraries = with pkgs; [
       stdenv.cc.cc
     ];
   };
-  # https://flatpak.org/setup/NixOS
-  # services.flatpak.enable = true;
 }

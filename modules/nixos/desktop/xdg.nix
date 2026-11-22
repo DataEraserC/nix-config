@@ -31,7 +31,7 @@
   xdg.portal = {
     enable = true;
 
-    config = lib.mkDefault {
+    config = {
       common = {
         # Use xdg-desktop-portal-gtk for every portal interface...
         default = [

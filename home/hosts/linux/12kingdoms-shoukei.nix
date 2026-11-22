@@ -1,7 +1,7 @@
-{ config, mylib, ... }:
+{ config, ... }:
 let
   hostName = "shoukei"; # Define your hostname.
-  mkSymlink = mylib.mklinkRelativeToRoot;
+  mkSymlink = config.lib.file.mkOutOfStoreSymlink;
 in
 {
   imports = [
@@ -18,14 +18,13 @@ in
 
   # Laptop defaults: backlight 3 min, screen off 6 min, lock 20 min.
   modules.desktop.hypridle = {
-    enable = true;
     keyboardBacklightTimeout = 180;
     screenOffTimeout = 360;
     lockTimeout = 1200;
   };
 
   xdg.configFile."niri/niri-hardware.kdl".source =
-    mkSymlink config "hosts/12kingdoms-shoukei/niri-hardware.kdl";
+    mkSymlink "${config.home.homeDirectory}/nix-config/hosts/12kingdoms-shoukei/niri-hardware.kdl";
 
   # Host-specific Noctalia config; sorts after the shared config.toml, so it can
   # override the shared baseline.

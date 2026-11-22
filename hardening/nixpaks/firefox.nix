@@ -9,7 +9,6 @@
   mkNixPak,
   buildEnv,
   makeDesktopItem,
-  passwordStore,
   ...
 }:
 
@@ -25,7 +24,6 @@ let
       {
         app = {
           package = firefox;
-          # package = firefox-nightly.packages.${pkgs.system}.firefox-nightly-bin;
           binPath = "bin/firefox";
         };
         flatpak.appId = appId;
@@ -70,7 +68,7 @@ let
             # ================ for browserpass extension ===============================
             "/etc/gnupg"
             (sloth.concat' sloth.homeDir "/.gnupg") # gpg's config
-            passwordStore # my secrets
+            (sloth.concat' sloth.homeDir "/.local/share/password-store") # my secrets
             (sloth.concat' sloth.runtimeDir "/gnupg") # for access gpg-agent socket
 
             # Match the host's default-app associations and XDG user dirs.

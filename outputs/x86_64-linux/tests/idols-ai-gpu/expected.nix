@@ -7,6 +7,4 @@
   sunshineUsesWlrCapture = "wlr";
   sunshineStartsAfterNiri = true;
   sunshineWaitsForNiriOutput = true;
-  gnomeSunshineDoesNotStartAfterNiri = true;
-  gnomeSunshineDoesNotWaitForNiriOutput = true;
 }

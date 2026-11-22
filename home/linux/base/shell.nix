@@ -29,23 +29,4 @@ rec {
     # enable scrolling in git diff
     DELTA_PAGER = "less -R";
   };
-
-  # gpg-agent can only learn a caller's terminal through GPG_TTY. SSH login
-  # shells source this file via the generated ~/.profile; local GUI callers
-  # keep the default Qt pinentry.
-  home.sessionVariablesExtra = ''
-    if [ -n "''${SSH_TTY:-}" ] || [ -n "''${SSH_CONNECTION:-}" ]; then
-      if [ -t 0 ] || [ -t 1 ]; then
-        _gpg_tty=$(tty 2>/dev/null) || _gpg_tty=
-        if [ -c "''${_gpg_tty:-}" ]; then
-          export GPG_TTY="$_gpg_tty"
-          export PINENTRY_USER_DATA="ssh:$_gpg_tty"
-        else
-          unset GPG_TTY
-          unset PINENTRY_USER_DATA
-        fi
-        unset _gpg_tty
-      fi
-    fi
-  '';
 }

@@ -40,13 +40,7 @@
       plugins = with pkgs; [
         thunar-archive-plugin
         thunar-volman
-        thunar-media-tags-plugin
       ];
     };
-    # Terminal fix:
-    # In Thunar Edit>Configure custom actions... then edit "Open Terminal Here"
-    # wezterm start --cwd %f
   };
-
-  documentation.man.cache.enable = false;
 }

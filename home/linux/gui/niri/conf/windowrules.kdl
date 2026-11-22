@@ -16,7 +16,7 @@ window-rule {
 // the focus ring colour is what names them: global cyan = ghostty, pink = kitty.
 window-rule {
     match app-id="kitty"
-    // open-on-workspace "1terminal"
+    open-on-workspace "1terminal"
     open-maximized true
     focus-ring {
         active-color "#f5c2e7" // catppuccin pink
@@ -24,24 +24,24 @@ window-rule {
 }
 window-rule {
     match app-id="com.mitchellh.ghostty"
-    // open-on-workspace "1terminal"
+    open-on-workspace "1terminal"
     open-maximized true
 }
 
 // Web browsers - open in workspace 2
 window-rule {
     match app-id="firefox"
-    // open-on-workspace "2browser"
+    open-on-workspace "2browser"
     open-maximized true
 }
 window-rule {
     match app-id="google-chrome"
-    // open-on-workspace "2browser"
+    open-on-workspace "2browser"
     open-maximized true
 }
 window-rule {
     match app-id="chromium-browser"
-    // open-on-workspace "2browser"
+    open-on-workspace "2browser"
     open-maximized true
 }
 
@@ -49,15 +49,15 @@ window-rule {
 window-rule {
     // match app-id="org.telegram.desktop"
     match title="^Telegram"
-    // open-on-workspace "3chat"
+    open-on-workspace "3chat"
 }
 window-rule {
     match app-id="wechat"
-    // open-on-workspace "3chat"
+    open-on-workspace "3chat"
 }
 window-rule {
     match app-id="QQ"
-    // open-on-workspace "3chat"
+    open-on-workspace "3chat"
 }
 
 // Entertainment applications - open in workspace 4
@@ -67,12 +67,12 @@ window-rule {
     // `open-maximized`, which fights their fullscreen rule. Anchor it so this
     // only affects the Steam client window itself.
     match app-id="^steam$"
-    // open-on-workspace "4entertainment"
+    open-on-workspace "4entertainment"
     open-maximized true
 }
 window-rule {
     match app-id="steam_app_default"
-    // open-on-workspace "4entertainment"
+    open-on-workspace "4entertainment"
 }
 window-rule {
     // Games launched through umu/Proton -- including the launchers the
@@ -95,75 +95,67 @@ window-rule {
 }
 window-rule {
     match app-id="heroic"
-    // open-on-workspace "4entertainment"
-}
-window-rule {
-    match app-id="net.lutris.Lutris"
-    // open-on-workspace "4entertainment"
-}
-window-rule {
-    match app-id="com.vysp3r.ProtonPlus"
-    // open-on-workspace "4entertainment"
+    open-on-workspace "4entertainment"
 }
 window-rule {
     // Run anime games on Linux
     match app-id="^moe.launcher"
-    // open-on-workspace "4entertainment"
+    open-on-workspace "4entertainment"
 }
 window-rule {
     // All *.exe (Windows applications)
     match app-id=".exe$"
-    // open-on-workspace "4entertainment"
+    open-on-workspace "4entertainment"
 }
 window-rule {
     match app-id="^mpv$"
-    // open-on-workspace "4entertainment"
+    open-on-workspace "4entertainment"
 }
 
 // Utility applications - open in workspace 5
 window-rule {
     match app-id="com.github.johnfactotum.Foliate"
-    // open-on-workspace "5utility"
+    open-on-workspace "5utility"
 }
 window-rule {
     match app-id="thunar"
-    // open-on-workspace "5utility"
+    open-on-workspace "5utility"
 }
 window-rule {
     match app-id="(?i)^clash-verge$"
     match app-id="^[.]clash-verge-wrapped$"
-    // open-on-workspace "5utility"
+    open-on-workspace "5utility"
 }
 window-rule {
     match app-id="^org[.]kde[.]easyeffects$"
-    // open-on-workspace "5utility"
+    open-on-workspace "5utility"
 }
 
 // Other applications - open in workspace 0
 window-rule {
     match app-id="BambuStudio"
-    // open-on-workspace "0other"
+    open-on-workspace "0other"
 }
 window-rule {
     match app-id="OrcaSlicer"
-    // open-on-workspace "0other"
+    open-on-workspace "0other"
 }
 window-rule {
     match app-id="Zoom Workplace"
     // Zoom Home Page
     match title="^(Zoom Workplace)( - Free account)?$"
-    // open-on-workspace "0other"
+    open-on-workspace "0other"
 }
 window-rule {
     match app-id="Zoom Workplace"
     // Zoom - other windows
     exclude title="^(Zoom Workplace)( - Free account)?$"
-    // open-on-workspace "0other"
+    open-on-workspace "0other"
     open-floating true
 }
 window-rule {
     match app-id="^Zoom$"
-    // open-on-workspace "0other"
+    open-on-workspace "0other"
 }
 window-rule {
     match app-id="^Zoom$" title="^as_toolbar$"
@@ -183,34 +175,3 @@ window-rule {
     open-focused false
     default-floating-position x=0 y=0 relative-to="bottom-right"
 }
-
-// Mayuri's rules
-
-// Steam fullscreen rule
-window-rule {
-    match app-id="^steam$" title="^Steam 大屏幕模式$"
-    match app-id=".*Minecraft.*"
-    open-fullscreen true
-}
-
-// Scrcpy floating rule
-window-rule {
-    match app-id=".*scrcpy.*"
-    open-floating true
-}
-
-// DropDown Apps rules
-window-rule {
-    match app-id="^dropdown.*$"
-    open-floating true
-    default-floating-position x=0 y=0 relative-to="top-left"
-    default-window-height { proportion 0.5; }
-    default-column-width { proportion 1.0; }
-}
-
-window-rule {
-    match app-id="^dropdown.*$" is-focused=false
-    opacity 0.5
-}
-
-workspace "ndrop"

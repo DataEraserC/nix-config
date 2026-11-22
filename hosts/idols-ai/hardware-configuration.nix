@@ -5,85 +5,13 @@
   config,
   lib,
   pkgs,
-  pkgs-latest,
-  nur-DataEraserC,
-  myvars,
   modulesPath,
   ...
 }:
-let
-
-  # Shared function for mounting key devices
-  mountKeyDeviceFunction = ''
-    mount_key_device() {
-      echo "Attempting to mount key device..."
-      mkdir -m 0755 -p /key
-
-      sleep 2 # To make sure the usb key has been loaded
-
-      # List of UUIDs for fallback USB key devices
-      key_device_uuids=(
-        "12CE-A600"
-        "D7AB-22CE"
-        # Add more UUIDs here as needed
-      )
-
-      # Try to mount each key device UUID in order
-      for uuid in "''${key_device_uuids[@]}"; do
-        # Use findfs if available, otherwise fall back to /dev/disk/by-uuid path
-        if command -v findfs >/dev/null 2>&1; then
-          echo "Using findfs to find device with UUID $uuid"
-          device_path=$(findfs "UUID=$uuid" 2>/dev/null)
-          if [ $? -ne 0 ] || [ -z "$device_path" ]; then
-            echo "Failed to find device with UUID $uuid using findfs"
-            # Try direct path as fallback
-            device_path="/dev/disk/by-uuid/$uuid"
-          fi
-        else
-          echo "findfs not available, falling back to /dev/disk/by-uuid path"
-          device_path="/dev/disk/by-uuid/$uuid"
-        fi
-        
-        # Check if device exists and is accessible
-        if [ -e "$device_path" ] && [ -r "$device_path" ]; then
-          echo "Found device $device_path for UUID $uuid"
-          if mount -n -t vfat -o ro "$device_path" /key; then
-            echo "Successfully mounted key device with UUID $uuid"
-            
-            # Check if the key file exists
-            if [ ! -f "/key/luks/root-part.key" ]; then
-              echo "WARNING: Key file '/key/luks/root-part.key' not found on mounted device"
-              umount /key
-              continue
-            fi
-            
-            echo "Key file found on device with UUID $uuid"
-            return 0
-          else
-            echo "Failed to mount key device with UUID $uuid at $device_path"
-          fi
-        else
-          echo "Device $device_path for UUID $uuid does not exist or is not accessible"
-        fi
-      done
-
-      echo "Failed to mount any key device with valid key file"
-      return 1
-    }
-  '';
-in
 {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
-    nur-DataEraserC.nixosModules.aw88399-legion-audio
   ];
-
-  hardware.dataEraserc.aw88399-legion-audio = {
-    enable = true;
-    patchVersion = null;
-    patchPackage = nur-DataEraserC.packages.${pkgs.system}.aw88399-legion-audio-patch;
-    firmwarePackage = nur-DataEraserC.packages.${pkgs.system}.aw88399-legion-firmware;
-  };
 
   boot.kernelParams = [
     # === NVMe power management (relaxed 2026-10) ===
@@ -112,42 +40,9 @@ in
   # depending on how you configured your disk mounts, change this to /boot or /boot/efi.
   boot.loader.efi.efiSysMountPoint = "/boot";
   boot.loader.systemd-boot.enable = true;
-  # TODO: add boot entity for windows
-  # NOTE: https://github.com/nix-community/lanzaboote/issues/427#issuecomment-2629899407
-  boot.loader.systemd-boot.edk2-uefi-shell.enable = true;
-  boot.loader.systemd-boot.edk2-uefi-shell.sortKey = "z1";
-  boot.loader.systemd-boot.windows = {
-    "nvme1n1p1" = {
-      title = "Windows 11";
-      efiDeviceHandle = "HD1b";
-    };
-  };
-  # NOTE: manual configuration example
-  # boot.loader.systemd-boot.extraEntries."windows.conf" = ''
-  #   title     Windows
-  #   sort-key  0
-  #   efi       /shellx64.efi
-  #   options   -nointerrupt -nomap -noversion windows.nsh
-  # '';
-
-  # boot.loader.systemd-boot.extraFiles."windows.nsh" = (
-  #   pkgs.writeText "windows.nsh" ''
-  #     HD1b:EFI\Microsoft\Boot\Bootmgfw.efi
-  #   ''
-  # );
 
   # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/top-level/linux-kernels.nix
-  boot.kernelPackages = pkgs.linuxPackages_7_2; # 6.19 works not well with nvidia driver
-  # boot.kernelPackages = pkgs.linuxPackages_latest;
-  # boot.kernelPackages = pkgs.linuxPackages_xanmod_latest;
-  # boot.kernelPackages = pkgs.linuxPackages_cachyos;
-  # services.scx.enable = true;
-  # boot.kernelPackages = pkgs.linuxPackagesFor (pkgs.linux_xanmod.override {
-  #   structuredExtraConfig = with lib.kernel; {
-  #     DMABUF_HEAPS = yes;
-  #     DMABUF_HEAPS_SYSTEM = yes;
-  #   };
-  # });
+  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   boot.initrd.availableKernelModules = [
     "xhci_pci"
@@ -156,37 +51,6 @@ in
     "usbhid"
     "usb_storage"
     "sd_mod"
-    "virtio_pci"
-    "virtio_blk"
-    "virtio_scsi"
-  ];
-  boot.initrd.kernelModules = [
-    "uas"
-    "usbcore"
-    "usb_storage"
-    "vfat"
-    "nls_cp437"
-    "nls_iso8859_1"
-    "dm_crypt"
-    "btrfs"
-  ];
-  boot.kernelModules = [
-    # kvm
-    "kvm-intel" # kvm virtualization support
-    #"acpi_call"
-    "usb_storage"
-  ];
-  boot.extraModprobeConfig =
-    # for intel cpu
-    ''
-      options intel_iommu=on
-      options iommu=pt
-      options kvm_intel nested=1
-      options kvm_intel emulate_invalid_guest_state=0
-      options kvm ignore_msrs=1
-    '';
-  boot.extraModulePackages = [
-    # config.boot.kernelPackages.acpi_call.out
   ];
   # clear /tmp on boot to get a stateless /tmp directory.
   boot.tmp.cleanOnBoot = true;
@@ -213,24 +77,6 @@ in
 
   # LUKS initrd, all fileSystems (/, /boot, /btr_pool, /nix, /persistent, /snapshots, /tmp, /swap)
   # and swap (including /swap/swapfile bind and swapDevices) are managed by disko (disko-fs.nix).
-
-  # mount windows disk
-  # ntfs3g instead of "ntfs" (kernel ntfs3 driver): uses the ntfs-3g FUSE
-  # implementation for better compatibility, esp. with hibernated/dirty volumes.
-  fileSystems."/run/media/${myvars.username}/windows" = {
-    device = "/dev/disk/by-uuid/7A66017F66013D7F";
-    fsType = "ntfs-3g";
-  };
-
-  features.lenovo-legion = {
-    enable = true;
-    enhanceMode = true;
-    installKernelModule = false;
-  };
-  features.intel-gpu-tools = {
-    enable = true;
-    enhanceMode = true;
-  };
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
   # (the default) this is the recommended approach. When using systemd-networkd it's

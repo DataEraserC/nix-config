@@ -1,16 +1,14 @@
-# WARN: do not use this file
-# Use nixos_agenix.nix or nixos_sopsnix.nix
 {
   lib,
   config,
   pkgs,
   agenix,
+  mysecrets,
   myvars,
   ...
-}@args:
+}:
 with lib;
 let
-  mysecrets = "${args.mysecrets}/agenix";
   cfg = config.modules.secrets;
 
   enabledServerSecrets =
@@ -32,10 +30,6 @@ let
   user_readable = {
     mode = "0500";
     owner = myvars.username;
-  };
-  MkPermAttr = username: mode: {
-    mode = mode;
-    owner = username;
   };
 in
 {
@@ -87,8 +81,7 @@ in
       assertions = [
         {
           # This expression should be true to pass the assertion
-          # WARNING: we bypass this on my secret bcs we only have a computer without surrounding facilities
-          assertion = !(cfg.desktop.enable && enabledServerSecrets) || true;
+          assertion = !(cfg.desktop.enable && enabledServerSecrets);
           message = "Enable either desktop or server's secrets, not both!";
         }
       ];
@@ -101,8 +94,8 @@ in
         # ---------------------------------------------
 
         # .age means the decrypted file is still encrypted by age(via a passphrase)
-        "nix-gpg-subkeys.priv.age" = {
-          file = "${mysecrets}/desktop/nix-gpg-subkeys-2024-01-27.priv.age.age";
+        "ryan4yin-gpg-subkeys.priv.age" = {
+          file = "${mysecrets}/desktop/ryan4yin-gpg-subkeys-2024-01-27.priv.age.age";
         }
         // noaccess;
 
@@ -122,164 +115,11 @@ in
         }
         // user_readable;
 
-        "gluttony" = {
-          file = "${mysecrets}/gluttony.age";
-        }
-        // user_readable;
-
-        "juliet-age" = {
-          file = "${mysecrets}/juliet-age.age";
-        }
-        // user_readable;
-
-        "idols-ai_id_rsa" = {
-          file = "${mysecrets}/idols-ai_id_rsa.age";
-        }
-        // user_readable;
-
-        "idols-ai_id_ed25519" = {
-          file = "${mysecrets}/idols-ai_id_ed25519.age";
-        }
-        // user_readable;
-
-        # alias-for-work
-        "alias-for-work.nushell" = {
-          file = "${mysecrets}/alias-for-work.nushell.age";
-        }
-        // user_readable;
-
         # work git identity, symlinked to ~/work/.gitconfig by home-manager
         "work-gitconfig" = {
           file = "${mysecrets}/desktop/work-gitconfig.age";
         }
         // user_readable;
-        "alias-for-work.bash" = {
-          file = "${mysecrets}/alias-for-work.bash.age";
-        }
-        // user_readable;
-        # I do not have server for router request so I use dae locally
-        "clash.dae" = {
-          file = "${mysecrets}/clash.dae.age";
-        }
-        // high_security;
-        "dae.dae" = {
-          file = "${mysecrets}/dae.dae.age";
-        }
-        // high_security;
-        "dae-subscription.dae" = {
-          file = "${mysecrets}/server/dae-subscription.dae.age";
-        }
-        // high_security;
-        # bcrypt hash line for the Caddy Basic Auth in front of Sub-Store
-        # (never the plaintext password); readable by root and the caddy group.
-        "sub-store.caddy" = mkIf config.services.caddy.enable {
-          file = "${mysecrets}/server/sub-store.caddy.age";
-          mode = "0440";
-          owner = "root";
-          group = "caddy";
-        };
-        "cpolar.yml" = {
-          file = "${mysecrets}/cpolar.yml.age";
-        }
-        // (MkPermAttr "cpolar" "0700");
-        # cpolar login credentials, only readable by the cpolar user (and root).
-        "cpolar-status.env" = {
-          file = "${mysecrets}/cpolar-status.env.age";
-          mode = "0700";
-          owner = "cpolar";
-          group = "cpolar";
-        };
-        # host-readable ntfy topic, replaces the ntfy_topic in alias-for-work.bash.
-        "ntfy-topic.env" = {
-          file = "${mysecrets}/ntfy-topic.env.age";
-          mode = "0644";
-          owner = myvars.username;
-          group = myvars.username;
-        };
-        # ACB 的静态密钥：模型网关 key、控制台/snowluma token、opencode 密码。
-        # 只给运行用户读；config.toml 里写 ${...} 占位符。
-        "acb.env" = {
-          file = "${mysecrets}/acb.env.age";
-          mode = "0400";
-          owner = myvars.username;
-          group = myvars.username;
-        };
-        # ACB 带外通知（ntfy）的 topic，仅运行用户可读；由
-        # modules.acb.notifications.topicSecret 挂进 acb-bridge 的 EnvironmentFile。
-        "ntfy-acb-topic.env" = {
-          file = "${mysecrets}/ntfy-acb-topic.env.age";
-          mode = "0400";
-          owner = myvars.username;
-          group = myvars.username;
-        };
-        "alist-jwt" = {
-          file = "${mysecrets}/alist-jwt.age";
-        }
-        // (MkPermAttr "alist" "0700");
-        "frp_aliyun2025.toml" = {
-          file = "${mysecrets}/frp_aliyun2025.toml.age";
-        }
-        // high_security;
-        "easytier-env" = {
-          file = "${mysecrets}/easytier.env.age";
-        }
-        // high_security;
-        # gost SOCKS5 proxy credentials, one line of "<username> <password>"
-        # (space separated); read by the gost auther and chain connector of
-        # modules.gost-proxy (both the listener and the chained forwarder).
-        "gost-proxy.auth" = mkIf config.modules.gost-proxy.enable (
-          { file = "${mysecrets}/gost-proxy.auth.age"; } // high_security
-        );
-        "ecc-ca.key" = {
-          file = "${mysecrets}/ecc-ca.key.age";
-        }
-        // high_security;
-        "ecc-server.key" = {
-          file = "${mysecrets}/ecc-server.key.age";
-        }
-        // high_security;
-        "cliproxyapi-management.key" = {
-          file = "${mysecrets}/cliproxyapi-management.key.age";
-          mode = "0600";
-          owner = "cliproxyapi";
-          group = "cliproxyapi";
-        };
-        "m365-copilot2api-admin-password" = {
-          file = "${mysecrets}/m365-copilot2api-admin-password.age";
-          mode = "0600";
-          owner = "m365-copilot2api";
-          group = "m365-copilot2api";
-        };
-        "m365-copilot2api-master-key" = {
-          file = "${mysecrets}/m365-copilot2api-master-key.age";
-          mode = "0600";
-          owner = "m365-copilot2api";
-          group = "m365-copilot2api";
-        };
-        "opencode2api-webui-password" = {
-          file = "${mysecrets}/opencode2api-webui-password.age";
-          mode = "0600";
-          owner = "opencode2api";
-          group = "opencode2api";
-        };
-        "agent2api-admin-password" = mkIf config.modules.agent2api.enable {
-          file = "${mysecrets}/agent2api-admin-password.age";
-          mode = "0600";
-          owner = "agent2api";
-          group = "agent2api";
-        };
-        "new-api-session-secret" = {
-          file = "${mysecrets}/new-api-session-secret.age";
-          mode = "0600";
-          owner = "new-api";
-          group = "new-api";
-        };
-        "workbuddy2api-api-key" = mkIf config.modules.workbuddy2api.enable {
-          file = "${mysecrets}/workbuddy2api-api-key.age";
-          mode = "0600";
-          owner = "workbuddy2api";
-          group = "workbuddy2api";
-        };
       };
 
       # place secrets in /etc/
@@ -294,56 +134,9 @@ in
           user = myvars.username;
         };
 
-        "agenix/gluttony" = {
-          source = config.age.secrets."gluttony".path;
-          mode = "0600";
-          user = myvars.username;
-        };
-
-        "agenix/juliet-age" = {
-          source = config.age.secrets."juliet-age".path;
-          mode = "0600";
-          user = myvars.username;
-        };
-
-        "agenix/idols-ai_id_rsa" = {
-          source = config.age.secrets."idols-ai_id_rsa".path;
-          mode = "0600";
-          user = myvars.username;
-        };
-
-        "agenix/idols-ai_id_ed25519" = {
-          source = config.age.secrets."idols-ai_id_ed25519".path;
-          mode = "0600";
-          user = myvars.username;
-        };
-
-        "agenix/nix-gpg-subkeys.priv.age" = {
-          source = config.age.secrets."nix-gpg-subkeys.priv.age".path;
+        "agenix/ryan4yin-gpg-subkeys.priv.age" = {
+          source = config.age.secrets."ryan4yin-gpg-subkeys.priv.age".path;
           mode = "0000";
-        };
-
-        # The following secrets are used by home-manager modules
-        # So we need to make then readable by the user
-        "agenix/alias-for-work.nushell" = {
-          source = config.age.secrets."alias-for-work.nushell".path;
-          mode = "0644"; # both the original file and the symlink should be readable and executable by the user
-        };
-        "agenix/alias-for-work.bash" = {
-          source = config.age.secrets."alias-for-work.bash".path;
-          mode = "0644"; # both the original file and the symlink should be readable and executable by the user
-        };
-        "agenix/cpolar-status.env" = {
-          source = config.age.secrets."cpolar-status.env".path;
-          mode = "0700";
-          user = "cpolar";
-          group = "cpolar";
-        };
-        "agenix/ntfy-topic.env" = {
-          source = config.age.secrets."ntfy-topic.env".path;
-          mode = "0644";
-          user = myvars.username;
-          group = myvars.username;
         };
 
         # Used by a home-manager module, so it must be readable by the user.
@@ -355,15 +148,6 @@ in
           mode = "0400";
           user = myvars.username;
         };
-      };
-    })
-
-    (mkIf cfg.server.network.enable {
-      age.secrets = {
-        "dae-subscription.dae" = {
-          file = "${mysecrets}/server/dae-subscription.dae.age";
-        }
-        // high_security;
       };
     })
 
@@ -431,14 +215,6 @@ in
           mode = "0400";
           owner = "postgres";
         };
-        "cpolar.yml" = {
-          file = "${mysecrets}/cpolar.yml.age";
-        }
-        // (MkPermAttr "cpolar" "0700");
-        "alist-jwt" = {
-          file = "${mysecrets}/alist-jwt.age";
-        }
-        // (MkPermAttr "alist" "0700");
 
         # Cloudflare API token (Zone -> DNS -> Edit on `writefor.fun`) consumed
         # by security.acme (lego) as its environment file for the ACME DNS-01

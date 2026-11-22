@@ -7,13 +7,6 @@
 }:
 {
   home.file.".ssh/romantic.pub".source = "${mysecrets}/public/romantic.pub";
-  home.file.".ssh/gluttony.pub".source = "${mysecrets}/public/gluttony.pub";
-  home.file.".ssh/juliet-age.pub".source = "${mysecrets}/public/juliet-age.pub";
-  home.file.".ssh/idols-ai_id_rsa.pub".source = "${mysecrets}/public/idols-ai_id_rsa.pub";
-  home.file.".ssh/idols-ai_id_ed25519.pub".source = "${mysecrets}/public/idols-ai_id_ed25519.pub";
-  home.file.".ssh/wsl-y9000p2025_id_rsa.pub".source = "${mysecrets}/public/idols-ai_id_rsa.pub";
-  home.file.".ssh/wsl-y9000p2025_id_ed25519.pub".source =
-    "${mysecrets}/public/idols-ai_id_ed25519.pub";
 
   programs.ssh = {
     enable = true;

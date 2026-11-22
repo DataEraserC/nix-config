@@ -1,12 +1,8 @@
 {
   pkgs,
   nix-gaming,
-  aagl,
   config,
   lib,
-  pkgs-unstable-yuzu,
-  suyu,
-  linyaps-flake,
   ...
 }:
 with lib;
@@ -17,12 +13,6 @@ in
   imports = [
     nix-gaming.nixosModules.pipewireLowLatency
     nix-gaming.nixosModules.platformOptimizations
-
-    # run anime games on Linux
-    aagl.nixosModules.default
-
-    # Linyaps
-    # linyaps-flake.nixosModules.linyaps
   ];
 
   options.modules.desktop = {
@@ -98,31 +88,5 @@ in
     #      https://github.com/FeralInteractive/GameMode#apps-with-gamemode-integration
     #      simply running the game will automatically activate GameMode.
     programs.gamemode.enable = true;
-    # Linyaps
-    services.linyaps.enable = true;
-
-    # run anime games on Linux
-    # https://github.com/an-anime-team/
-    networking.mihoyo-telemetry.block = true;
-    environment.systemPackages =
-      with aagl.packages."x86_64-linux";
-      [
-        # anime-game-launcher # Genshin: Impact
-        # honkers-railway-launcher # Honkai: Star Rail
-        # sleepy-launcher # Zenless Zon Zero
-      ]
-      ++
-        # Mayuri Spec
-        (with pkgs; [
-          nix-gaming.packages.${pkgs.system}.osu-lazer-bin
-          # nix-gaming.packages.${pkgs.system}.osu-stable
-          # prismlauncher # A free, open source launcher for Minecraft
-          hmcl # MineCraft Launcher
-          # minecraft # Official MineCraft Launcher
-          # prismlauncher
-
-          #mindustry-wayland
-          #mindustry-server
-        ]);
   };
 }

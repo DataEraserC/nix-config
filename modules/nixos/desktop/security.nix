@@ -1,5 +1,4 @@
 {
-  lib,
   config,
   pkgs,
   ...
@@ -23,11 +22,7 @@
   # login password, causing "Unlock Login Keyring" prompt desyncs.
   # Keep everything in "login" and leave the `default` pointer unset (or
   # pointing at "login").
-  # Only outside the KDE profile: kde-wayland/values/official-config.nix keeps
-  # seahorse off with a plain `programs.seahorse.enable = false`, and on KDE
-  # hosts this mkIf drops the `true` above entirely, so the two definitions
-  # never meet - the KDE profile's `false` stays the sole definition there.
-  programs.seahorse.enable = lib.mkIf (!config.modules.desktop.kde-wayland.enable) true;
+  programs.seahorse.enable = true;
   # The OpenSSH agent remembers private keys for you
   # so that you don’t have to type in passphrases every time you make an SSH connection.
   # Use `ssh-add` to add a key to the agent.
@@ -40,35 +35,10 @@
   # "keyring password").
   security.pam.services.passwd.enableGnomeKeyring = true;
 
-  # gpg agent with pinentry.  SSH callers pass their tty through GnuPG's
-  # PINENTRY_USER_DATA channel (see the Linux shell module); everyone else
-  # keeps the previous Qt dialog.  GPG_TTY stays as a fallback.
+  # gpg agent with pinentry
   programs.gnupg.agent = {
     enable = true;
-    pinentryPackage = pkgs.writeShellApplication {
-      name = "pinentry";
-      runtimeInputs = [
-        pkgs.pinentry-curses
-        pkgs.pinentry-qt
-      ];
-      text = ''
-        user_data="''${PINENTRY_USER_DATA:-}"
-        case "$user_data" in
-          ssh:*)
-            tty="''${user_data#ssh:}"
-            if [ -n "$tty" ] && [ -c "$tty" ]; then
-              exec ${pkgs.pinentry-curses}/bin/pinentry --ttyname="$tty" "$@"
-            fi
-            ;;
-        esac
-
-        gpg_tty="''${GPG_TTY:-}"
-        if [ -n "$gpg_tty" ] && [ -c "$gpg_tty" ]; then
-          exec ${pkgs.pinentry-curses}/bin/pinentry "$@"
-        fi
-        exec ${pkgs.pinentry-qt}/bin/pinentry "$@"
-      '';
-    };
+    pinentryPackage = pkgs.pinentry-qt;
     enableSSHSupport = false;
     settings.default-cache-ttl = 4 * 60 * 60; # 4 hours
   };

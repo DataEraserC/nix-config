@@ -11,8 +11,6 @@
   ###################################################################################
 
   virtualisation = {
-    # Do not use "--restart=always" to create container, or shutdown/reboot will be slow
-    # https://github.com/containers/podman/issues/15284
     podman = {
       enable = true;
       # Create a `docker` alias for podman, to use it as a drop-in replacement
@@ -28,29 +26,6 @@
     # writable, but rootless sessions can fall back to a file driver
     # (k8s-file / json-file), which otherwise grows without limit.
     containers.containersConf.settings.containers.log_size_max = 10 * 1024 * 1024;
-
-    # Containers registries configuration (shared by Docker and Podman)
-    # https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md
-    containers = {
-      registries = {
-        # Unqualified image names (e.g. "nginx") will be searched in these registries in order
-        search = [
-          "docker.io"
-          "quay.io"
-          "ghcr.io"
-          "registry.k8s.io"
-          "mcr.microsoft.com"
-          "gcr.io"
-        ];
-        # Insecure registries (HTTP instead of HTTPS) - add as needed
-        insecure = [ ];
-        # Blocked registries - block any known malicious or unused registries
-        block = [ ];
-      };
-    };
-
-    # Usage: https://wiki.nixos.org/wiki/Waydroid
-    waydroid.enable = true;
   };
 
   # Desktop hosts use rootless podman only: the user is not in the `podman`

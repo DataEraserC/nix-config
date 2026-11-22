@@ -48,13 +48,10 @@
 
       # replace https with ssh
       url = {
-        "ssh://git@github.com/DataEraserC" = {
-          insteadOf = "https://github.com/DataEraserC";
+        "ssh://git@github.com/ryan4yin" = {
+          insteadOf = "https://github.com/ryan4yin";
         };
       };
-      safe.directory = [
-        "/run/media/nixos/windows/"
-      ];
 
       alias = {
         # common aliases

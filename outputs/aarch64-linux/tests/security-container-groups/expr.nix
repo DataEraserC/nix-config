@@ -1,13 +1,12 @@
 {
   lib,
   outputs,
-  myvars,
   ...
 }:
 lib.genAttrs (builtins.attrNames outputs.nixosConfigurations) (
   name:
   let
-    userGroups = outputs.nixosConfigurations.${name}.config.users.users.${myvars.username}.extraGroups;
+    userGroups = outputs.nixosConfigurations.${name}.config.users.users.ryan.extraGroups;
   in
   {
     # Groups that grant root-equivalent or otherwise over-broad access. The

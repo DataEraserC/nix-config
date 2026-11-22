@@ -282,11 +282,10 @@ in
           directory = ".pki";
           mode = "0700";
         }
-        # {
-        #   # symlinked to ${mysecrets}/PasswordStore, no need to preserve
-        #   directory = ".local/share/password-store";
-        #   mode = "0700";
-        # }
+        {
+          directory = ".local/share/password-store";
+          mode = "0700";
+        }
         {
           # gnmome keyrings
           directory = ".local/share/keyrings";
@@ -378,6 +377,15 @@ in
         # Audio
         ".config/pulse"
         ".local/state/wireplumber"
+
+        # go-musicfox - TUI NetEase Cloud Music client
+        # ~/.config/go-musicfox/config.toml is force-managed by Home Manager
+        # (see home/linux/gui/base/go-musicfox/default.nix) and reset on each
+        # rebuild; this keeps the runtime themes/ directory and the app's
+        # between-rebuild config edits.
+        ".config/go-musicfox"
+        ".local/share/go-musicfox" # login cookie + library db
+        ".local/state/go-musicfox" # logs
 
         # Digital Painting
         ".local/share/krita"

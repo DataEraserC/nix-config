@@ -3,9 +3,6 @@
   pkgs-stable,
   pkgs-master,
   pkgs-blender,
-  nur-ryan4yin,
-  nur-DataEraserC,
-  blender-bin,
   ...
 }:
 let
@@ -19,23 +16,16 @@ let
       wrapProgram $out/bin/bambu-studio --set GDK_DPI_SCALE 0.8
     '';
   };
-  my_packages = with pkgs; [
-    gimp
-    # nur-DataEraserC.packages.${pkgs.system}.wechat_dev_tools_bin
-  ];
 in
 {
-  home.packages =
-    with pkgs-stable;
-    [
-      # creative
-      # krita # digital painting
-      # musescore # music notation
-      # pkgs-master.orca-slicer # 3d printer slicer app
-      # bambu-studio # bambu 3d printer slicer app
-      # pkgs-blender.blender # 3d modeling
-    ]
-    ++ my_packages;
+  home.packages = with pkgs-stable; [
+    # creative
+    krita # digital painting
+    musescore # music notation
+    pkgs-master.orca-slicer # 3d printer slicer app
+    bambu-studio # bambu 3d printer slicer app
+    pkgs-blender.blender # 3d modeling
+  ];
 
   programs = {
     # live streaming
