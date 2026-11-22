@@ -406,6 +406,10 @@ routing {
     pname(cmd_lajichang) -> lajichang
     pname(cmd_xxmad) -> xxmad
     pname(cmd_mojie) -> mojie
+    # Downloads get their own semantic marker even though the outbound is the
+    # xxmad group: a distinct pname keeps bulk transfers identifiable and
+    # killable separately from other xxmad-routed traffic.
+    pname(cmd_download) -> xxmad
 
     # Put it in the front to prevent broadcast, multicast and other packets that should be sent to the LAN from being
     # forwarded by the proxy.
