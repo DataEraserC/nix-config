@@ -95,14 +95,6 @@ extend-ignore-re = [
   "aer",
   "AER",
 
-  # gost (GO Simple Tunnel) is the upstream proxy's name; the dictionary wants
-  # "ghost" and the hook rewrites every gost-proxy reference.
-  "gost",
-
-  # gost's authenticator config key is `auther`, not `author`; the hook rewrites
-  # it and silently breaks the proxy config.
-  "auther",
-
   # DataEraserC
   "osu-lazer-bin",
   "shotcut",
