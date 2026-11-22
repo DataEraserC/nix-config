@@ -773,6 +773,31 @@ rec {
     # wired from the row the same way. port / frontendPort document what
     # idols-ai deploys for the catalog - the module defaults apply, and dae
     # pins the backend on 127.0.0.1:24500.
+    # Local Ollama inference API (modules.ollama reads this row; the cuda flag
+    # picks pkgs.ollama-cuda on NVIDIA hosts)
+    ollama = {
+      hosts = {
+        idols-ai = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 11434;
+          cuda = true;
+        };
+        wsl-y9000p2025 = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 11434;
+          cuda = false;
+        };
+      };
+      catalog = {
+        tags = [
+          "ai"
+        ];
+        note = "ollama api";
+      };
+    };
+
     sub-store = {
       hosts = {
         idols-ai = {

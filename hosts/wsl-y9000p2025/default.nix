@@ -81,7 +81,7 @@ rec {
 
   # EasyTier decentralized P2P VPN
   modules.easytier.enable = false;
-  modules.ollama.enable = true;
+  modules.ollama.hostKey = "wsl-y9000p2025";
 
   # CLIProxyAPI proxy with an offline management panel, bound to 0.0.0.0:1105.
   modules.cliproxyapi.enable = (svc "cliproxyapi").enable;

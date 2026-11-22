@@ -24,8 +24,7 @@ let
     modules.secrets.preservation.enable = true;
     modules.gaming-stack.enable = true;
     modules.linyaps.enable = true;
-    modules.ollama.enable = true;
-    modules.ollama.cuda = true;
+    modules.ollama.hostKey = "idols-ai";
     modules.desktop.appcast.enable = true;
     modules.archive-tools.enable = true;
     modules.dsh.enable = true;

@@ -22,6 +22,8 @@ in
     home.packages = with pkgs; [
       # https://github.com/flightlessmango/MangoHud
       # a simple overlay program for monitoring FPS, temperature, CPU and GPU load, and more.
+      # Upstream's home gaming.nix also ships it, but that module is gated on
+      # modules.desktop.gaming.enable (false here), so this file provides it.
       mangohud
 
       # Script to install various redistributable runtime libraries in Wine.
