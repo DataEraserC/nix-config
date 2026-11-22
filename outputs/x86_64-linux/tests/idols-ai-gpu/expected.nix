@@ -6,7 +6,10 @@
   # wivrn/adb setup - so those assertions are dropped, not maintained.
   loadsVirtualDisplay = true;
   createsVirtualDisplay = true;
-  niriUsesIntelRenderer = true;
+  # niriUsesIntelRenderer = true was dropped with the renderer-pinning debug
+  # block in niri-hardware.kdl (removed in the upstream-verbatim rebuild; niri
+  # picks its render device on its own again).
+  niriUsesIntelRenderer = false;
   sunshineUserHasInputAccess = false;
   sunshineHasSysAdmin = false;
   sunshineUsesWlrCapture = "wlr";
