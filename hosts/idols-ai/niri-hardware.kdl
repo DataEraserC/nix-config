@@ -57,11 +57,3 @@ output "eDP-1" {
 //     position x=0 y=0
 // }
 
-// // ============= Named Workspaces =============
-// workspace "4entertainment" { open-on-output "Beihai Century Joint Innovation Technology Co.,Ltd P32A2V 0000000000000"; }
-// workspace "2browser" { open-on-output "Beihai Century Joint Innovation Technology Co.,Ltd P32A2V 0000000000000"; }
-// workspace "5utility" { open-on-output "Beihai Century Joint Innovation Technology Co.,Ltd P32A2V 0000000000000"; }
-
-// workspace "3chat" { open-on-output "Guangxi Century Innovation Display Electronics Co., Ltd 27D1U 0000000000000"; }
-// workspace "1terminal" { open-on-output "Guangxi Century Innovation Display Electronics Co., Ltd 27D1U 0000000000000"; }
-// workspace "0other" { open-on-output "Guangxi Century Innovation Display Electronics Co., Ltd 27D1U 0000000000000"; }
