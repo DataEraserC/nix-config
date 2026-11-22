@@ -22,6 +22,9 @@ let
     modules.desktop.wayland.enable = true;
     modules.secrets.desktop.enable = true;
     modules.secrets.preservation.enable = true;
+    # upstream gaming base (sysctls/gamescope/gamemode/32-bit graphics) runs
+    # alongside the downstream stack; overlapping values are identical
+    modules.desktop.gaming.enable = true;
     modules.gaming-stack.enable = true;
     modules.linyaps.enable = true;
     modules.ollama.hostKey = "idols-ai";

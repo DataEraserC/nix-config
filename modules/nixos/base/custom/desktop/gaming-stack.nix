@@ -22,6 +22,11 @@ in
   # Unconditional imports (they were unconditional in the pre-split gaming.nix
   # too): the imported modules carry their own enable options, and gating via
   # `config` here would recurse (config-in-imports).
+  #
+  # platformOptimizations is imported only for its `programs.steam.
+  # platformOptimizations` option declaration; it stays DISABLED because its
+  # sysctls duplicate upstream's gaming.nix ones, and boot.kernel.sysctl
+  # treats repeat definitions as unique-value conflicts.
   imports = [
     nix-gaming.nixosModules.pipewireLowLatency
     nix-gaming.nixosModules.platformOptimizations
@@ -79,7 +84,9 @@ in
 
     # see https://github.com/fufexan/nix-gaming/#pipewire-low-latency
     services.pipewire.lowLatency.enable = true;
-    programs.steam.platformOptimizations.enable = true;
+    # programs.steam.platformOptimizations stays off: the sysctls it would set
+    # are already carried by the upstream gaming module (identical values, but
+    # boot.kernel.sysctl rejects duplicate definitions).
 
     # Optimise Linux system performance on demand
     # https://github.com/FeralInteractive/GameMode

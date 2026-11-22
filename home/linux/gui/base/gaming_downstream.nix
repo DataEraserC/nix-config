@@ -20,11 +20,8 @@ in
 
   config = mkIf cfg.enable {
     home.packages = with pkgs; [
-      # https://github.com/flightlessmango/MangoHud
-      # a simple overlay program for monitoring FPS, temperature, CPU and GPU load, and more.
-      # Upstream's home gaming.nix also ships it, but that module is gated on
-      # modules.desktop.gaming.enable (false here), so this file provides it.
-      mangohud
+      # mangohud comes from the upstream home gaming.nix (active via
+      # modules.desktop.gaming.enable)
 
       # Script to install various redistributable runtime libraries in Wine.
       winetricks
