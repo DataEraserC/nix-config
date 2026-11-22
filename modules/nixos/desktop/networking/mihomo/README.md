@@ -13,10 +13,11 @@ sudo systemctl restart mihomo.service           # dashboard: http://127.0.0.1:90
 ```
 
 `~/.config/mihomo` holds `sources.yaml` and the generated `config.yaml`, which the service loads
-through systemd `LoadCredential`; the core's own state — geodata and cache — is in
-`/var/lib/private/mihomo` (`StateDirectory`, `DynamicUser`). The generator, `policy.yaml` and
-`gateway-config.nu` are run from here and never copied over. `just mihomo-gen` renders the config
-and validates it with the core the service runs.
+through systemd `LoadCredential`; the core's own state is in `/var/lib/private/mihomo`
+(`StateDirectory`, `DynamicUser`), where the module links geodata from nixpkgs (`v2ray-rules-dat`,
+`dbip-country-lite`, `dbip-asn-lite`), so it updates with nixpkgs, not at runtime. The generator,
+`policy.yaml` and `gateway-config.nu` are run from here and never copied over. `just mihomo-gen`
+renders the config and validates it with the core the service runs.
 
 `sources.yaml` holds everything private (subscription URLs, secret, private domains) and stays out
 of the repo and the Nix store; the module loads `config.yaml` via `LoadCredential`. Generate the
@@ -62,11 +63,21 @@ Verge UI. Verge logs `Unregistered Clash configuration key "ipv6"` for the pin -
 still reaches the core.
 
 The gateway (`suzi`, not a host in this flake) runs the same config with a fixed set of deltas --
-`gateway-config.nu` renders it, `--redact` for a shareable template. Its output carries the
-subscriptions, so never commit it; the secret is filled in on the box, not here. Its binary is a
+`gateway-config.nu` renders it from the same `sources.yaml` and `policy.yaml`. The gateway uses
+nftables TProxy, disables the desktop TUN auto-route, and uses `fake-ip` DNS with `dns.ipv6: false`:
+LAN clients receive fake A mappings so mihomo retains the domain for routing and sniffing while
+their traffic uses the working IPv4 TProxy path. The gateway withholds AAAA records because LAN IPv6
+transparent handling is unreliable on this gateway. Its output carries the subscriptions and the
+private domains, so never commit it; the secret is filled in on the box, not here. Its binary is a
 static release build under `/usr/local/bin`, not a package: update it by hand, validate the live
 config with the new core (`mihomo -t -d /etc/mihomo -f <candidate>`) before swapping, and keep the
 previous binary. The release ships no checksums, so TLS plus `-v` is the whole verification.
+
+Gateway mode contract: keep nftables TProxy with both `tun.enable` and `tun.auto-route` disabled,
+and keep `dns.ipv6` disabled. The gateway currently withholds AAAA records because LAN IPv6
+transparent handling is unreliable; clients therefore use the working fake-IPv4 path. Do not combine
+LAN TProxy with the desktop TUN auto-route: in this gateway topology it can recapture fake dials and
+cause timeouts.
 
 ## Why generate
 
@@ -75,6 +86,16 @@ The portable policy is therefore written once in `policy.yaml` as GEOSITE catego
 policy is opt-in: `rules_from:` (a decoded snapshot) or `file:` carry groups, rules and
 rule-providers over. The generator drops and reports malformed rules, misplaced `MATCH` and orphaned
 targets instead of writing a config the core rejects.
+
+## Google Play routing
+
+`policy.yaml` routes `services.googleapis.cn` through `PROXY` on desktops and the gateway. This
+addresses Google Play downloads stalling when direct API access selects a mainland CDN that is then
+accessed through an overseas proxy.
+
+References: [Google Play CDN report](https://blog.l3zc.com/2025/03/chinese-cdn-used-by-playstore/)
+and
+[Google Play domain classifications](https://github.com/v2fly/domain-list-community/blob/master/data/google-play).
 
 ## Gotchas
 
@@ -95,6 +116,8 @@ targets instead of writing a config the core rejects.
   Alibaba/Baidu blocks) are CT v6 interconnect dead zones that GSLB normally steers around, and a
   bare-IP TLS test needs `-k` -- a certificate name mismatch (curl error 60) means the connection
   itself worked. A browser IPv6 test under TUN measures the proxy node, not the line.
+- `SKIP_SYSTEM_IPV6_CHECK=1` on the unit: the core's startup IPv6 check plus `strict-route`'s v6
+  blackhole otherwise lock the host out of ever getting a GUA (WA-030).
 - `tun.stack` stays at upstream's default `mips`; nftables rules out `system` and `mixed`. The
   gateway runs `mixed`.
 - The gateway sniffs, the desktop does not. LAN clients that use DoH dial the IP they resolved
@@ -106,8 +129,8 @@ targets instead of writing a config the core rejects.
 - WeChat resolves for itself, but its queries still cross the TUN, so `dns-hijack: any:53` catches
   them and the fake-ip table hands the name back to the rules: `mmbiz.qpic.cn` measured DIRECT.
   `multimedia.nt.qq.com.cn` stays in `fake-ip-filter` for the same reason. The exclude-process fix
-  that won clash-verge-rev#1762 is not available here: `hardening/bwraps/wechat.nix` sets
-  `unsharePid = true` and the sandbox reports uid 0, so no process name resolves.
+  that won clash-verge-rev#1762 is not available here: nixpak unshares the PID namespace and the
+  sandbox reports uid 0, so no process name resolves.
 - `find-process-mode: off` unless `PROCESS-*` rules or `tun_exclude_process` need it.
 - `tun_exclude_address`: a destination that can never be a proxy target should not pay a fake-ip
   round trip -- RFC1918, RFC 6598's `100.64.0.0/10` (where Tailscale addresses come from),
@@ -127,6 +150,9 @@ targets instead of writing a config the core rejects.
   `policy.yaml` bypasses proxy only for that observed probe, not game CDNs or broad vendor domains.
   Verify future probes in `/connections` and add only confirmed hosts. Reference:
   [HoyoPlay API endpoints](https://gist.github.com/DynamiByte/0ad250bbe1930e2736a6d4e6e842bcb2).
+- LinkedIn resolves to a Azure China IP and redirect to `linkedin.cn`, so `policy.yaml` pins
+  `GEOSITE,linkedin` to `PROXY`; a `no-resolve`-less imported ipcidr rule-set shadows it, so such a
+  host overrides in `sources.yaml`.
 - Rule payloads are bare domains: `DOMAIN-SUFFIX,https://qlogo.cn` is invalid.
 - On a systemd-resolved host, sing-tun normally points resolved at the TUN DNS with `resolvectl`.
   The nixpkgs `DynamicUser` sandbox cannot make those privileged D-Bus changes, so resolved's own
@@ -135,6 +161,17 @@ targets instead of writing a config the core rejects.
   `hosts/idols-ai/default.nix`), prefixed with `+` to run outside the unit sandbox. Never set link
   DNS statically to mihomo: a dead mihomo would take DNS down with it, and resolved does not fall
   back.
+- On shoukei, `modules.networking.mihomo.resolvedIntegration` enables resolved and the
+  NetworkManager resolved backend. Once DNS is listening, the service registers `127.0.0.1:1053` and
+  `~.` on `Meta`, which NetworkManager leaves unmanaged. Wi-Fi reconnects can update their own DNS
+  without overwriting this route. Stopping mihomo reverts only `Meta`; removing the TUN also removes
+  its DNS configuration, leaving the physical links' DNS available. More-specific VPN DNS routes
+  still win; another VPN claiming `~.` (including Tailscale's full DNS override) would share the
+  catch-all and must not be used concurrently. This relies on mihomo's default `Meta` device name
+  and the generator's local DNS port; apply TUN changes with a service restart so the DNS hook runs
+  for the new interface. After activation, verify normal and reconnected Wi-Fi queries return fake
+  IPs, and that stopping mihomo restores network DNS. See
+  [systemd's VPN DNS routing guide](https://github.com/systemd/systemd/blob/main/docs/RESOLVED-VPNS.md).
 
 ## Steam download region
 

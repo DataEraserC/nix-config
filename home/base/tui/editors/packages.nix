@@ -71,6 +71,7 @@
               requests
               pyquery
               pyyaml
+              toml # TOML writing; reading uses stdlib tomllib
               protobuf # protocol buffer compiler
             ]
           ))
@@ -126,7 +127,6 @@
 
         #-- Optional Requirements:
         prettier # common code formatter
-        fzf
         ripgrep # recursively searches directories for a regex pattern
       ]
     );

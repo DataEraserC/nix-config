@@ -14,11 +14,10 @@
     defaultApplications =
       let
         browser = [
-          "google-chrome.desktop"
-          "firefox.desktop"
+          "com.google.Chrome.desktop"
+          "org.mozilla.firefox.desktop"
         ];
         editor = [
-          "code.desktop"
           "dev.zed.Zed.desktop"
           "nvim.desktop"
           "Helix.desktop"
@@ -26,7 +25,7 @@
       in
       {
         "application/json" = browser;
-        "application/pdf" = browser;
+        "application/pdf" = [ "org.mozilla.firefox.desktop" ];
 
         "text/html" = browser;
         "text/xml" = browser;
@@ -48,14 +47,15 @@
         "x-scheme-handler/ftp" = browser; # open `ftp:` url with `browser`
         "x-scheme-handler/http" = browser;
         "x-scheme-handler/https" = browser;
-        # https://github.com/microsoft/vscode/issues/146408
-        "x-scheme-handler/vscode" = [ "code-url-handler.desktop" ]; # open `vscode://` url with `code-url-handler.desktop`
         "x-scheme-handler/zoommtg" = [ "Zoom.desktop" ];
+        "x-scheme-handler/zoomus" = [ "Zoom.desktop" ];
+        "application/x-zoom" = [ "Zoom.desktop" ];
 
         # all other unknown schemes will be opened by this default application.
         # "x-scheme-handler/unknown" = editor;
 
-        "x-scheme-handler/tg" = [ "org.telegram.desktop.desktop " ];
+        "x-scheme-handler/tg" = [ "org.telegram.desktop.desktop" ];
+        "x-scheme-handler/weixin" = [ "wechat.desktop" ];
 
         "audio/*" = [ "mpv.desktop" ];
         "video/*" = [ "mpv.desktop" ];
@@ -67,6 +67,12 @@
 
         "inode/directory" = [ "yazi.desktop" ];
       };
+
+    # The portal app chooser used by sandboxed apps (e.g. Telegram) lists only these
+    # and the types a desktop entry declares, never the defaults above.
+    associations.added = {
+      "application/pdf" = [ "org.mozilla.firefox.desktop" ];
+    };
 
     associations.removed = {
       # ......

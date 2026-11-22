@@ -25,18 +25,20 @@ systems.
 
 - **gui/**: Cross-platform GUI applications and configurations
   - **dev-tools.nix**: Misc development and network tools (mitmproxy, wireshark)
+  - **git-signing.nix**: Git commit signing with the OpenPGP key on the CanoKeys
   - **media.nix**: Media players and utilities
   - **zed-editor.nix**: Zed editor configuration (primary GUI editor)
   - **rime/**: Rime (flypy) customisation shared by fcitx5-rime (Linux) and Squirrel (macOS)
   - **terminal/**: Terminal emulator configurations
     - **ghostty.nix**: Ghostty terminal (default)
     - **kitty.nix**: Kitty terminal
+  - **work-gitconfig.nix**: Work git identity for repositories under `~/work`, linked from agenix
 
 ### Terminal Interface
 
 - **tui/**: Terminal-based interface configurations
-  - **agents/**: AI coding agents — global rules deployment, CLIs, and telemetry/auto-update
-    opt-outs
+  - **agents/**: AI coding agents — global rules and skills deployment, CLIs, and
+    telemetry/auto-update opt-outs
   - **cloud/**: Cloud development tools (Terraform, etc.)
   - **container.nix**: Container tools (Docker, Podman)
   - **dev-tools.nix**: Terminal-based development tools

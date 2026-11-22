@@ -1,21 +1,28 @@
 {
   pkgs,
   llm-agents,
-  nur-ryan4yin,
   ...
 }:
 let
   agentPackages = llm-agents.packages.${pkgs.stdenv.hostPlatform.system};
+  # llm-agents.nix still exposes OpenCode V2 as `opencode2` so it can coexist
+  # with the v1 package. Re-expose its binary under the normal command name.
+  opencode = pkgs.linkFarm "opencode" [
+    {
+      name = "bin/opencode";
+      path = "${agentPackages.opencode2}/bin/opencode2";
+    }
+  ];
 in
 {
   home.packages = [
     # Agents
     agentPackages.codex
-    agentPackages.opencode2
+    opencode
     agentPackages.pi
     # dsh from nur-packages: llm-agents.nix's dsh cannot boot on nixpkgs node
     # (node-addon-require-builtin probe), this one shims it.
-    nur-ryan4yin.packages.${pkgs.stdenv.hostPlatform.system}.dsh
+    pkgs.dsh
 
     # Docs lookup CLI behind the find-docs skill (agents/skills/find-docs). The skill's flags are
     # written against this package, not against upstream's npx instructions.

@@ -25,20 +25,24 @@
     # The official https://cache.nixos.org is always trusted and is appended
     # automatically, so it does not need to be listed here.
     substituters = [
-      # cache mirror located in China
-      # status: https://mirrors.ustc.edu.cn/status/
-      "https://mirrors.ustc.edu.cn/nix-channels/store"
-      # status: https://mirror.sjtu.edu.cn/
-      # "https://mirror.sjtu.edu.cn/nix-channels/store"
-      # others
-      # "https://mirrors.sustech.edu.cn/nix-channels/store"
-      "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
-
+      # The LAN cache on youko first: one machine warms it over the WAN, then
+      # every other machine fetches the same paths over gigabit. A miss only
+      # costs one extra hop, since the cache fetches the path itself.
+      "https://nix-cache.writefor.fun/mirrors.ustc.edu.cn/nix-channels/store"
+      "https://nix-cache.writefor.fun/cache.nixos.org"
       # numtide's cache (niks3), which serves the prebuilt packages of the
       # numtide/llm-agents.nix flake input used for the AI agent CLIs.
+      "https://nix-cache.writefor.fun/cache.numtide.com"
+      # My own NUR cache, built by the ryan4yin/nur-packages CI. NUR's npm
+      # dep hashes assume no registry mirror, so take them from the cache.
+      "https://nix-cache.writefor.fun/ryan4yin.cachix.org"
+
+      # Direct fallbacks for when youko is down; every proxied cache above also
+      # exists in the clear, so losing the LAN cache costs speed, not builds.
+      "https://mirrors.ustc.edu.cn/nix-channels/store"
+      "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
       "https://cache.numtide.com"
-      # my own cache server, currently not used.
-      # "https://ryan4yin.cachix.org"
+      "https://ryan4yin.cachix.org"
     ];
 
     # WARNING: every key here trusts *everything* that key signs. Add one only
@@ -46,6 +50,7 @@
     # a third party the ability to ship you arbitrary store paths.
     trusted-public-keys = [
       "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+      # ryan4yin.cachix.org, see substituters above.
       "ryan4yin.cachix.org-1:Gbk27ZU5AYpGS9i3ssoLlwdvMIh0NxG0w8it/cv9kbU="
     ];
     builders-use-substitutes = true;

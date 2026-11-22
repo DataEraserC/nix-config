@@ -21,9 +21,9 @@
     publicKeys = [
       # https://www.gnupg.org/gph/en/manual/x334.html
       {
-        source = "${mysecrets}/public/ryan4yin-gpg-keys-2014-01-27.pub";
+        source = "${mysecrets}/public/ryan4yin-gpg-keys-2026-11-11.pub";
         trust = 5;
-      } # ultimate trust, my own keys.
+      } # ultimate trust, my own key.
     ];
 
     # This configuration is based on the tutorial below, it allows for a robust setup
@@ -35,8 +35,6 @@
 
       # Disable inclusion of the version string in ASCII armored output
       no-emit-version = true;
-      # Do not write comment packets
-      no-comments = false;
       # Export the smallest key possible
       # This removes all signatures except the most recent self-signature on each user ID
       export-options = "export-minimal";
@@ -80,5 +78,8 @@
       # Specify how many times the passphrases mangling for symmetric encryption is repeated
       s2k-count = "65011712";
     };
+    # Reach the CanoKey through pcscd instead of scdaemon's own CCID driver,
+    # which would grab the USB interface exclusively (CanoKey OpenPGP FAQ).
+    scdaemonSettings.disable-ccid = true;
   };
 }

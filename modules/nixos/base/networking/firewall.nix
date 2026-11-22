@@ -1,8 +1,14 @@
-{ lib, myvars, ... }:
+{
+  config,
+  lib,
+  myvars,
+  ...
+}:
 let
   inherit (myvars.networking) lanCidr;
   # The host that scrapes the exporters (VictoriaMetrics runs on youko).
   monitoringHost = myvars.networking.hostsAddr.youko.ipv4;
+  rasdaemonExporter = config.services.prometheus.exporters.rasdaemon;
 in
 {
   # Hosts bring their own firewall as defence in depth behind the router's
@@ -14,9 +20,9 @@ in
   networking.firewall = {
     enable = true;
 
-    # Nothing is opened to the Internet. LAN/tailnet/local-container access
-    # comes from the rules below; per-service `openFirewall` ports are
-    # suppressed.
+    # Nothing is opened to the Internet except Tailscale's WireGuard port
+    # below. LAN/tailnet/local-container access comes from the rules below;
+    # per-service `openFirewall` ports are suppressed.
     allowedTCPPorts = lib.mkForce [ ];
     allowedUDPPorts = lib.mkForce [ ];
 
@@ -32,6 +38,14 @@ in
       # smartctl_exporter (drive/SSD SMART health) is scraped only by the
       # monitoring host.
       ip saddr != ${monitoringHost} tcp dport 9633 drop
+    ''
+    + lib.optionalString rasdaemonExporter.enable ''
+
+      # rasdaemon's exporter (physical servers), likewise; it also drops IPv6.
+      ip saddr != ${monitoringHost} tcp dport ${toString rasdaemonExporter.port} drop
+      meta nfproto ipv6 tcp dport ${toString rasdaemonExporter.port} drop
+    ''
+    + ''
 
       # Monitoring uses the stable IPv4 address above. Deny IPv6 exporter
       # connections before broad LAN/tailnet/container trust can accept them;
@@ -51,7 +65,9 @@ in
       # The home LAN is the trusted core.
       ip  saddr ${lanCidr} accept
       ip6 saddr fe80::/10 accept
-      # Tailscale's WireGuard port, for direct (non-DERP) connections.
+      # Tailscale's WireGuard port, for direct (non-DERP) connections. The LAN
+      # and tailnet are accepted above, so this is the only port open to the
+      # Internet.
       udp dport 41641 accept
     '';
   };

@@ -1,15 +1,23 @@
-{ lib, pkgs, ... }:
 {
-  # Nix 2.35 is newer than nixpkgs' nixVersions.stable (still 2.34), so opt into
-  # the latest released version until stable catches up.
-  # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/tools/package-management/nix/default.nix
-  nix.package = pkgs.nixVersions.latest;
-
+  config,
+  lib,
+  nixpkgsConfig,
+  ...
+}:
+let
+  # Store hygiene below applies to physical hosts only: VM guests build nothing
+  # locally (Colmena pushes their closures) and MicroVM guests share the host's
+  # read-only store. `hardwareTools` is off on every guest.
+  isPhysical = config.modules.hardwareTools.enable;
+  GiB = 1024 * 1024 * 1024;
+in
+{
   # https://lix.systems/add-to-config/
   # nix.package = pkgs.lix;
 
-  # to install chrome, you need to enable unfree packages
-  nixpkgs.config.allowUnfree = lib.mkDefault true;
+  # NixOS only: darwin's nixpkgs.pkgs instance already carries it (lib/macosSystem.nix),
+  # and nixpkgs rejects nixpkgs.config next to nixpkgs.pkgs.
+  nixpkgs.config = nixpkgsConfig;
 
   # do garbage collection weekly to keep disk usage low
   nix.gc = {
@@ -18,10 +26,25 @@
     options = lib.mkDefault "--delete-older-than 7d";
   };
 
+  # A run can fail while a store path is still in use; retry instead of waiting a week.
+  systemd.services.nix-gc.serviceConfig.Restart = lib.mkIf isPhysical "on-failure";
+
+  # Builds cut off by a crash or power loss stay in the build dir (/nix/var/nix/builds,
+  # Nix's default `build-dir`) on the persistent pool. Clear it at boot, before
+  # nix-daemon runs; the line is boot-only, so Nix's own 7-day tmpfiles rule still
+  # ages the directory at runtime.
+  systemd.tmpfiles.rules = lib.mkIf isPhysical [ "D! /nix/var/nix/builds 0755 root root -" ];
+
   # Manual optimise storage: nix-store --optimise
   # https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-auto-optimise-store
   nix.settings = {
     auto-optimise-store = true;
+
+    # When a build leaves less than 20 GiB free, GC until 50 GiB is free. The
+    # store shares its btrfs pool with /persistent (databases, VM images), which
+    # must keep room to write.
+    min-free = lib.mkIf isPhysical (20 * GiB);
+    max-free = lib.mkIf isPhysical (50 * GiB);
 
     # Required to run nixpkgs' systemd-nspawn based NixOS tests locally (used
     # by the nixpkgs-review workflow). These are daemon-wide settings, so every

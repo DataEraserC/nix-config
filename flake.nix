@@ -21,26 +21,21 @@
     # https://hydra.nixos.org/jobset/nixpkgs/unstable
     # update via nix flake update nixpkgs --override-input nixpkgs github:NixOS/nixpkgs/<commit-hash>
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    # Pinned to release tag v2.4.0 (not a branch); bump deliberately when needed.
+    # Pinned to release tag v2.4.2 (not a branch); bump deliberately when needed.
     fcitx5-vinput = {
-      url = "github:xifan2333/fcitx5-vinput/v2.4.0";
+      url = "github:xifan2333/fcitx5-vinput/v2.4.2";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-26.05";
-    # Kept for pinning a package that regressed in newer nixpkgs. Currently only
-    # kubernetes-helm uses it (home/base/tui/container.nix); extend or drop this
-    # input together with that consumer.
-    nixpkgs-2505.url = "github:nixos/nixpkgs/nixos-25.05";
 
-    # ryan4yin/nixpkgs fork for the `.agents/skills/nixpkgs-patched` workflow. It
-    # currently carries no patches (see WORKAROUNDS.md), but `pkgs-patched` is
-    # wired in outputs/default.nix so a temporary carry needs no flake edit.
+    # ryan4yin/nixpkgs fork for the `.agents/skills/nixpkgs-patched` workflow.
     nixpkgs-patched.url = "github:ryan4yin/nixpkgs/nixos-unstable-patched";
     # get some latest packages from the master branch
     nixpkgs-master.url = "github:nixos/nixpkgs/master";
     # NixOS MicroVMs -- run the VMs directly on the hosts, replacing the former KubeVirt
+    # Pinned to a reviewed commit: the newest tag (v0.5.0, 2024) is far behind main.
     microvm = {
-      url = "github:microvm-nix/microvm.nix";
+      url = "github:microvm-nix/microvm.nix/194a254693f49af939a2b53d04982bd4b276fdb3";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -72,15 +67,7 @@
     };
 
     lanzaboote = {
-      url = "github:nix-community/lanzaboote/v1.1.0";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.rust-overlay.follows = "rust-overlay";
-    };
-
-    # lanzaboote's pinned rust-overlay still uses the deprecated
-    # `stdenv.isLinux`/`stdenv.isDarwin`; follow a newer revision.
-    rust-overlay = {
-      url = "github:oxalica/rust-overlay";
+      url = "github:nix-community/lanzaboote/v1.2.0";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -137,8 +124,9 @@
     # Blender/CUDA source rebuild; bump the rev deliberately when needed.
     nixpkgs-blender.url = "github:nixos/nixpkgs/4b8338e3113dc41bcf7695f56dc372107b7ff4c9";
 
+    # Pinned to a reviewed commit: release tags lag main by months.
     nixos-apple-silicon = {
-      url = "github:nix-community/nixos-apple-silicon";
+      url = "github:nix-community/nixos-apple-silicon/ce7d0925860cf29d686b24ea5798f3a02676b4f7";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -147,15 +135,10 @@
 
     # -------------- Gaming ---------------------
 
-    nix-gaming = {
-      url = "github:fufexan/nix-gaming";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # x86/x86_64 emulation on 16K-page ARM64 (Apple Silicon). FEX cannot run
     # natively with 16K pages, so this wraps FEX in a 4K-page muvm microVM and
     # exposes an `x86pkgs` set plus Steam/Wine launchers. Used by shoukei; see
-    # hosts/12kingdoms-shoukei and WORKAROUNDS.md (WA-021).
+    # hosts/12kingdoms-shoukei and docs/WORKAROUNDS.md (WA-021).
     #
     # Pinned to our fork of rowanG077/nix-x86-on-aarch64 at the reviewed commit
     # 5d69793a. To update, fetch upstream into the fork, review the new commits,
@@ -190,10 +173,9 @@
       flake = false;
     };
     ponytail = {
-      url = "github:DietrichGebert/ponytail/v5.1.0";
+      url = "github:DietrichGebert/ponytail/v5.3.3";
       flake = false;
     };
-
     ########################  My own repositories  #########################################
 
     # my private secrets, it's a private repository, you need to replace it with your own.
@@ -220,16 +202,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Wayland <-> X11 clipboard sync daemon for xwayland-satellite (niri)
+    # Wayland <-> X11 clipboard sync for xwayland-satellite (niri).
     pyclipsync = {
-      url = "github:ryan4yin/pyclipsync/v0.1.3";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    # terminal window manager / multiplexer; nixpkgs lags behind upstream,
-    # so track the upstream flake.
-    tuios = {
-      url = "github:Gaurav-Gosain/tuios/v0.9.0";
+      url = "github:ryan4yin/pyclipsync";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

@@ -1,4 +1,6 @@
 {
+  config,
+  lib,
   pkgs,
   ...
 }:
@@ -16,7 +18,7 @@
     enable = true;
     font = {
       name = "Maple Mono NF CN";
-      size = 13; # macOS overrides this in home/darwin/terminal.nix
+      size = lib.mkDefault 13; # macOS overrides this in home/darwin/terminal.nix
     };
 
     settings = {
@@ -31,11 +33,7 @@
       macos_option_as_alt = true; # Option key acts as Alt on macOS
       enable_audio_bell = false;
 
-      #  To resolve issues:
-      #    1. https://github.com/ryan4yin/nix-config/issues/26
-      #    2. https://github.com/ryan4yin/nix-config/issues/8
-      #  Spawn a nushell in login mode via `bash`
-      shell = "${pkgs.bash}/bin/bash --login -c 'nu --login --interactive'";
+      shell = "${lib.getExe config.programs.nushell.package} --config-home ${config.programs.nushell.configDir}";
     };
 
     # macOS specific settings

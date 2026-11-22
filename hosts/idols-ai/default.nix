@@ -7,8 +7,8 @@
 }:
 #############################################################
 #
-#  Ai - my main computer, with NixOS + Core Ultra 7 270K Plus + RTX 4090 GPU,
-#  128G DDR5-4800 (mixed 4-DIMM, see MIXED-MEMORY.md), for gaming & daily use.
+#  Ai - my gaming and daily-use desktop. Hardware and the platform history:
+#  ./README.md.
 #
 #############################################################
 let
@@ -24,7 +24,6 @@ in
     disko.nixosModules.default
     # disks
     ./disko-fs.nix
-    ./disko-fs-data.nix
 
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -33,38 +32,66 @@ in
 
     ./preservation.nix
     ./secureboot.nix
+    ./openrgb
 
     ./restic.nix
+
+    # WA-035: neighbour-probe fallback for the Mesh WiFi backhaul to the homelab.
+    ./neighbour-probe.nix
 
     # others
     ./ai
   ];
 
   # Zram consumes physical memory for compression, which can cause a deadlock and system hang if the model size approaches the physical memory limit.
-  # Disable the whole module (zram device + its swappiness=180 sysctl tunings); this host uses a disk swapfile instead.
+  # Disable the whole module (zram device + its swappiness=180 sysctl tunings); this host uses a
+  # disk swapfile instead, created by disko at /swap (see ./disko-fs.nix). The two must move together.
   modules.zram.enable = false;
 
-  # zswap: compressed writeback cache in front of the disk swapfile.
-  # Keeps swapped cold anon pages compressed in RAM instead of the SSD, which frees more
-  # page cache for the ~78GB mmap'd LLM weights (mmap file pages never go through zswap).
-  # Safe here: disk swapfile remains the real backing store, no zram deadlock structure.
-  # - zstd: CPU is not the bottleneck here (llama.cpp peaks ~30% util); its ~2.5x ratio
-  #   keeps ~5G more anon bytes in the capped pool than lz4, and ~5us decompress is noise
-  #   vs the ~100us SSD fault it avoids.
-  # - 10% pool (~13G on 128G): the module default 25% (~32G) would compete with the weight
-  #   cache.
+  # 32G of RAM against aquamarine's 96G, so builds go to the server first.
+  modules.remote-builders.enable = true;
+
+  # zswap: compressed writeback cache in front of the disk swapfile, so cold
+  # anonymous pages stay in RAM instead of hitting the SSD. Safe here: the disk
+  # swapfile remains the real backing store, no zram deadlock structure.
+  # - zstd: ~2.5x the ratio of lz4 for ~5us decompress, which is noise against
+  #   the ~100us SSD fault it avoids; the CPU is not the bottleneck.
+  # - 10% pool (~3G on 32G): the module default 25% would compete with the page
+  #   cache that games and VMs rely on.
   boot.zswap = {
     enable = true;
     compressor = "zstd";
     maxPoolPercent = 10;
   };
 
+  # zswap has no notion of "eager": it only compresses pages that reclaim has
+  # already decided to evict (Documentation/admin-guide/mm/zswap.rst). Tuning the
+  # reclaim policy, not zswap, is what keeps a long-running desktop responsive:
+  # - swappiness 20 (kernel default 60): drop page cache first instead of
+  #   compressing the compositor's and Firefox's anonymous pages, which then come
+  #   back as a fault plus a decompress every time. Not 0: at 0 the kernel only
+  #   swaps once free+file pages drop below the high watermark, so an anon spike
+  #   ends in an OOM kill instead of overflowing into zswap.
+  # - watermark_scale_factor 100 (default 10): wake kswapd earlier so it drains
+  #   cache ahead of allocation bursts, instead of the allocating app stalling in
+  #   direct reclaim (the path behind allocstall_movable and
+  #   kswapd_low_wmark_hit_quickly, both elevated after ~20h uptime here).
+  # - watermark_boost_factor 0 (default 15000): skip the fragmentation-triggered
+  #   extra reclaim that otherwise keeps evicting cache and anon pages on an
+  #   aging system. Same value modules/nixos/base/zram.nix uses.
+  boot.kernel.sysctl = {
+    "vm.swappiness" = 20;
+    "vm.watermark_scale_factor" = 100;
+    "vm.watermark_boost_factor" = 0;
+  };
+
   services.sunshine.enable = true;
-  services.tuned.ppdSettings.main.default = lib.mkForce "performance";
 
   modules.btrbk.enable = true;
 
-  # Permit the desktop user to access Intel accelerator devices for local ASR.
+  # Give the desktop user the render group outright instead of relying only on
+  # the logind seat ACL, so local ASR keeps its /dev/dri access in sessions
+  # that have no seat (the Sunshine headless session, for example).
   users.users.${myvars.username}.extraGroups = [ "render" ];
 
   # systemd-journal - cap disk usage
@@ -81,20 +108,25 @@ in
   services.smartd.enable = true;
 
   # QEMU/KVM(HostCpuOnly) for local VMs.
-  environment.systemPackages = [ pkgs.qemu_kvm ];
+  environment.systemPackages = [
+    pkgs.qemu_kvm
+    pkgs.ddcutil # external monitor control over DDC/CI (brightness, input source)
+  ];
 
-  # Re-evaluate after the Insta360 Link firmware or the kernel's uvcvideo changes.
-  powerManagement.resumeCommands = ''
-    # Insta360 Link may stay enumerated with a stalled UVC endpoint after S3 resume.
-    ${pkgs.coreutils}/bin/sleep 1
-    ${pkgs.usbutils}/bin/usbreset 2e1a:4c01 || true
-  '';
+  # The external monitors answer DDC/CI on /dev/i2c-*: this loads i2c-dev and installs the
+  # udev rules that grant the i2c group and locally logged-in users access, so `ddcutil`
+  # works without sudo.
+  hardware.i2c.enable = true;
+
+  # Insta360 Link: reset instead of resume, or its UVC endpoint stalls after S3 (WA-010).
+  boot.kernelParams = [ "usbcore.quirks=2e1a:4c01:b" ];
 
   networking = {
     inherit hostName;
 
-    # we use networkd instead
-    networkmanager.enable = false; # provides nmcli/nmtui for wifi adjustment
+    # off: this host uses networkd (below). NetworkManager would otherwise
+    # provide nmcli/nmtui for wifi adjustment.
+    networkmanager.enable = false;
     useDHCP = false;
   };
 
@@ -103,13 +135,15 @@ in
 
   # networkd removes routing policy rules not defined in .network files
   # (ManageForeignRoutingPolicyRules defaults to yes) each time it reconfigures
-  # a link. On S3 resume it reconfigures enp130s0, which wiped mihomo's
+  # a link. On S3 resume it reconfigures the NIC, which wiped mihomo's
   # (9000-9010) and Tailscale's rules and briefly broke routing. Keep foreign
   # rules so the VPN/TUN rules survive.
   systemd.network.config.networkConfig.ManageForeignRoutingPolicyRules = false;
 
-  systemd.network.networks."10-${iface}" = {
-    matchConfig.Name = [ iface ];
+  # Predictable names follow the PCIe topology, so a board or slot change renames the
+  # wired NIC. Match the `en*` prefix instead of a name; one wired port, so one link.
+  systemd.network.networks."10-lan" = {
+    matchConfig.Name = [ "en*" ];
     networkConfig = {
       Address = [
         ipv4WithMask
@@ -117,7 +151,7 @@ in
       ];
       DNS = nameservers;
       DHCP = "ipv6"; # enable DHCPv6 only, so we can get a GUA.
-      IPv6AcceptRA = true; # for Stateless IPv6 Autoconfiguraton (SLAAC)
+      IPv6AcceptRA = true; # for Stateless IPv6 Autoconfiguration (SLAAC)
       LinkLocalAddressing = "ipv6";
       # r8169 drops carrier on S3 resume; without this, networkd tears down the
       # static address/route and mihomo's TUN auto-detect briefly loses its
@@ -151,6 +185,8 @@ in
   # parsing is where missing geodata gets fetched. Flipping at fork time pointed
   # that fetch at a port nobody was listening on -- SERVFAIL, a fatal config
   # error, a unit that could never start.
+  # The hook names the link with `hostsAddr.ai.iface`: networkd matches an `en*`
+  # prefix, but `resolvectl` takes one name or index, not a pattern.
   systemd.services.mihomo.serviceConfig = {
     ExecStartPost = lib.mkDefault "+${pkgs.writeShellScript "mihomo-dns-takeover" ''
       probe() { (exec 3<>/dev/tcp/127.0.0.1/1053) 2>/dev/null; }

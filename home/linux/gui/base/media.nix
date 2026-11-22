@@ -12,7 +12,7 @@
       pavucontrol
       playerctl
       pulsemixer
-      imv # simple image viewer
+      pkgs.nixpaks.imv # simple image viewer
 
       # music
       go-musicfox # TUI NetEase Cloud Music client; plays through mpv (configured below)
@@ -26,12 +26,12 @@
     ]
     # Zoom: Settings > Share Screen > Advanced > Screen Capture Mode on Wayland > PipeWire Mode.
     # zoom-us ships only an x86_64 Linux client, so the aarch64 host skips it.
-    ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [ pkgs.zoom-us ];
+    ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [ pkgs.nixpaks.zoom ];
 
   programs.mpv = {
     enable = true;
+    package = pkgs.nixpaks.mpv;
     defaultProfiles = [ "gpu-hq" ];
-    scripts = [ pkgs.mpvScripts.mpris ];
   };
 
   services = {
@@ -48,7 +48,15 @@
       enable = true;
 
       extraPresets.loudness-normalization.output = {
-        blocklist = [ ];
+        # Excluded from output processing ("Excluded Apps" in the GUI). Matched
+        # against the stream's app id, process binary or node name; browsers need
+        # "node:media-name" plus StreamOutputs.blocklistUsesMediaName. Loading a
+        # preset replaces the GUI-managed list, so exclusions belong here.
+        blocklist = [
+          "mpv"
+          "ZOOM VoiceEngine"
+          "Wemeet VoiceEngine"
+        ];
         "plugins_order" = [
           "autogain#0"
           "limiter#0"

@@ -16,11 +16,8 @@ let
   ipv4WithMask = "${ipv4}/24";
 in
 {
-  imports = [
-    ../idols-ruby/packages.nix
-    ../idols-ruby/computer-use.nix
-    ../idols-ruby/oci-containers
-  ];
+  # Headless computer-use environment (Xvfb + i3 + desktop automation + browser).
+  modules.desktop.computerUse.enable = true;
 
   # supported file systems, so we can mount any removable disks with these filesystems
   boot.supportedFilesystems = [
@@ -52,10 +49,12 @@ in
     matchConfig.Name = [ iface ];
     networkConfig = {
       Address = [ ipv4WithMask ];
+      # DNS goes to the proxy gateway, which resolves through the proxy;
+      # `nameservers` is the plain upstream-DNS alternative.
       # DNS = nameservers;
       DNS = [ proxyGateway ];
       DHCP = "ipv6"; # enable DHCPv6 only, so we can get a GUA.
-      IPv6AcceptRA = true; # for Stateless IPv6 Autoconfiguraton (SLAAC)
+      IPv6AcceptRA = true; # for Stateless IPv6 Autoconfiguration (SLAAC)
       LinkLocalAddressing = "ipv6";
     };
     routes = [

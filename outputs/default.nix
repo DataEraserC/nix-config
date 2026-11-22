@@ -9,6 +9,24 @@ let
   mylib = import ../lib { inherit lib; };
   myvars = import ../vars { inherit lib; };
 
+  # Keep npm fetches on the domestic mirror, including inside Nix builds.
+  # `rewriteURL` covers plain fetchurl calls; `npmRegistryOverrides` covers
+  # fetchNpmDeps (package-lock tarballs and registry packuments).
+  nixpkgsConfig = {
+    allowUnfree = true;
+    # Only Huawei works here: npmmirror 404s on prefetch-npm-deps' doubled
+    # slash, and Tencent answers 567 to its concurrent fetches.
+    npmRegistryOverrides = {
+      "registry.npmjs.org" = "https://mirrors.huaweicloud.com/repository/npm";
+    };
+    rewriteURL =
+      url:
+      if lib.hasPrefix "https://registry.npmjs.org/" url then
+        "https://registry.npmmirror.com/${lib.removePrefix "https://registry.npmjs.org/" url}"
+      else
+        url;
+  };
+
   # Add my custom lib, vars, nixpkgs instance, and all the inputs to specialArgs,
   # so that I can use them in all my nixos/home-manager/darwin modules.
   genSpecialArgs =
@@ -18,6 +36,7 @@ let
         inherit system;
         config.allowUnfree = true;
       };
+
     in
     inputs
     // {
@@ -28,14 +47,10 @@ let
         inputs
         mylib
         myvars
+        nixpkgsConfig
         pkgs-stable
         ;
 
-      pkgs-2505 = import inputs.nixpkgs-2505 {
-        inherit system;
-        # To use chrome, we need to allow the installation of non-free software
-        config.allowUnfree = true;
-      };
       pkgs-patched = import inputs.nixpkgs-patched {
         inherit system;
         # to use chrome, we need to allow the installation of non-free software
@@ -73,7 +88,6 @@ let
   nixosSystems = {
     x86_64-linux = import ./x86_64-linux (args // { system = "x86_64-linux"; });
     aarch64-linux = import ./aarch64-linux (args // { system = "aarch64-linux"; });
-    # riscv64-linux = import ./riscv64-linux (args // {system = "riscv64-linux";});
   };
   darwinSystems = {
     aarch64-darwin = import ./aarch64-darwin (args // { system = "aarch64-darwin"; });
@@ -84,32 +98,50 @@ let
   darwinSystemValues = builtins.attrValues darwinSystems;
   allSystemValues = nixosSystemValues ++ darwinSystemValues;
 
+  nixosConfigurations = lib.attrsets.mergeAttrsList (
+    map (it: it.nixosConfigurations or { }) nixosSystemValues
+  );
+
+  # Per-node deployment settings from `mylib.colmenaSystem`, keyed by host name.
+  colmenaDeployments = lib.attrsets.mergeAttrsList (map (it: it.colmena or { }) nixosSystemValues);
+
   # Raw Colmena hive (nodes + meta), evaluated below into the exposed
   # `colmenaHive` output. The nix-community Colmena rewrite only reads
   # `colmenaHive`, so the raw hive is not an output of its own.
+  #
+  # Each node is rebuilt from its `nixosConfigurations` entry: the same modules
+  # (including the one `nixpkgs.lib.nixosSystem` appends), specialArgs and
+  # system. Colmena applies `nodeNixpkgs`' overlays and config on top of the
+  # node's own, so it gets a package set with none: not the node's `pkgs`, and
+  # not `legacyPackages`, which carries the flake's own overlays.
   rawColmenaHive = {
-    meta =
-      (
-        let
-          system = "x86_64-linux";
-        in
-        {
-          # colmena's default nixpkgs & specialArgs
-          nixpkgs = import nixpkgs { inherit system; };
-          specialArgs = genSpecialArgs system;
+    meta = {
+      nixpkgs = import nixpkgs { system = "x86_64-linux"; };
+      nodeNixpkgs = builtins.mapAttrs (
+        name: _:
+        import nixpkgs {
+          inherit (nixosConfigurations.${name}.pkgs.stdenv.hostPlatform) system;
+          config = nixpkgsConfig;
         }
-      )
-      // {
-        # per-node nixpkgs & specialArgs
-        nodeNixpkgs = lib.attrsets.mergeAttrsList (
-          map (it: it.colmenaMeta.nodeNixpkgs or { }) nixosSystemValues
-        );
-        nodeSpecialArgs = lib.attrsets.mergeAttrsList (
-          map (it: it.colmenaMeta.nodeSpecialArgs or { }) nixosSystemValues
-        );
-      };
+      ) colmenaDeployments;
+      nodeSpecialArgs = builtins.mapAttrs (
+        name: _: nixosConfigurations.${name}._module.specialArgs
+      ) colmenaDeployments;
+    };
   }
-  // lib.attrsets.mergeAttrsList (map (it: it.colmena or { }) nixosSystemValues);
+  // builtins.mapAttrs (name: deployment: {
+    imports = [
+      deployment
+      # Colmena evaluates with nixpkgs' plain lib, which lacks the version the
+      # flake's lib reports; without this the toplevel differs (`26.11pre-git`).
+      # Recorded as WA-042 in docs/WORKAROUNDS.md.
+      {
+        system.nixos.versionSuffix = lib.trivial.versionSuffix;
+        system.nixos.revision = lib.trivial.revisionWithDefault null;
+      }
+    ]
+    ++ nixosConfigurations.${name}._module.args.modules;
+  }) colmenaDeployments;
 
   # Helper function to generate a set of attributes for each system
   forAllSystems = func: (nixpkgs.lib.genAttrs allSystemNames func);
@@ -126,9 +158,7 @@ in
   };
 
   # NixOS Hosts
-  nixosConfigurations = lib.attrsets.mergeAttrsList (
-    map (it: it.nixosConfigurations or { }) nixosSystemValues
-  );
+  inherit nixosConfigurations;
 
   # Colmena - remote deployment via SSH. The nix-community evaluator reads the
   # evaluated `colmenaHive` output built from the raw hive in the `let` block.
@@ -142,7 +172,8 @@ in
   # Packages
   packages = forAllSystems (system: allSystems.${system}.packages or { });
 
-  # Eval Tests for all NixOS & darwin systems.
+  # Eval Tests for all NixOS & darwin systems. Each system's `evalTests` lists its
+  # failures, so an empty attrset means that system passed.
   evalTests = lib.lists.all (it: it.evalTests == { }) allSystemValues;
 
   checks = forAllSystems (
@@ -198,6 +229,18 @@ in
       security-exporters = import ../tests/security-exporters.nix {
         pkgs = nixpkgs.legacyPackages.${system};
         networking = myvars.networking;
+      };
+      # Load the audit rules in a VM: one rule that fails to load leaves
+      # auditing off, which evaluation cannot catch.
+      security-auditd = import ../tests/security-auditd.nix {
+        pkgs = nixpkgs.legacyPackages.${system};
+        inherit (inputs) agenix;
+      };
+      # A persisted /etc/ssh must receive the activation copy at boot, which
+      # only happens when preservation prepares the mount in initrd.
+      security-preservation-etc = import ../tests/security-preservation-etc.nix {
+        pkgs = nixpkgs.legacyPackages.${system};
+        inherit (inputs) preservation;
       };
     }
   );

@@ -1,0 +1,82 @@
+{
+  pkgs,
+  myvars,
+  ...
+}:
+{
+  # ===============================================================================================
+  # 2x AMD Radeon AI PRO R9700 (RDNA4, gfx1201) for local inference
+  # https://wiki.nixos.org/wiki/AMD_GPU
+  #
+  # The second full-length x16 slot is chipset-attached: its root port is Gen4 x4
+  # while the card side reports x16, so the second card reads weights at ~7.1 GB/s
+  # against 46.3 GB/s. Split models by layer, not tensor parallel — see ./README.md
+  # and ./ROCM.md (ROCm support, measured links, RCCL TP=2 deadlock).
+  # ===============================================================================================
+
+  boot.kernelModules = [ "amdgpu" ];
+
+  boot.kernelParams = [
+    # ROCm: multi-GPU systems may hang in compute applications unless the IOMMU
+    # runs in passthrough mode.
+    # https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html
+    "iommu=pt"
+
+    # This board's DSDT advertises ATPX power control (`\_SB.PC00.GFX0.ATPX`) but
+    # never defines the `PEG0.PEGP._OFF`/`_ON` symbols its body calls, so the first
+    # idle resume of the headless card leaves it in `runtime_status = error` until
+    # reboot; amdgpu discards the ACPI error, so the failure is silent. This is the
+    # only setting that avoids it, and it needs the iGPU kept for the console
+    # fallback to trigger at all. Root cause, kernel-source trail and the field
+    # comparison: ./ROCM.md (WA-032).
+    "amdgpu.runpm=0"
+
+    # The driver's own default is -1, "auto, disabled except SRIOV", so on bare
+    # metal a hung card stays hung until the next reboot. Nobody is here to
+    # power-cycle an unattended inference host, so switch the recovery path on.
+    "amdgpu.gpu_recovery=1"
+  ];
+
+  # ROCm 10.1 is available: https://rocm.docs.amd.com/en/latest/.
+  # nixpkgs still ships 7.2.x while the upgrade awaits split reviews, LLVM/OpenMP
+  # fixes and compatibility work: https://github.com/NixOS/nixpkgs/pull/573885.
+  # Inference containers carry their own ROCm userspace.
+  # Not hardware.amdgpu.opencl.enable: its clr adds an OpenCL 2.2 libOpenCL.so.1 that shadows ocl-icd.
+  hardware.graphics.extraPackages = [ pkgs.rocmPackages.clr.icd ];
+
+  # /dev/kfd is world-writable under nixpkgs' default udev rule, but
+  # /dev/dri/renderD* is `render` 0660 and this headless host has no logged-in
+  # seat to hand out ACLs, so the inference user needs the group.
+  users.users.${myvars.username}.extraGroups = [ "render" ];
+
+  environment.systemPackages = [
+    pkgs.rocmPackages.rocm-smi
+    pkgs.rocmPackages.rocminfo
+    pkgs.nvtopPackages.full
+  ];
+
+  # Cap both cards at 250 W to quiet their fans; the smaller power draw is a side effect. Measured on
+  # this host (27B, second card), that costs ~4% of prefill and decode throughput against the 300 W
+  # default. amdgpu exposes the cap in microwatts and accepts anything inside [power1_cap_min,
+  # power1_cap_max] — 210-300 W on these cards. The set path (amdgpu_dpm_set_power_limit) has no
+  # overdrive gate, so the ppfeaturemask default stands.
+  services.udev.extraRules = ''
+    ACTION=="add", SUBSYSTEM=="hwmon", ATTR{name}=="amdgpu", ATTR{power1_cap}="250000000"
+  '';
+
+  # GPU panel in btop, and utilization/VRAM in node_exporter for the shared
+  # VictoriaMetrics scrape — the same shape as the Radeon iGPU hosts.
+  # perfmon: CAP_PERFMON is what btop needs for the i915 iGPU.
+  modules.btop = {
+    package = pkgs.btop-rocm;
+    perfmon = true;
+  };
+  # `enabledCollectors` is a list option, so this merges with the base module's
+  # `[ "systemd" "logind" ]` instead of replacing it: only name the collector
+  # this host adds. Repeating the base entries passes `--collector.systemd`
+  # twice, which node_exporter rejects, and the unit restart-loops.
+  #
+  # The CPU/RAPL collector lives in ./hardware-intel-cpu.nix; this file only adds
+  # the AMD GPU `drm` collector.
+  services.prometheus.exporters.node.enabledCollectors = [ "drm" ];
+}

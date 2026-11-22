@@ -13,13 +13,11 @@ Markdown with no Nix dependency; this module only wires it into place.
 - `skills.nix`: links the global skills into `~/.agents/skills/<name>`, from pinned flake inputs and
   from `agents/skills/`; the inventory is
   [agents/skills/README.md](../../../../agents/skills/README.md).
-- `packages.nix`: agent CLIs (`codex`, `opencode2`, `pi`) from the `llm-agents` flake input, plus
-  `pkgs.mcp-grafana` for the Grafana MCP server.
+- `packages.nix`: agent CLIs (`codex`, `opencode`, `pi`) from the `llm-agents` flake input, dsh from
+  `nur-ryan4yin`, `pkgs.ctx7` for the `find-docs` skill, and `pkgs.mcp-grafana` for the Grafana MCP
+  server. Profile patches live in `~/.dsh/profiles/<name>/cordis.patch.yml`. See [dsh.md](./dsh.md)
+  for the layer order and the settings that bite.
 - `env.nix`: telemetry and auto-update opt-outs for the agents.
-
-dsh is installed by this module but configured at runtime, not by Nix: profile patches live in
-`~/.dsh/profiles/<name>/cordis.patch.yml`. See [dsh.md](./dsh.md) for the layer order and the
-settings that bite.
 
 ## Deployed rule targets
 
@@ -65,7 +63,7 @@ compatibility links are needed:
   includes `~/.agents/skills` and follows symlink directories.
 - **dsh**:
   [Filesystem skill package](https://www.npmjs.com/package/@deepseek-ai/dsh-skill-filesystem)
-  documents `~/.agents/skills` and directory symlinks; confirmed in the shipped 0.2.0-rc.2 loader.
+  documents `~/.agents/skills` and directory symlinks; confirmed in the shipped 0.2.1-rc.2 loader.
 
 Adding or removing links requires a user-run Home Manager switch. Changes to an already-linked skill
 are available without a rebuild; start a new session or use the harness's reload mechanism to read

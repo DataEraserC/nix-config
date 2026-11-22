@@ -47,7 +47,9 @@ lives in the Home Manager module [`home/base/tui/agents/`](../home/base/tui/agen
 
 Before adding or expanding a rule, read the current rules and identify the decision boundary that
 needs to change. Keep reusable boundaries in `global-rules.md`; put concrete incidents, bypass
-attempts, and counterexamples in [behavioral scenarios](evals/global-rules.md).
+attempts, and counterexamples in [behavioral scenarios](evals/global-rules.md). Keep the file
+runtime- and project-neutral: runtime behavior belongs in that runtime's documentation, project
+mechanics in the project's instructions, and a rule belongs here only when it applies across both.
 
 - If an existing rule already covers the incident, add or refine a scenario instead of another rule.
 - If the boundary is missing or ambiguous, amend the relevant rule rather than append a special
@@ -56,6 +58,13 @@ attempts, and counterexamples in [behavioral scenarios](evals/global-rules.md).
   task-specific procedures in reference docs or skills.
 - Review the net growth and remove repetition. Brevity must preserve the boundary; verify both the
   prohibited action and the authorized action still behave as intended.
+
+The writing and design rules name Grice's maxims and Occam's razor and state the boundary beside
+each name. The name recruits what the model already knows about the principle; the boundary fixes
+the readings that would mislead: the maxim of relation never suppresses a report the rules require,
+and Occam's razor never prefers the smallest diff to the upstream fix. The rules first omitted the
+names, and agents applied the unnamed boundaries so rarely that users named the principles in chat
+instead; the [failure log](evals/failure-log.md) records how often.
 
 After changing the rules or a custom skill, size the evaluation to the change as the
 [evaluation guide](evals/global-rules.md#choosing-the-scope) describes, and record the results in
@@ -98,20 +107,23 @@ and boundaries for readiness waits, process inspection, and shell command sequen
 cost more than the compression saved; revision-specific sizes, results, and coverage limits are
 recorded in [#428](https://github.com/ryan4yin/nix-config/pull/428).
 
+- **Enforce the most-ignored rules in the harness.** A dsh plugin that rejects a fixed `sleep` over
+  5 seconds, `git -c user.*`, reads under `/run/agenix/`, and copies of credential directories; the
+  [failure log](evals/failure-log.md) shows prose rules alone did not stop them.
 - **Fold `mattpocock/skills` `pr` into `git-delivery`**: before/after evidence, one-way or two-way
   door, and blast radius for PR bodies.
 - **Write a `testing-strategy` skill**: E2E of real workflows first, unit tests for logic and edge
   cases E2E cannot reach.
-- **Merge `ponytail-review` with a comment and doc pruning pass** (reference:
-  `MidAutumnMoon/TaysiTsuki` `home/agents/skills/prune-comments-and-docs`). Worth borrowing from
-  `garrytan/gstack` `review/checklist.md`: a critical pass before an informational one, reading
-  consumers outside the diff for a new enum value or loosened validator, a do-not-flag list, and
-  "zero findings is valid". Keep review report-only.
+- **Merge `ponytail-review` into the shipped `review-comments-and-docs` skill** (its doc-pruning
+  half came from `MidAutumnMoon/TaysiTsuki` `home/agents/skills/prune-comments-and-docs`). Worth
+  borrowing from `garrytan/gstack` `review/checklist.md`: a critical pass before an informational
+  one, reading consumers outside the diff for a new enum value or loosened validator, a do-not-flag
+  list, and "zero findings is valid". Keep review report-only.
 - **Adapt `wayfinder` in the fork** so its map and tickets default to local Markdown and research
   stays local, instead of GitHub issues and pushed `research/` branches.
 - **Adapt `domain-modeling` in the fork** to record decisions in the repository's existing documents
-  (here `AGENTS.md`, `WORKAROUNDS.md`, `SECURITY.md`, READMEs) and create `GLOSSARY.md` or ADRs only
-  where none exist.
+  (here `AGENTS.md`, `docs/WORKAROUNDS.md`, `docs/SECURITY.md`, READMEs) and create `GLOSSARY.md` or
+  ADRs only where none exist.
 - **Borrow small gstack ideas into the rules**: completion statuses (done, done with concerns,
   blocked, needs context); never call a failure pre-existing without running the same check on the
   base branch; a subagent with no one to ask takes the recommended option but never a destructive or

@@ -35,7 +35,7 @@ projects live in [agents/](./agents/README.md).
 ## Validation
 
 - For Nix changes, run `just fmt` and inspect the diff: it formats all Nix files. Nix style is
-  `nixfmt` with width 100.
+  `nixfmt`, whose default width is 100.
 - For supported non-Nix files, use `prettier --write <file>` and `prettier --check <file>`;
   configuration lives in `.prettierrc.yaml`. Spelling checks use `typos` and `.typos.toml`.
 - Run `just test` for configuration changes; it evaluates `.#evalTests` across Linux and Darwin and
@@ -81,13 +81,14 @@ for disclosure of AI-assisted contributions:
 ## Security
 
 Security architecture, control limitations, rollout checks, and prioritized work are documented in
-[SECURITY.md](./SECURITY.md). Keep it consistent with changes to security boundaries or defaults.
+[SECURITY.md](./docs/SECURITY.md). Keep it consistent with changes to security boundaries or
+defaults.
 
 ## Workarounds
 
 Temporary workarounds, version pins, carried patches, and known gaps are recorded in
-[WORKAROUNDS.md](./WORKAROUNDS.md), each with a removal condition. Add a row in the same change that
-introduces one, and re-evaluate entries when their `Revisit` trigger comes up.
+[WORKAROUNDS.md](./docs/WORKAROUNDS.md), each with a removal condition. Add a row in the same change
+that introduces one, and re-evaluate entries when their `Revisit` trigger comes up.
 
 ## Command Hazards
 
@@ -95,17 +96,20 @@ introduces one, and re-evaluate entries when their `Revisit` trigger comes up.
   evaluate or build without activating a system. Use these commands for previews and validation.
 - `just up`, `just upp`, `just up-nix`, and `just override-pkgs <hash>` update flake inputs and
   commit the lock file. Use `nix flake update <input>` when the update should remain uncommitted.
+- `git push` publishes: to GitHub and, through the mirror workflow, to Gitee. Commit locally as
+  needed; ask the user before pushing.
 - `just niri` and `just local` activate the machine you are on through `sudo` and block on a
   password prompt; `just darwin-rollback` switches the macOS generation on the machine you are on,
-  and a bare `sudo systemctl restart <unit>` activates a running service the same way. The user runs
-  these, not an agent.
-- `just shoryu`, `just shushou`, `just youko`, `just ruby`, `just kana`, `just lab`,
-  `just k3s-test`, and `just col <tag>` activate systems through Colmena. Use the narrower recipe
-  that matches the intended host scope.
+  and a bare `sudo systemctl restart <unit>` activates a running service the same way.
+  `just shoukei-home-wifi` (a persistent NetworkManager profile) changes the local machine through
+  `sudo` too. The user runs these, not an agent.
+- `just shoryu`, `just shushou`, `just youko`, `just aquamarine`, `just ruby`, `just kana`,
+  `just lab`, `just k3s-test`, and `just col <tag>` activate systems through Colmena. Use the
+  narrower recipe that matches the intended host scope.
 - `just microvm-deploy <guest> <physical-host>` installs one MicroVM guest's runner on the physical
   host and restarts its unit there. A later host activation re-points the guest at the runner baked
-  into the host's system; see WA-026 in [WORKAROUNDS.md](./WORKAROUNDS.md) before deploying. Deploy
-  guests serially and check the guest Node and host services after each activation.
+  into the host's system; see WA-026 in [WORKAROUNDS.md](./docs/WORKAROUNDS.md) before deploying.
+  Deploy guests serially and check the guest Node and host services after each activation.
 - VM hosts (`shoryu`, `shushou`, `youko`) carry the `br0` bridge for their guests. Use the
   `boot`-based host deployment procedure for network stack or broad nixpkgs changes; see
   [hosts/README.md](./hosts/README.md#deploying-vm-hosts).
@@ -115,6 +119,9 @@ introduces one, and re-evaluate entries when their `Revisit` trigger comes up.
   only for the intended cleanup or history operation.
 - `just penvof` reads a process environment and can expose secrets. Use normal process inspection
   commands when environment values are not required.
+- `just del-failed` deletes failed pods in every namespace of the current kube context.
+- `just pkg-review <pr>` and `just pkg-test <pr> <pname>` dispatch a workflow in
+  `ryan4yin/nixpkgs-review-gha` that posts its result on the nixpkgs PR, a public GitHub write.
 
 ## Task Skills
 
@@ -139,11 +146,12 @@ repository, and cross-link them — no need to be told.
 
 ## Further Context
 
+- [Documentation index](./docs/README.md)
 - [Repository overview](./README.md)
-- [Workarounds & known gaps](./WORKAROUNDS.md)
+- [Workarounds & known gaps](./docs/WORKAROUNDS.md)
 - [Outputs and tests](./outputs/README.md)
 - [Hosts](./hosts/README.md), [system modules](./modules/README.md), and
   [Home Manager](./home/README.md)
-- [Secrets](./secrets/README.md), [backups](./BACKUP.md), and
+- [Secrets](./secrets/README.md), [backups](./docs/BACKUP.md), and
   [hardened app wrappers](./hardening/README.md)
 - [Installing NixOS from the ISO](./nixos-installer/README.md)

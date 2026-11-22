@@ -19,10 +19,12 @@ in
     ../idols-ai/preservation.nix
   ];
 
+  # 16G on a laptop: heavy derivations go to aquamarine's 96G instead of
+  # swapping here.
+  modules.remote-builders.enable = true;
+
   # disable sunshine for security
-  services.sunshine.enable = lib.mkForce false;
-  # battery-first: override the profile default
-  services.tuned.ppdSettings.main.default = lib.mkForce "power-saver";
+  services.sunshine.enable = false;
 
   # Laptop joins untrusted networks and is never scraped (see youko's
   # `offlineHosts`); don't expose :9100, and don't keep the smartctl exporter
@@ -50,6 +52,8 @@ in
     inherit hostName;
     inherit (myvars.networking) nameservers;
   };
+
+  modules.networking.mihomo.resolvedIntegration = true;
 
   fileSystems."/btr_pool" = {
     device = "/dev/disk/by-uuid/c2e8b249-240e-4eef-bf4e-81e7dbbf4887";

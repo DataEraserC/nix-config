@@ -1,4 +1,6 @@
 {
+  config,
+  lib,
   pkgs,
   ...
 }:
@@ -23,7 +25,7 @@
     installBatSyntax = false;
     settings = {
       font-family = "Maple Mono NF CN";
-      font-size = 13;
+      font-size = lib.mkDefault 13; # macOS overrides this in home/darwin/terminal.nix
 
       # hide title bar/header bar (Linux only; on macOS it would remove the traffic lights too)
       window-decoration = pkgs.stdenv.hostPlatform.isDarwin;
@@ -35,11 +37,7 @@
       # Start fullscreen on macOS; window managers control this on Linux.
       fullscreen = pkgs.stdenv.hostPlatform.isDarwin;
 
-      #  To resolve issues:
-      #    1. https://github.com/ryan4yin/nix-config/issues/26
-      #    2. https://github.com/ryan4yin/nix-config/issues/8
-      #  Spawn a nushell in login mode via `bash`
-      command = "${pkgs.bash}/bin/bash --login -c 'nu --login --interactive'";
+      command = "${lib.getExe config.programs.nushell.package} --config-home ${config.programs.nushell.configDir}";
     };
   };
 }

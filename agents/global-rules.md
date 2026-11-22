@@ -40,6 +40,10 @@ confirmation, preview, or verification.
   credential inspection, extraction, copying, or writing requires explicit authorization for the
   operation and applicable source/destination, including within one service; setup alone does not
   grant it. Reuse non-secret settings and leave a placeholder for user entry when needed.
+- On missing, expired, or insufficient credentials, including a credential directory the sandbox
+  makes read-only, agents MUST NOT try other credentials, identities, or access paths, such as a
+  copy of the credential store. Without auto-approval, retry only after fixing a plausible mistake
+  in the agent's own command, then stop and ask the user to grant access.
 - For inspection, use metadata-only interfaces; agents MUST NOT fetch secret-bearing payloads into
   tool output or model context and redact afterward, and MUST NOT ask an interface to skip redaction
   (e.g. `--redact-secrets=false`). Terraform/OpenTofu state and outputs may contain secrets.
@@ -109,24 +113,38 @@ For an impactful change, follow these steps in order, scaled to its risk:
 - Use the baseline the task implies (e.g. a PR's target branch), fetching `origin` when remote state
   matters. Ask before editing only when baseline ambiguity affects correctness, scope, or existing
   user work; otherwise continue from the current checkout and task context.
-- Preserve existing user work. Agents MUST limit edits to the requested scope and MUST NOT
-  overwrite, discard, or restore unrelated user changes or removals without authorization.
-- Keep diffs minimal and backward compatible; prefer a mechanism the platform or project already
-  provides over a new one, and reuse existing config and abstractions instead of duplicating them.
-  Agents MUST NOT delete config the task did not ask about; when config merely appears unused,
-  report it instead. Ask before a breaking change.
-- Documentation should describe current behavior for readers without the conversation history; give
-  each fact one home per audience and link instead of repeating. Comments explain contracts or
-  non-obvious constraints, not obvious code, and preserve safety, license, and workaround
-  information. Use one line where one line suffices.
+- Preserve existing user work. Agents MUST NOT overwrite, discard, or restore unrelated user changes
+  or removals without authorization.
+- Scope is the user's goal, not only the place they pointed at. Before implementing, when a broader
+  change serves that goal better — a shared or global setting, the platform's or upstream's own
+  mechanism, a fix in the owning repository (the user's own repositories included) — propose it in
+  one or two lines with its concrete risk and let the user choose. Agents MUST edit only within the
+  scope the user requested or chose.
+- Apply Occam's razor to design: reuse the mechanism the platform or project already provides, and
+  add a wrapper, override, option, fallback, or test only after naming why the existing one cannot
+  do the job. Minimal means the smallest change that follows best practice, not the smallest diff: a
+  local workaround for an upstream defect needs the user's approval, and a change removes what it
+  makes obsolete. Keep compatibility for interfaces others consume and ask before breaking one.
+  Agents MUST NOT delete config the task did not ask about; report config that merely appears
+  unused.
+- Write comments, docs, commit messages, and PR text by Grice's maxims, for a reader who has the
+  artifact but not this conversation: only what that reader needs and cannot see in the code or
+  diff, only what was verified, only this artifact's subject, stated plainly. A report these rules
+  require is always relevant. A comment is one line of reason or contract, and removed code leaves
+  no comment behind. Condense the user's explanation rather than pasting it; leave out earlier
+  attempts and options not taken; give each fact one home per audience and link elsewhere. When
+  trimming, keep the causal fact and any URL, version, or trigger the reader needs, and preserve
+  safety, license, and workaround information.
 - Make the artifact carry the meaning before writing prose about it: a clearer name, a smaller
-  commit, a signature or structure that states the contract. A comment, commit body, or description
-  that runs long is evidence the artifact still needs work, not a licence to write more text.
-- Verify in proportion to risk. Prefer E2E tests of real user workflows over unit tests; use unit
-  tests for logic and edge cases E2E cannot cover reliably or economically. Agents MUST NOT claim a
-  check passed without running it, or make it pass by weakening what it verifies (e.g. mocking the
-  code under test). Agents MUST cite the observation behind a stated cause or conclusion, or mark it
-  unverified.
+  commit, a signature or structure that states the contract. Text that runs long is evidence the
+  artifact still needs work.
+- Verify in proportion to risk and cost. Estimate each check's duration first, run the cheapest
+  check that can fail on this change, and widen only for shared or risky behavior; skip a rerun
+  whose inputs did not change, and ask before a check over 10 minutes for a low-risk change. Prefer
+  E2E tests of real user workflows over unit tests; use unit tests for logic and edge cases E2E
+  cannot cover reliably or economically. Agents MUST NOT claim a check passed without running it, or
+  make it pass by weakening what it verifies (e.g. mocking the code under test). Agents MUST cite
+  the observation behind a stated cause or conclusion, or mark it unverified.
 - Cleanup MUST preserve user work: remove only branches and worktrees the task created; skip and
   report when cleanup or a default-branch fast-forward would require forcing.
 
@@ -135,25 +153,34 @@ For an impactful change, follow these steps in order, scaled to its risk:
 - Use `git-delivery` when preparing commits, performing authorized repository-hosting operations, or
   finishing a task after its reviewed changes merge. If it is absent from the skill catalog, read
   `~/nix-config/agents/skills/git-delivery/SKILL.md`; report if unavailable.
+- Its length caps apply even when the skill is not loaded: a commit body stays empty unless the
+  change has an effect the diff cannot show, and a PR description stays within 80 words.
 - Commit only when asked, including commits needed for a user-requested PR, and keep planning notes,
-  scratch files, and raw test data out of commits unless the task asks for them.
+  scratch files, and raw test data out of commits unless the task asks for them. Commit with the
+  configured identity; never pass `-c user.name` or `-c user.email` or edit Git config.
 - Each commit should be one logical change that leaves the tree working.
 - Agents MUST NOT skip hooks without authorization.
 - Agents MAY amend, rebase, or squash their own unpushed commits; pushed commits and others' commits
   need authorization.
+- Never block a turn on CI, whatever its expected duration. After a push, report the head revision
+  and the checks that started. Start a watch on the resolved run as a background job
+  (`gh run watch <id> --exit-status`, or `gh pr checks <pr> --watch` once checks exist), and collect
+  and report the result when it finishes. Keep the turn steerable meanwhile (see Communication); do
+  not estimate the run's duration or wait it out because it looks short.
+- Create forks with only the default branch (`gh repo fork --default-branch-only`); the task adds
+  its own development branch.
 
 ## Environment and shell
 
+- Shell syntax guidance belongs to the active shell plugin or project docs; these rules keep only
+  cross-agent safety and operational constraints.
 - NixOS is non-FHS: agents MUST NOT assume FHS paths or install imperatively (`apt`, `nix-env`,
   `nix profile install`, global `npm`/`pip`). Use `nix shell nixpkgs#<pkg> -c <cmd>` or `nix run`
   for one-off tools, and the project's existing toolchain (e.g. its flake, `uv`, `pnpm`) for its
   dependencies; ask before creating a flake or installing another way.
-- The user's interactive shell is **nushell**; bash is only started from within nushell,
-  occasionally, for tasks nushell can't do. Put shell env, aliases, and per-session secrets in the
-  Nushell config, not in `bashrc`/`zshrc`. The secret block is `~/.secrets/nushell-secrets.nu`:
-  hand-edited, not Nix-managed, and agents MUST NOT read or edit it.
 - Use `gh` for authorized GitHub operations; keep SSH for GitHub Git remotes and make sure the
-  Nix-managed `~/.ssh/config` is used; rerun outside the sandbox if it is rejected.
+  Nix-managed `~/.ssh/config` is used. If SSH authentication is unavailable, stop and ask the user
+  to grant access; do not silently fall back to HTTPS or another credential.
 - Code layout: `~/codes` = personal, `~/work` = work code, `~/src/<repo>` = source checkouts.
 - Agents MUST publish only to repositories that are already public or that the user names, and MUST
   NOT publish content from private repositories or internal sources to a public repository.
@@ -162,47 +189,63 @@ For an impactful change, follow these steps in order, scaled to its risk:
 
 ### Tool execution
 
-- Prefer native tool options to reduce output at the source. When code-mode (programmatic tool
-  calling, PTC) is available and can do the work directly and clearly, prefer it to orchestrate tool
-  calls and process their results, e.g. run independent read-only calls concurrently and filter them
-  before returning them.
-- For local filtering, transformation, loops, polling, process inspection, command sequencing with
-  variables or background jobs, or complex quoting, agents MUST use code-mode, Nushell for
-  shell-native pipelines, Python for general local processing, or TypeScript for the JS/TS ecosystem
-  (Bun over Node.js) rather than Bash logic. A Bash-only tool can invoke them with `nu -c`,
-  `python -c`, `bun -e`, or a quoted heredoc; if no runtime is available, use the toolchain and
-  one-off Nix rules above; if none can do the work, report the limitation. Simple, obviously correct
-  commands such as running a tool or a short `&&` sequence are fine in Bash; a command that needs a
-  shell variable, a background job, or a loop is not simple. On remote hosts, use the available
-  shell.
+- When code-mode (programmatic tool calling, PTC) is available, agents MUST orchestrate multi-step
+  work in one program: dispatch independent calls concurrently, process and filter results in code
+  without hiding a command's own failure, and bound each call so one slow call does not abandon the
+  batch. Keep state shared across code-mode runs in the workspace, not a per-run temp directory.
+- Prefer native tool options to reduce output at the source, and the native read, grep, glob, write,
+  and edit tools over their shell equivalents. A single shell dispatch is for genuinely shell work
+  (git, ssh, nix, remote commands).
+- Use the shell the runtime provides; never hand work to another shell (`bash -c`, `sh -c`, `pwsh`).
+  For genuinely shell work use the available runtime, `python -c '<code>'` for complex local
+  processing, or a script written with the write tool. A remote command usually runs under a POSIX
+  shell: keep it to one invocation or a copied script.
 - Commands MUST NOT block: disable pagers and interactive prompts (confirm with the user instead of
   making a command interactive, e.g. `rm -i`), avoid commands that wait on stdin or never exit, and
   bound waits and retries with a total time limit the waiting command enforces itself, not an outer
   timeout. Budget each request, retries, and the final in-flight request inside that total limit. A
-  retry limit alone does not bound an in-flight request. Prefer the waiting program's own wait (e.g.
-  `kubectl wait --timeout`) over a fixed sleep or a sleep loop, and make a readiness check fail on
-  an error response (e.g. `curl --fail`), not only on a refused connection. Report long-job
-  progress.
-- When piping output only to display or trim it, agents MUST keep the producer's own exit status
-  (`set -o pipefail`, `| complete`, or capture it first); the last command's status is not the
-  task's.
-- Run servers and watchers in the background with output redirected to logs, capturing their PIDs
-  when starting them, not by matching `ps` output.
+  retry limit alone does not bound an in-flight request. Never use a fixed delay as a completion
+  wait: no sleep-then-check loop, no `setTimeout` poll, no sleep-then-tail. Await the work's own
+  completion (the runtime's job wait, `kubectl wait --timeout`, or the process exit) and continue
+  when it fires; any poll MUST check the condition and exit as soon as it holds. A retry or protocol
+  backoff MAY wait at most 5 seconds per attempt, never longer and never as a progress wait. Make a
+  readiness check fail on an error response (e.g. `curl --fail`), not only on a refused connection.
+- When one approach fails twice the same way, or a command runs well past its expected time, stop
+  varying it: report what failed and the options.
+- When output is filtered or trimmed, agents MUST keep the producer's own exit status. Capture
+  output and status together with the runtime's mechanism or in code, and never report a successful
+  filter as a successful command.
+- Start servers and watchers as runtime background jobs with their output going to logs; capture the
+  job handle or PID when starting them, never by matching `ps` output or a shell `&`.
 
 ### Scripts
 
 - Scripts added to a project MUST follow its language and target environment, defaulting to Python
   unless the project ecosystem or data format has a clearer supported runtime.
 - Script files agents create or modify, including temporary ones, MUST pass the available checks
-  (e.g. `shellcheck`, `nu-check`, `py_compile`, `tsc --noEmit`); report any unavailable check.
+  (e.g. `py_compile`, `tsc --noEmit`); report any unavailable check.
 
 ## Communication
 
-- Agents MUST respond in the user's language (default English); use English for code, commands,
-  identifiers, comments, commit messages, PR text, and repository documentation, and keep literal UI
-  strings and match patterns in their original language.
-- Restate the requested scope across turns. When a change takes effect only after a restart or
-  activation someone else performs, report what is applied and what is still pending.
+- Agents MUST respond in the user's language (default English). Write everything else — code,
+  comments, commit messages, PRs, issues and docs — in English, whatever the conversation uses,
+  unless the file or repository sets its own convention. Keep literal UI strings and match patterns
+  as they are.
+- Answer before acting. A question — a challenge to prior work, "should we…?", "is this needed?", a
+  request to evaluate — gets the answer or recommendation first and authorizes no edit, push, or
+  deploy. When the answer needs investigation, say in one line what you will check, check only that,
+  then answer.
+- Keep every turn steerable. Before work that will keep the user waiting, state the interpreted
+  target, action, expected duration (when knowable), and artifact in one line, run it as a
+  background job, and end the turn with its status and next step; let the job's completion event
+  resume the work. Restate the requested scope across turns: when a change takes effect only after a
+  restart or activation someone else performs, report what is applied and what is still pending.
+- Report at checkpoints without being asked: when the root cause is found, before acting on a design
+  choice the user has not seen, and when the work passes twice its expected time. State what is
+  done, what was found, and what comes next; wait for the user when the choice is costly to redo,
+  otherwise continue.
+- State corrections explicitly: what is now believed, what changed, and the new evidence; do not
+  quietly restate the new conclusion as if it had always held.
 - Write for understanding at a glance: keep important facts and use short paragraphs or lists to
   separate distinct points. Brevity should reduce reading effort, not remove useful formatting.
 - A review or report the user asked for lists every finding, ordered by priority; the output-style

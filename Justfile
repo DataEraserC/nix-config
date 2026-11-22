@@ -60,7 +60,7 @@ upp input:
 history:
   nix profile history --profile /nix/var/nix/profiles/system
 
-# Open a nix shell with the flake
+# Open a nix repl with nixpkgs from the flake registry
 [group('nix')]
 repl:
   nix repl -f flake:nixpkgs
@@ -125,7 +125,7 @@ verify-store:
 repair-store *paths:
   nix store repair {{paths}}
 
-# Update all Nixpkgs inputs
+# Update the secondary nixpkgs inputs (the primary `nixpkgs` needs `just up`)
 [group('nix')]
 up-nix:
   nix flake update --commit-lock-file nixpkgs-stable nixpkgs-master nixpkgs-darwin nixpkgs-patched
@@ -208,11 +208,11 @@ reset-launchpad:
 [linux]
 [group('homelab')]
 col tag mode="switch":
-  colmena apply {{mode}} --on '@{{tag}}' --verbose --show-trace
+  colmena apply {{mode}} --build-on-target --on '@{{tag}}' --verbose --show-trace
 
 # Deploy one microVM guest: copy its runner to the physical host, then restart the
 # guest unit there. microvm.nix's sshSwitch step is not used: it switches the guest over
-# SSH and dies on the read-only virtiofs /nix/store (WA-026 in WORKAROUNDS.md).
+# SSH and dies on the read-only virtiofs /nix/store (WA-026 in docs/WORKAROUNDS.md).
 # The host is the physical machine running the guest.
 [linux]
 [group('homelab')]
@@ -224,22 +224,34 @@ microvm-deploy guest host:
 [linux]
 [group('homelab')]
 lab mode="switch":
-  colmena apply {{mode}} --on '@virt-*' --verbose --show-trace
+  colmena apply {{mode}} --build-on-target --on '@virt-*' --verbose --show-trace
 
 [linux]
 [group('homelab')]
 shoryu mode="switch":
-  colmena apply {{mode}} --on '@shoryu' --verbose --show-trace
+  colmena apply {{mode}} --build-on-target --on '@shoryu' --verbose --show-trace
 
 [linux]
 [group('homelab')]
 shushou mode="switch":
-  colmena apply {{mode}} --on '@shushou' --verbose --show-trace
+  colmena apply {{mode}} --build-on-target --on '@shushou' --verbose --show-trace
 
 [linux]
 [group('homelab')]
 youko mode="switch":
-  colmena apply {{mode}} --on '@youko' --verbose --show-trace
+  colmena apply {{mode}} --build-on-target --on '@youko' --verbose --show-trace
+
+[linux]
+[group('homelab')]
+aquamarine mode="switch":
+  colmena apply {{mode}} --build-on-target --on '@aquamarine' --verbose --show-trace
+
+# Wake homelab hosts and wait until they answer. Defaults to all; accepts host
+# names, with `aqua` as an alias for aquamarine. Usage: just wake [host ...]
+[linux]
+[group('homelab')]
+wake *hosts:
+  python3 {{absolute_path("scripts/wake.py")}} {{hosts}}
 
 ############################################################################
 #
@@ -250,12 +262,12 @@ youko mode="switch":
 [linux]
 [group('homelab')]
 ruby mode="switch":
-  colmena apply {{mode}} --on '@ruby' --verbose --show-trace
+  colmena apply {{mode}} --build-on-target --on '@ruby' --verbose --show-trace
 
 [linux]
 [group('homelab')]
 kana mode="switch":
-  colmena apply {{mode}} --on '@kana' --verbose --show-trace
+  colmena apply {{mode}} --build-on-target --on '@kana' --verbose --show-trace
 
 ############################################################################
 #
@@ -266,7 +278,7 @@ kana mode="switch":
 [linux]
 [group('homelab')]
 k3s-test mode="switch":
-  colmena apply {{mode}} --on '@k3s-test-*' --verbose --show-trace
+  colmena apply {{mode}} --build-on-target --on '@k3s-test-*' --verbose --show-trace
 
 # =================================================
 #
@@ -282,15 +294,15 @@ dsh-web:
   # dsh's web fetch refuses a DNS answer it does not call public and fake-ip answers
   # with 198.18.0.0/15, so a proxied hop makes mihomo resolve the origin instead.
   # That makes mihomo a dependency of every Node fetch the harness makes, so it has
-  # to stop at the LAN: without no_proxy this host's own llama-swap endpoint goes
-  # through it too. Node reads only lowercase `no_proxy` and matches exact hosts,
-  # not CIDR; curl and Go do honor CIDR.
+  # to stop at the LAN: without no_proxy the llama-swap endpoint (aquamarine,
+  # 192.168.5.101) goes through it too. Node reads only lowercase `no_proxy` and
+  # matches exact hosts, not CIDR; curl and Go do honor CIDR.
   with-env {
     HTTPS_PROXY: "http://127.0.0.1:7897"
     HTTP_PROXY: "http://127.0.0.1:7897"
-    no_proxy: "localhost,127.0.0.1,::1,[::1],192.168.5.100,192.168.5.178,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
-    NO_PROXY: "localhost,127.0.0.1,::1,[::1],192.168.5.100,192.168.5.178,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
-  } { ^dsh web --no-open }
+    no_proxy: "localhost,127.0.0.1,::1,[::1],192.168.5.100,192.168.5.101,192.168.5.178,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+    NO_PROXY: "localhost,127.0.0.1,::1,[::1],192.168.5.100,192.168.5.101,192.168.5.178,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+  } { ^dsh --profile web --no-open }
 
 # Render the mihomo config from this repo and validate it with the live core.
 [linux]
@@ -310,33 +322,6 @@ mihomo-gen:
     exit $check.exit_code
   }
   print "validated -- restart: sudo systemctl restart mihomo.service"
-
-# Seed mihomo's geodata into the service's state dir, so a cold start needs no DNS.
-[linux]
-[group('services')]
-mihomo-geo:
-  #!/usr/bin/env nu
-  # Copy geodata in by hand, so a cold start never has to fetch it. The core
-  # fetches it while parsing rules, before its own DNS is up and while the link
-  # DNS points at it -- that fetch can only fail.
-  let src = ($env.HOME | path join .config mihomo)
-  let dst = "/var/lib/private/mihomo"
-  sudo mkdir -p $dst
-  mut seeded = []
-  for f in [GeoSite.dat geoip.metadb ASN.mmdb] {
-    let p = ($src | path join $f)
-    if ($p | path exists) {
-      sudo cp $p $dst
-      $seeded = ($seeded | append ($dst | path join $f))
-    } else {
-      print $"(!) ($f) is not in ($src) -- fetch it first: mihomo -t -d ($src) -f ($src)/config.yaml"
-    }
-  }
-  if ($seeded | is-not-empty) {
-    sudo chmod 644 ...$seeded
-    let names = ($seeded | path basename | str join ', ')
-    print $"seeded ($names) -- restart mihomo to pick them up"
-  }
 
 # Render the mihomo config into a Clash Verge Rev local profile on macOS.
 # sources.yaml comes from the encrypted dotfiles sync (nix-secrets `just restore`).
@@ -381,6 +366,30 @@ game:
 [group('k8s')]
 del-failed:
   kubectl delete pod --all-namespaces --field-selector="status.phase==Failed"
+
+# Start PC VR on idols-ai; WirePlumber routes audio to the headset once it connects.
+[linux]
+[group('vr')]
+vr:
+  systemctl --user start wivrn.service
+
+# Stop PC VR when finished.
+[linux]
+[group('vr')]
+vr-stop:
+  systemctl --user stop wivrn.service
+
+# Show PC VR service status.
+[linux]
+[group('vr')]
+vr-status:
+  systemctl --user status wivrn.service --no-pager
+
+# Follow PC VR service logs.
+[linux]
+[group('vr')]
+vr-logs:
+  journalctl --user -u wivrn.service -f
 
 [linux]
 [group('services')]

@@ -14,8 +14,6 @@ in
   ];
 
   preservation.enable = true;
-  boot.initrd.systemd.enable = true;
-
   environment.systemPackages = [
     # `sudo gdu -x /`
     pkgs.gdu
@@ -27,7 +25,15 @@ in
   preservation.preserveAt."/persistent" = {
     directories = [
       "/etc/NetworkManager/system-connections"
-      "/etc/ssh"
+      # Mount in initrd: NixOS copies mode-carrying /etc entries (such as
+      # authorized_keys.d) during stage-2 activation, which runs before systemd
+      # starts. A mount created by preservation.target comes later and would
+      # hide those copies behind the previous `switch`, so key changes only
+      # applied on `switch`, never on `boot` + reboot.
+      {
+        directory = "/etc/ssh";
+        inInitrd = true;
+      }
       "/etc/nix/inputs"
       "/etc/secureboot" # lanzaboote - secure boot
       # my secrets
@@ -88,13 +94,11 @@ in
       "/home/${username}/.terraform.d".d = permission;
     };
 
-  # systemd-machine-id-commit.service would fail but it is not relevant
-  # in this specific setup for a persistent machine-id so we disable it
-  #
-  # see the firstboot example below for an alternative approach
+  # Mask the commit service: /etc/machine-id is persisted by preservation
+  # (see the `files` entry above), so there is no transient ID to commit.
   systemd.suppressedSystemUnits = [ "systemd-machine-id-commit.service" ];
 
-  # let the service commit the transient ID to the persistent volume
+  # Inert while the unit is masked above; kept as the alternative approach.
   systemd.services.systemd-machine-id-commit = {
     unitConfig.ConditionPathIsMountPoint = [
       ""

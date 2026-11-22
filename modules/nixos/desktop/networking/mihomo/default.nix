@@ -30,7 +30,7 @@ let
     cp -r ${pkgs.metacubexd} $out
     chmod -R u+w $out
     substituteInPlace $out/index.html $out/200.html $out/404.html \
-      --replace '<title>MetaCubeXD</title>' '<title>MetaCubeXD · ${host}</title>'
+      --replace-fail '<title>MetaCubeXD</title>' '<title>MetaCubeXD · ${host}</title>'
     cat >> $out/config.js <<'EOF'
 
     ;(function () {
@@ -49,8 +49,10 @@ let
   '';
 in
 {
-  options.modules.networking.mihomo.enable =
-    lib.mkEnableOption "the native Mihomo core with TUN and a local web UI";
+  options.modules.networking.mihomo = {
+    enable = lib.mkEnableOption "the native Mihomo core with TUN and a local web UI";
+    resolvedIntegration = lib.mkEnableOption "route systemd-resolved DNS through the mihomo TUN interface";
+  };
 
   config = lib.mkIf cfg.enable {
     services.mihomo = {
@@ -66,5 +68,66 @@ in
     # wait for it: otherwise activation can start mihomo before the mount is up
     # and fail with "Failed to set up credentials: No such file or directory".
     systemd.services.mihomo.unitConfig.RequiresMountsFor = builtins.dirOf configFile;
+
+    # Geodata from nixpkgs: a cold start must not fetch it (its DNS is not up yet).
+    systemd.tmpfiles.settings.mihomo-geodata = {
+      "/var/lib/private/mihomo/GeoSite.dat"."L+".argument =
+        "${pkgs.v2ray-rules-dat}/share/v2ray/geosite.dat";
+      "/var/lib/private/mihomo/geoip.metadb"."L+".argument = pkgs.dbip-country-lite.mmdb;
+      "/var/lib/private/mihomo/ASN.mmdb"."L+".argument = pkgs.dbip-asn-lite.mmdb;
+    };
+
+    services.resolved.enable = lib.mkIf cfg.resolvedIntegration true;
+    networking.networkmanager =
+      lib.mkIf (cfg.resolvedIntegration && config.networking.networkmanager.enable)
+        {
+          dns = "systemd-resolved";
+          # NetworkManager owns physical links; mihomo owns this virtual link.
+          unmanaged = [ "interface-name:Meta" ];
+        };
+    systemd.services.mihomo.after = lib.optional cfg.resolvedIntegration "systemd-resolved.service";
+    systemd.services.mihomo.requires = lib.optional cfg.resolvedIntegration "systemd-resolved.service";
+
+    # Force the TUN's v6 address up: left to itself mihomo skips the v6 half when
+    # no NIC has an IPv6 address at startup, yet still installs its strict-route v6
+    # blackhole, which locks the host out of IPv6. Upstream knob (`inet6-address`,
+    # meta-docs tun.md); the full chain is WA-030.
+    systemd.services.mihomo.serviceConfig = {
+      Environment = [ "SKIP_SYSTEM_IPV6_CHECK=1" ];
+    }
+    // lib.optionalAttrs cfg.resolvedIntegration {
+      # Attach the catch-all to the TUN, leaving DHCP and more-specific VPN DNS
+      # routes untouched. Removing the TUN also removes its resolved settings.
+      # '+' allows the privileged D-Bus call outside mihomo's service sandbox.
+      # '-': a timed-out hook must not take the proxy down with it.
+      ExecStartPost = "-+${pkgs.coreutils}/bin/timeout 30 ${
+        lib.getExe (
+          pkgs.writeShellApplication {
+            name = "mihomo-resolved";
+            runtimeInputs = [
+              pkgs.dig
+              pkgs.systemd
+            ];
+            text = ''
+              until (( SECONDS >= 25 )); do
+                if [[ -e /sys/class/net/Meta ]] \
+                  && dig +time=1 +tries=1 @127.0.0.1 -p 1053 localhost A >/dev/null \
+                  && resolvectl dns Meta 127.0.0.1:1053 \
+                  && resolvectl dnssec Meta no \
+                  && resolvectl dnsovertls Meta no \
+                  && resolvectl domain Meta '~.'; then
+                  exit 0
+                fi
+                sleep 0.1
+              done
+              echo "mihomo TUN or DNS did not become ready" >&2
+              exit 1
+            '';
+          }
+        )
+      }";
+      # The interface may already be gone after a clean stop or a crash.
+      ExecStopPost = "-+${pkgs.systemd}/bin/resolvectl revert Meta";
+    };
   };
 }

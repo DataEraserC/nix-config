@@ -57,11 +57,8 @@ in
           };
         };
 
-        # xwayland-satellite has no compositor-level clipboard bridging, so X11
-        # clients (WeChat/QQ, run via xwayland-satellite) and Wayland clients
-        # cannot see each other's clipboard. This daemon mirrors the X11
-        # CLIPBOARD and the Wayland data device both directions (see the
-        # pyclipsync repo for details).
+        # QQ draws a Wayland window but copies through the X11 CLIPBOARD, which
+        # xwayland-satellite bridges only while an X11 window has focus.
         services.pyclipsync.enable = true;
 
         # NOTE: this executable is used by greetd to start a wayland session when system boot up

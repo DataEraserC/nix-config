@@ -2,6 +2,57 @@
 
 This directory contains all host-specific configurations for my NixOS and macOS systems.
 
+Manual firmware settings are recorded in [`docs/bios.md`](../docs/bios.md), and the shared
+Wake-on-LAN workflow is in [`docs/wake-on-lan.md`](../docs/wake-on-lan.md).
+
+## Host Profiles
+
+Every host is exactly one profile. The profile fixes the system module that
+`outputs/<system>/src/<host>.nix` imports and the Home Manager role that
+`home/hosts/<platform>/<host>.nix` imports. A host directory only adds hardware, networking,
+persisted paths and feature switches on top.
+
+| Profile   | System module (in outputs)        | Home role (in home/hosts) | Hosts                                       |
+| --------- | --------------------------------- | ------------------------- | ------------------------------------------- |
+| `desktop` | `modules/nixos/desktop.nix`       | `home/linux/gui.nix`      | `ai`, `shoukei`                             |
+| `agent`   | `modules/nixos/agent.nix`         | `home/linux/tui.nix`      | `aquamarine`, `ruby`, `kana`                |
+| `server`  | `modules/nixos/server/server.nix` | none                      | `shoryu`, `shushou`, `youko`, k3s, `akane`¹ |
+| `darwin`  | `modules/darwin`                  | `home/darwin`             | `fern`, `frieren`                           |
+
+¹ `akane` (aarch64) uses `server-aarch64.nix`; the k3s nodes import `server.nix` from their host
+directory.
+
+- **desktop**: Niri session and GUI apps on top of the full TUI stack.
+- **agent**: headless, with the full TUI stack from Home Manager (shell, editors, dev toolchains,
+  cloud CLIs, AI agents with their rules and skills), and nix-ld, rootless Podman and linger from
+  the system. Computer use (Xvfb + i3, VNC) is part of the profile but off by default. Git reaches
+  GitHub over HTTPS with the host's own `gh` login, not the owner's SSH key.
+- **server**: system services only, no Home Manager.
+
+The `agent` hosts differ only in:
+
+|              | `aquamarine`                               | `ruby`              | `kana`              |
+| ------------ | ------------------------------------------ | ------------------- | ------------------- |
+| Computer use | off                                        | on, with cua-driver | on, with cua-driver |
+| Hardware     | physical; 2x R9700, NPU speech recognition | libvirt guest       | libvirt guest       |
+| Root         | tmpfs; `preservation.nix` keeps home state | disk                | disk                |
+
+`outputs/x86_64-linux/tests/agent-profile` checks the `agent` rows.
+
+### Where a new piece of configuration goes
+
+1. A tool you run from a shell goes to the Home Manager role (`home/base/core`, `home/base/tui`),
+   never to a host's `environment.systemPackages`.
+2. Anything that needs root or a system service (nix-ld, Podman, drivers, systemd units) goes to the
+   profile's system module, or to a `modules/nixos` module the profile imports.
+3. Hardware, networking, the hostname, persisted paths and feature switches go to the host
+   directory.
+
+A host does not import files from another host's directory; shared code moves under `modules/` or
+`home/` instead. Existing exceptions, between machines on identical hardware: `shushou` and `youko`
+reuse `12kingdoms-shoryu`'s hardware and preservation files, and `shoukei` reuses `idols-ai`'s
+preservation file.
+
 ## Current Host Inventory
 
 ### Physical Machines
@@ -10,34 +61,40 @@ This directory contains all host-specific configurations for my NixOS and macOS 
 
 Named after characters from "Oshi no Ko":
 
-| Host    | Platform        | Hardware                                | Purpose            | Status    |
-| ------- | --------------- | --------------------------------------- | ------------------ | --------- |
-| `ai`    | NixOS           | Ultra 7 270K Plus + RTX 4090, 128G DDR5 | Gaming & Daily Use | ✅ Active |
-| `kana`  | NixOS (libvirt) | Virtual                                 | Run AI Agents      | ✅ Active |
-| `ruby`  | NixOS (libvirt) | Virtual                                 | Run AI Agents      | ✅ Active |
-| `akane` | NixOS (aarch64) | Virtual (UTM)                           | aarch64 test VM    | ✅ Active |
+| Host         | Platform        | Hardware                                             | Purpose            | Status    |
+| ------------ | --------------- | ---------------------------------------------------- | ------------------ | --------- |
+| `ai`         | NixOS           | i5-13600KF + RTX 4090, 32G DDR5                      | Gaming & Daily Use | ✅ Active |
+| `aquamarine` | NixOS           | Ultra 7 270K Plus + 2x Radeon AI PRO R9700, 96G DDR5 | AI Inference       | ✅ Active |
+| `kana`       | NixOS (libvirt) | Virtual                                              | Run AI Agents      | ✅ Active |
+| `ruby`       | NixOS (libvirt) | Virtual                                              | Run AI Agents      | ✅ Active |
+| `akane`      | NixOS (aarch64) | Virtual (UTM)                                        | aarch64 test VM    | ✅ Active |
 
-On 2026-04-27 `ai` was rebuilt on a new platform. The MSI board and i5-13600KF it was added with in
-2023-05 (the host was originally named `msi-rtx4090`) gave way to the Colorful CVN Z890 ARK FROZEN +
-Intel Core Ultra 7 270K Plus. The traces in the history are PR #257 (the NIC moved from `enp5s0` to
-`enp130s0`) and PR #258 (Niri output names renamed, `hardware-intel.nix` added with the Arrow Lake
-NPU, kernel moved to `linuxPackages_latest`). The 2×48G DDR5 kit was already in place at that point;
-the repo has no record of when it went in.
+On 2026-04-27 `ai` was rebuilt on a new platform. The MSI board it was added with in 2023-05, with
+the i5-13600KF (the host was originally named `msi-rtx4090`), gave way to the Colorful CVN Z890 ARK
+FROZEN + Intel Core Ultra 7 270K Plus. The traces in the history are PR #257 (the NIC moved from
+`enp5s0` to `enp130s0`) and PR #258 (Niri output names renamed, `hardware-intel.nix` added). The
+kernel moved to `linuxPackages_latest` in `77ca37ea`, the same day but outside #258. The 2×48G DDR5
+kit was already in place at that point; the repo has no record of when it went in.
 
 On 2026-10-06 `ai` grew from 2×48G (96G) to 2×48G + 2×16G (128G) across all four DIMM slots, at
 DDR5-4800 with XMP off — the only stable setting with four DIMMs on this board. The 16G pair must be
-installed first; with the 48G pair in first the board does not POST. The bring-up order, the BIOS
-settings, the stress-test recipe, and how to recover a board that will not POST are in
-[`idols-ai/MIXED-MEMORY.md`](./idols-ai/MIXED-MEMORY.md).
+installed first; with the 48G pair in first the board does not POST. It did run, in stretches of one
+to two days at a time, before a sudden hard freeze, and resuming from suspend was unreliable too;
+the stress test passed and no BIOS setting, DIMM or IMC fault was ever isolated, so 128G in four
+DIMMs stayed untrusted.
+
+On 2026-10-13 that platform was split in two. The Z890 board, the 270K Plus, the 2×48G kit and two
+Radeon AI PRO R9700 cards became `aquamarine`, a headless inference server; `ai` went back to the
+MSI MAG B760M MORTAR board with the i5-13600KF, the 2×16G kit and the RTX 4090. `aquamarine` boots
+from the NVMe that used to be `ai`'s `/data` disk. Its name and the address `192.168.5.101` are
+reused from the `aquamarine` VM retired on 2026-09-21; that VM's services still run directly on
+`youko` (`hosts/12kingdoms-youko/homelab-services/`). Hardware, install and runbook:
+[`idols-aquamarine/README.md`](./idols-aquamarine/README.md).
 
 ##### Retired
 
-| Host         | Platform        | Hardware | Purpose               | Status     |
-| ------------ | --------------- | -------- | --------------------- | ---------- |
-| `aquamarine` | NixOS (libvirt) | Virtual  | Monitoring & Services | ⚪ Retired |
-
-`aquamarine` is retired; its services now run directly on `youko`
-(`hosts/12kingdoms-youko/homelab-services/`).
+_No physical host in this group is retired. The `aquamarine` VM (NixOS on libvirt, monitoring and
+services) was retired on 2026-09-21 and its name was reused for the inference server above._
 
 #### `darwin` - macOS Systems
 
@@ -71,7 +128,8 @@ disks.
 
 #### `k8s` - Kubernetes Infrastructure
 
-- **VM Cluster**: 3 physical mini PCs (shoryu, shushou, youko) running all VMs
+- **VM Cluster**: 3 physical mini PCs (shoryu, shushou, youko) run the k3s VMs; `akane` is a NixOS
+  VM under UTM on macOS
 - **K3s Testing**: `k3s-test-1` control plane and workers, running as microVMs; placement and
   rollout are documented in [`k8s/README.md`](./k8s/README.md)
 
@@ -97,6 +155,18 @@ Copy the closest existing host and adapt it. The step-by-step procedure, includi
 networking wiring, secrets, and the eval tests a new host must pass, is in
 [`.agents/skills/nix-config-new-host/SKILL.md`](../.agents/skills/nix-config-new-host/SKILL.md).
 
+## CPU Power Policy
+
+Physical hosts get `powersave` from [`power.nix`](../modules/nixos/power.nix); Apple hosts keep
+their own `schedutil`. On the active Intel/AMD P-state drivers `powersave` still scales with load,
+so this is not a frequency cap.
+
+TuneD is not enabled on any host. It tunes much more than CPU frequency and fits laptops, but our
+laptop is a MacBook with its own native support, so it has no use here.
+
+The desktops also run UPower for power-supply reporting: the laptop's battery, and peripheral
+batteries on a desktop. It only reports state, and changes no CPU or device setting.
+
 ## Deploying VM Hosts
 
 The three VM hosts (`shoryu`, `shushou`, `youko`) put their VMs on the Linux bridge `br0`, with the
@@ -110,7 +180,23 @@ qemu-kvm path; there are none right now.
   settings). Deploy serially (`-p 1`) and re-check VM reachability afterwards.
 - Use `boot` + a serial reboot for anything that can drop the network mid-flight — `systemd.network`
   / `br0` changes, nixpkgs updates, or any broad rebuild.
+- `switch` enforces this through `system.switch.inhibitors` in
+  [genVmHostModule.nix](../lib/genVmHostModule.nix): when the kernel, its parameters or modules, the
+  initrd, systemd, `networkd.conf`, or the `br0` / uplink units change, `switch-to-configuration`
+  prints `There are changes to critical components of the system` and exits before installing the
+  boot loader, and Colmena reports the activation as failed. Colmena has already pointed the system
+  profile at the new generation, so rerun with `just <host> boot` and reboot, or switch anyway on
+  the host with `NIXOS_NO_CHECK=1 /nix/var/nix/profiles/system/bin/switch-to-configuration switch`.
 - If a host loses VM networking, check `br0` and the VM taps, or reboot the host.
+
+## Boot Recovery on Physical Servers
+
+`shoryu`, `shushou`, `youko` (systemd-boot) and `aquamarine` (Lanzaboote) write each new generation
+with a boot counter. After 3 boots that never reach `boot-complete.target` (ordered after
+`sysinit.target`), the entry is marked bad and the boot loader starts the newest good one. The root
+LUKS volume unlocks through TPM2 alone, so retries need no console. Failures later in boot, such as
+a broken `br0`, do not count, and a hung boot retries only after a reboot or power cycle.
+`bootctl list` shows each entry's remaining tries.
 
 ## Common Build Commands
 
@@ -122,8 +208,8 @@ just build-host <host>
 ```
 
 `eval-host` only evaluates the configuration. `build-host` builds the system closure without
-activating it. Host activation remains an explicit Colmena operation such as `just shoryu`,
-`just shushou`, or `just youko`.
+activating it. Host activation is always explicit: Colmena (`just shoryu`, `just shushou`,
+`just youko`, `just aquamarine`) from another machine, or `just local` on the machine itself.
 
 ## Distributed Building
 

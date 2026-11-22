@@ -4,9 +4,9 @@
 # rules, the rules from `sources.yaml` and the rules imported from your
 # subscriptions, so this file is the tail that closes every config.
 #
-# GEOSITE categories come from meta-rules-dat, which the module keeps current
-# (`geo-auto-update`). `mihomo -t` validates the names: `taobao`, `alipay` and
-# `wechat` do not exist in it, hence the hand-written domains below.
+# GEOSITE categories come from meta-rules-dat on the gateway and nixpkgs'
+# v2ray-rules-dat on the desktops. `mihomo -t` validates the names: `taobao`,
+# `alipay` and `wechat` do not exist in it, hence the hand-written domains below.
 
 # Region node groups. Each entry becomes two groups offered inside PROXY:
 # "<name> 自动" (url-test, lazy: only health-checked once selected) and
@@ -85,6 +85,9 @@ rules:
   - GEOSITE,private,DIRECT
   - GEOSITE,category-ads-all,REJECT
 
+  # Proxy the Play CN API to avoid mainland CDN selection for proxied downloads.
+  - DOMAIN,services.googleapis.cn,PROXY
+
   # Steam picks its download caches from the IP it sees on the login (CM) connection:
   # a proxied login downloads from Tokyo/SG/HK/LA. `cm.steampowered.com` must precede
   # the `steampowered.com` catch, and both the Valve IP ranges below, which also serve
@@ -107,6 +110,9 @@ rules:
   # IPs without a lookup, so domain rules leak; needs ASN.mmdb via `geox-url.asn`.
   - IP-ASN,32590,DIRECT,no-resolve
   - DOMAIN,launcher-webstatic.hoyoverse.com,DIRECT
+
+  # LinkedIn resolves to a CN IP; GEOIP,CN below would send it DIRECT (302 to linkedin.cn).
+  - GEOSITE,linkedin,PROXY
 
   # CN consumer services: proxied they fail in ways that look like app bugs --
   # WeChat pictures spin, JD and Taobao product images go blank. Much of it is

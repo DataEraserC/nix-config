@@ -1,4 +1,27 @@
-{ config, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  mylib,
+  ...
+}:
+let
+  ruleGlobs = [
+    "alert_rules/*.yml"
+    "alert_rules/*.yaml"
+    "recording_rules/*.yml"
+    "recording_rules/*.yaml"
+  ];
+  # A rule vmalert cannot parse fails this build instead of the running service.
+  checkedRules =
+    pkgs.runCommand "vmalert-homelab-rules" { nativeBuildInputs = [ config.services.vmalert.package ]; }
+      ''
+        mkdir $out
+        cp -r ${./alert_rules} $out/alert_rules
+        cp -r ${./recording_rules} $out/recording_rules
+        vmalert -dryRun ${lib.concatMapStringsSep " " (glob: ''-rule="$out/${glob}"'') ruleGlobs}
+      '';
+in
 {
   # https://docs.victoriametrics.com/victoriametrics/vmalert/
   services.vmalert.instances."homelab" = {
@@ -18,19 +41,19 @@
       # from URLs in log messages or UI and exported metrics.
       "datasource.showURL" = false;
       # Path to the files with alerting and/or recording rules.
-      rule = [
-        "${./alert_rules}/*.yml"
-        "${./alert_rules}/*.yaml"
-        "${./recording_rules}/*.yml"
-        "${./recording_rules}/*.yaml"
-      ];
+      rule = map (glob: "${checkedRules}/${glob}") ruleGlobs;
       # https://docs.victoriametrics.com/victoriametrics/vmalert/#link-to-alert-source
       # Set this two args to generate the correct `.GeneratorURL`
       "external.url" = "https://grafana.writefor.fun";
+      # Grafana resolves this by UID, then by name; it must match the provisioned
+      # datasource name in grafana/datasources.nix.
       "external.alert.source" =
-        ''explore?left={"datasource":"{{ if eq .Type \"vlogs\" }}VictoriaLogs{{ else }}VictoriaMetrics{{ end }}","queries":[{"expr":{{ .Expr|jsonEscape|queryEscape }},"refId":"A"}],"range":{"from":"{{ .ActiveAt.UnixMilli }}","to":"now"}}'';
+        ''explore?left={"datasource":"victoriametrics-homelab","queries":[{"expr":{{ .Expr|jsonEscape|queryEscape }},"refId":"A"}],"range":{"from":"{{ .ActiveAt.UnixMilli }}","to":"now"}}'';
     };
   };
+
+  # nixpkgs only sets DynamicUser; vmalert talks to loopback and keeps no state.
+  systemd.services.vmalert-homelab.serviceConfig = mylib.systemdHardening.mkDefaults mylib.systemdHardening.service;
 
   services.prometheus.alertmanager = {
     enable = true;
@@ -119,7 +142,7 @@
               chat_id = 586169186; # My Telegram ID
               # Whether to notify about resolved alerts.
               send_resolved = true;
-              # Disable notifications for resolved alerts
+              # Not disabled: resolved alerts are still notified (see send_resolved).
               disable_notifications = false;
               # Telegram's MarkdownV2 & Markdown are all very painful, we use html instead.
               # https://core.telegram.org/bots/api#formatting-options
@@ -141,7 +164,7 @@
                 🟢 <b>告警恢复</b> [{{ .CommonLabels.severity | title }}] <b>{{ .CommonLabels.alertname }}</b>
                 {{- end }}
 
-                • <b>告警组</b>: {{ .CommonLabels.alertgroup }}
+                • <b>告警组</b>: {{ with .CommonLabels.alertgroup }}{{ . }}{{ else }}N/A{{ end }}
                 • <b>Cluster</b>: {{ with .CommonLabels.cluster }}{{ . }}{{ else }}N/A{{ end }}
                 • <b>Env</b>: {{ with .CommonLabels.env }}{{ . }}{{ else }}N/A{{ end }}
                 • <b>Namespace</b>: {{ with .CommonLabels.namespace }}{{ . }}{{ else }}N/A{{ end }}

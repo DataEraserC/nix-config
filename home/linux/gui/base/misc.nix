@@ -7,21 +7,20 @@
     # GUI apps
     # e-book viewer(.epub/.mobi/...)
     # do not support .pdf
-    foliate
+    nixpaks.foliate
 
-    # remote desktop(rdp connect)
-    remmina
-    freerdp # required by remmina
+    # remote desktop (RDP/VNC/SPICE); FreeRDP is a Remmina runtime dependency
+    nixpaks.remmina
 
     # my custom hardened packages
     nixpaks.qq
     nixpaks.telegram-desktop
-    bwraps.wechat
+    nixpaks.wechat
     # discord # update too frequently, use the web version instead
   ];
 
-  # allow fontconfig to discover fonts and configurations installed through home.packages
-  # Install fonts at system-level, not user-level
+  # Fonts install at system level, not user level, so fontconfig does not
+  # scan home.packages for them.
   fonts.fontconfig.enable = false;
 
 }

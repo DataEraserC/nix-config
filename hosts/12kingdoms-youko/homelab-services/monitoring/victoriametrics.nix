@@ -6,10 +6,7 @@
 let
   # Powered-off hosts (SBCs) plus shoukei (exporter disabled on the
   # machine); remove entries when they come back online.
-  # `aquamarine` is decommissioned: its IP now lives on youko's bridge, so
-  # scraping it would relabel youko's metrics as aquamarine.
   offlineHosts = [
-    "aquamarine"
     "shoukei"
     "suzu"
     "suzi"
@@ -25,28 +22,17 @@ let
   # `vars/networking.nix`.
   physicalHosts = [
     "ai"
+    "aquamarine"
     "shoryu"
     "shushou"
     "youko"
   ];
+
+  # Physical servers run rasdaemon and its exporter on :10029 (hardware.rasdaemon
+  # in lib/genVmHostModule.nix and hosts/idols-aquamarine/default.nix).
+  rasdaemonHosts = lib.remove "ai" physicalHosts;
 in
 {
-  # Since victoriametrics use DynamicUser, the user & group do not exists before the service starts.
-  # this group is used as a supplementary Unix group for the service to access our data dir under /var/lib
-  users.groups.victoriametrics-data = { };
-
-  # Workaround for victoriametrics to store data in another place
-  # https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html#Type
-  systemd.tmpfiles.rules = [
-    "d /var/lib/victoriametrics 0770 root victoriametrics-data - -"
-  ];
-
-  # Symlinks do not work with DynamicUser, so we should use bind mount here.
-  # https://github.com/systemd/systemd/issues/25097#issuecomment-1929074961
-  systemd.services.victoriametrics.serviceConfig = {
-    SupplementaryGroups = [ "victoriametrics-data" ];
-  };
-
   # https://victoriametrics.io/docs/victoriametrics/latest/configuration/configuration/
   services.victoriametrics = {
     enable = true;
@@ -62,8 +48,6 @@ in
       # Keep it >= the senders' scrapeInterval (vmagent 20s, in-cluster 30s).
       "-dedup.minScrapeInterval=30s"
     ];
-    # Directory below /var/lib to store victoriametrics metrics data.
-    stateDir = "victoriametrics";
 
     # specifies a set of targets and parameters describing how to scrape metrics from them.
     # https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
@@ -283,7 +267,33 @@ in
             ];
           }
         ]
-      ) [ ] (lib.attrsets.filterAttrs (n: _: builtins.elem n physicalHosts) myvars.networking.hostsAddr));
+      ) [ ] (lib.attrsets.filterAttrs (n: _: builtins.elem n physicalHosts) myvars.networking.hostsAddr))
+      # --- MCE / PCIe AER / memory errors (physical servers only) --- #
+      ++ (lib.attrsets.foldlAttrs
+        (
+          acc: hostname: addr:
+          acc
+          ++ [
+            {
+              job_name = "rasdaemon-${hostname}";
+              scrape_interval = "60s";
+              metrics_path = "/metrics";
+              static_configs = [
+                {
+                  targets = [ "${addr.ipv4}:10029" ];
+                  labels.type = "rasdaemon";
+                  labels.app = "rasdaemon";
+                  labels.host = hostname;
+                  labels.env = "homelab";
+                  labels.cluster = "homelab";
+                }
+              ];
+            }
+          ]
+        )
+        [ ]
+        (lib.attrsets.filterAttrs (n: _: builtins.elem n rasdaemonHosts) myvars.networking.hostsAddr)
+      );
     };
   };
 }

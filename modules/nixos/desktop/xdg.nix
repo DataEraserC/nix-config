@@ -33,12 +33,14 @@
 
     config = {
       common = {
-        # Use xdg-desktop-portal-gtk for every portal interface...
+        # Prefer the GTK portal for interfaces it implements.
         default = [
           "gtk"
           "gnome"
         ];
       };
+      # niri's own ScreenCast offers only DMA-BUF, which Zoom rejects; wlr has SHM (WA-046).
+      niri."org.freedesktop.impl.portal.ScreenCast" = "wlr";
     };
 
     # Sets environment variable NIXOS_XDG_OPEN_USE_PORTAL to 1
@@ -50,8 +52,9 @@
 
     # ls /run/current-system/sw/share/xdg-desktop-portal/portals/
     extraPortals = with pkgs; [
-      xdg-desktop-portal-gtk # for provides file picker / OpenURI
-      xdg-desktop-portal-gnome # for screensharing
+      xdg-desktop-portal-gtk # file picker and OpenURI
+      xdg-desktop-portal-gnome # screenshot and remaining GNOME services
+      xdg-desktop-portal-wlr # ScreenCast on niri
     ];
   };
 
@@ -68,8 +71,8 @@
     overrideStrategy = "asDropin";
     text = ''
       [Unit]
-      After=xdg-desktop-portal.service xdg-desktop-portal-gtk.service xdg-desktop-portal-gnome.service
-      Wants=xdg-desktop-portal.service xdg-desktop-portal-gtk.service xdg-desktop-portal-gnome.service
+      After=xdg-desktop-portal.service xdg-desktop-portal-gtk.service xdg-desktop-portal-gnome.service xdg-desktop-portal-wlr.service
+      Wants=xdg-desktop-portal.service xdg-desktop-portal-gtk.service xdg-desktop-portal-gnome.service xdg-desktop-portal-wlr.service
     '';
   };
 }

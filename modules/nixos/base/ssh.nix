@@ -11,11 +11,14 @@
       # Secure by default: X11 forwarding off everywhere; desktops re-enable it
       # in modules/nixos/desktop/ssh.nix (needed for GUI forwarding).
       X11Forwarding = lib.mkDefault false;
-      # root user is used for remote deployment, so we need to allow it
+      # root login stays available for Colmena/MicroVM deployment, keys only
       PermitRootLogin = lib.mkDefault "prohibit-password";
       PasswordAuthentication = false; # disable password login
+      # nixpkgs defaults it to true, and PAM then still accepts the Unix password
+      KbdInteractiveAuthentication = false;
     };
-    openFirewall = true;
+    # Only keys declared in Nix log in; a hand- or intruder-added key is ignored
+    authorizedKeysInHomedir = false;
   };
 
   # NixOS appends an `Include` of systemd's ssh_config.d drop-in to

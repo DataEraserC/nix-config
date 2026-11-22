@@ -1,29 +1,34 @@
 {
   config,
   pkgs,
-  tuios,
   ...
 }:
 let
-  # nixpkgs lags behind upstream; use the flake input.
-  tuiosPkg = tuios.packages.${pkgs.stdenv.hostPlatform.system}.tuios;
-
   # tuios watches config.toml and its settings page writes it back, so link the
   # checked-in file out-of-store instead of into the store.
   configDir = "${config.home.homeDirectory}/nix-config/home/base/tui/tuios";
 in
 {
-  home.packages = [ tuiosPkg ];
+  home.packages = [ pkgs.tuios ];
 
   xdg.configFile."tuios/config.toml".source =
     config.lib.file.mkOutOfStoreSymlink "${configDir}/config.toml";
 
-  # auto-start tuios in interactive shells, except when already inside tuios.
+  # auto-start tuios in local interactive shells, except when already inside
+  # tuios or connected over SSH.
   # `work` for the ~/work tree, `personal` for everything else (a host with no
   # ~/work gets `personal` everywhere).
   programs.nushell.extraConfig = ''
-    # auto start tuios
-    if $nu.is-interactive and (not ("TUIOS_SESSION" in $env)) {
+    # TUIOS keeps TERM=xterm-256color for terminfo compatibility, even though
+    # this host's only terminal emulators (kitty and Ghostty) both speak the
+    # Kitty graphics protocol and TUIOS forwards it. Force the guest TERM to
+    # xterm-kitty so graphics-aware apps do not disable themselves; its
+    # terminfo entry comes with kitty.
+    if ("TUIOS_ENV" in $env) {
+      $env.TERM = "xterm-kitty"
+    }
+
+    if $nu.is-interactive and (not ("TUIOS_SESSION" in $env)) and (not ("SSH_CONNECTION" in $env)) {
       # Exit 3 means the daemon is stopped; stdout still lists saved sessions.
       let listing = (^tuios ls --json | complete)
       if $listing.exit_code not-in [0 3] {

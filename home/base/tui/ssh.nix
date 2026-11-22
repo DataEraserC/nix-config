@@ -3,29 +3,62 @@
   lib,
   pkgs,
   mysecrets,
+  myvars,
   ...
 }:
+let
+  # WA-035: settings for the home LAN, which the desktop reaches over a Mesh
+  # WiFi backhaul.
+  lanHost = {
+    # A lost first SYN must not fail the connection; a LAN handshake is ~2 ms,
+    # so the connect is cut short and retried instead of hanging.
+    ConnectTimeout = 1;
+    ConnectionAttempts = 3;
+    # One persistent master per host keeps a session (and with it the mesh's
+    # forwarding entry for that peer) open, so later connections reuse it
+    # instead of resolving and handshaking again. Three missed keepalives reap a
+    # master whose path died.
+    ControlMaster = "auto";
+    ControlPersist = "30m";
+    ServerAliveInterval = 15;
+  };
+in
 {
   home.file.".ssh/romantic.pub".source = "${mysecrets}/public/romantic.pub";
 
+  # Each CanoKey holds a resident FIDO2 SSH key for GitHub and every host, its
+  # handle exported on each desktop to ~/.ssh/canokey-<name>; every new
+  # connection needs a touch, and ssh skips the handle of an unplugged key. Setup:
+  # docs/security-keys.md.
   programs.ssh = {
     enable = true;
+    # macOS's ssh has no FIDO provider ("Cannot download keys without provider").
+    package = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin pkgs.openssh;
 
     enableDefaultConfig = false;
-    settings."*" = {
-      ForwardAgent = false;
-      AddKeysToAgent = "yes";
-      Compression = true;
-      ServerAliveInterval = 0;
-      ServerAliveCountMax = 3;
-      HashKnownHosts = false;
-      UserKnownHostsFile = "~/.ssh/known_hosts";
-      ControlMaster = "no";
-      ControlPath = "~/.ssh/master-%r@%n:%p";
-      ControlPersist = "no";
-    };
-
+    # Keep this one definition: Nix merges a `settings."<pattern>"` attribute
+    # path into `settings = ...` only while that value stays an attrset literal,
+    # so the generated LAN patterns are merged inside it with `//` instead.
     settings = {
+      "*" = {
+        # Main key first, then the backup.
+        IdentityFile = map (name: "${config.home.homeDirectory}/.ssh/${name}") [
+          "canokey-tea"
+          "canokey-moe"
+        ];
+        ForwardAgent = false;
+        AddKeysToAgent = "yes";
+        Compression = true;
+        ServerAliveInterval = 0;
+        ServerAliveCountMax = 3;
+        HashKnownHosts = false;
+        UserKnownHostsFile = "~/.ssh/known_hosts";
+        # A connection reused within 30 s needs no new touch.
+        ControlMaster = "auto";
+        ControlPath = "~/.ssh/master-%r@%n:%p";
+        ControlPersist = "30s";
+      };
+
       "github.com" = {
         # WA-028: pinned to IPv4 until the mihomo v6 fake-ip pool is proven here
         AddressFamily = "inet";
@@ -37,11 +70,18 @@
 
       "192.168.*" = {
         ForwardAgent = true;
-        # decrypted secret: AI agents must not read it
-        IdentityFile = "/etc/agenix/ssh-key-romantic";
-        IdentitiesOnly = true;
-      };
-    };
+      }
+      // lanHost;
+    }
+    # Aliases forward the agent like their addresses do; servers ask it for sudo
+    # (modules/nixos/server/ssh-agent-sudo.nix).
+    // lib.genAttrs (builtins.attrNames myvars.networking.hostsAddr) (
+      _:
+      {
+        ForwardAgent = true;
+      }
+      // lanHost
+    );
   };
 
   # Keep ~/.ssh/config a real, user-owned file rather than a /nix/store symlink.

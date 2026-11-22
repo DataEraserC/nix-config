@@ -1,0 +1,261 @@
+{ pkgs, mkNixPak }:
+let
+  inherit (pkgs) lib;
+
+  load = name: (pkgs.callPackage (../nixpaks + "/${name}.nix") { inherit mkNixPak; }).config;
+
+  # Wrapper files are the source of truth for the app inventory. The test
+  # loader compares this with the per-app suites under ./policy.
+  appNames = map (lib.removeSuffix ".nix") (
+    builtins.attrNames (
+      lib.filterAttrs (
+        name: type: type == "regular" && name != "default.nix" && lib.hasSuffix ".nix" name
+      ) (builtins.readDir ../nixpaks)
+    )
+  );
+  apps = map load appNames;
+
+  mountStrings =
+    app: builtins.filter builtins.isString (lib.flatten (with app.bubblewrap.bind; rw ++ ro ++ dev));
+
+  # Render a sloth value as the launcher would, with $VAR for environment
+  # lookups, so suites can assert on paths built from $HOME and friends.
+  renderSloth =
+    value:
+    if builtins.isString value then
+      value
+    else if value.type == "env" then
+      "$" + value.key
+    else if value.type == "concat" then
+      renderSloth value.a + renderSloth value.b
+    else if value.type == "mkdir" then
+      renderSloth value.dir
+    else
+      throw "cannot render sloth value of type ${value.type}";
+
+  # A bind entry is a path, or a [ source destination ] pair.
+  renderBind = entry: if builtins.isList entry then map renderSloth entry else renderSloth entry;
+
+  forbiddenDbus =
+    argument:
+    lib.any (name: lib.hasInfix name argument) [
+      "org.freedesktop.portal.Usb"
+      "org.freedesktop.portal.RemoteDesktop"
+      "org.gnome.Shell.Screencast"
+    ]
+    || argument == "--talk=org.freedesktop.portal.Desktop";
+
+  withoutSecretPortal =
+    calls:
+    calls
+    // {
+      "org.freedesktop.portal.Desktop" = lib.filter (
+        arg: !lib.hasInfix "org.freedesktop.portal.Secret" arg
+      ) calls."org.freedesktop.portal.Desktop";
+    };
+
+  forbiddenMount =
+    path:
+    path == "/dev"
+    || lib.hasPrefix "/dev/video" path
+    || lib.hasPrefix "/dev/bus/usb" path
+    || path == "/dev/uinput"
+    || path == "/run/dbus"
+    || path == "/run/dbus/system_bus_socket"
+    || path == "/sys"
+    || path == "/run/udev";
+
+  hasHostFontconfig = app: lib.elem [ "/etc/static/fonts" "/etc/fonts" ] app.bubblewrap.bind.ro;
+
+  hasPrivateTmp =
+    app:
+    let
+      tmpPath = lib.findFirst (
+        entry: builtins.isList entry && builtins.length entry == 2 && builtins.elem "/tmp" entry
+      ) null app.bubblewrap.bind.rw;
+    in
+    builtins.isList tmpPath && builtins.length tmpPath == 2;
+
+  hasDbusFragment = app: fragment: lib.any (argument: lib.hasInfix fragment argument) app.dbus.args;
+
+  networkCheck =
+    app: mode:
+    if mode == "host" then
+      app.bubblewrap.network && !app.pasta.enable
+    else if mode == "pasta" then
+      app.bubblewrap.network
+      && app.pasta.enable
+      && app.pasta.mode == "isolate"
+      && lib.elem "--no-map-gw" app.pasta.args
+    else if mode == "none" then
+      !app.bubblewrap.network && !app.pasta.enable
+    else
+      throw "unknown network mode for ${app.flatpak.appId}: ${mode}";
+
+  mediaCheck =
+    app: expected: allowPipewire:
+    if expected then
+      app.portalGroups.camera && app.portalGroups.screenCast
+    else
+      (!app.bubblewrap.sockets.pipewire || allowPipewire)
+      && !app.portalGroups.camera
+      && !app.portalGroups.screenCast
+      && !(hasDbusFragment app "org.freedesktop.portal.Camera")
+      && !(hasDbusFragment app "org.freedesktop.portal.ScreenCast");
+
+  secretPortalCheck =
+    app: expected:
+    if expected then
+      (app.browserPermissions.secretPortal or false)
+      && lib.any (
+        argument:
+        argument
+        == "--call=org.freedesktop.portal.Desktop=org.freedesktop.portal.Secret.RetrieveSecret@/org/freedesktop/portal/desktop"
+      ) app.dbus.args
+    else
+      !(app.browserPermissions.secretPortal or false)
+      && !(hasDbusFragment app "org.freedesktop.portal.Secret");
+
+  # FIDO2 needs both the udev-maintained node directory and the bwrap wrapper
+  # that links /dev/hidrawN into it; neither may leak to other apps.
+  fido2Check =
+    app: expected:
+    (app.browserPermissions.fido2 or false) == expected
+    && lib.elem "/dev/fido-hidraw" app.bubblewrap.bind.dev == expected
+    && (lib.getName app.bubblewrap.package == "bwrap") == expected;
+
+  trayCheck =
+    app: expected:
+    if expected then
+      app.desktopIntegration.tray
+      && (app.dbus.policies."org.freedesktop.DBus" or null) == "talk"
+      && (app.dbus.policies."org.kde.StatusNotifierWatcher" or null) == "talk"
+    else
+      !app.desktopIntegration.tray;
+
+  # Checks shared by every game launcher suite (modules/gaming-policy.nix):
+  # ~/Gaming is the sandbox home and the only host home path, joysticks are
+  # the only input devices, compat tools come from the store, and the launcher
+  # grants no file chooser or document portal.
+  gamingChecks =
+    name:
+    let
+      app = load name;
+      rw = map renderBind app.bubblewrap.bind.rw;
+      source = entry: if builtins.isList entry then builtins.head entry else entry;
+      sources = binds: map (entry: source (renderBind entry)) binds;
+    in
+    {
+      sharedHome = lib.elem [ "$HOME/Gaming" "$HOME" ] rw;
+      noXdgStorage = !app.xdgStorage.enable;
+      writableScope = lib.all (
+        path:
+        path == "$HOME/Gaming"
+        || path == "$XDG_RUNTIME_DIR/nixpak-${app.flatpak.appId}-tmp"
+        # Without the nixpak bus proxy the sandbox needs the session bus socket
+        # itself (WA-051).
+        || (!app.dbus.enable && path == "$XDG_RUNTIME_DIR/bus")
+      ) (sources app.bubblewrap.bind.rw);
+      noHostHomeReads =
+        !lib.any (
+          path:
+          lib.any (prefix: lib.hasPrefix prefix path) [
+            "$HOME"
+            "$XDG_CACHE_HOME"
+            "$XDG_CONFIG_HOME"
+            "$XDG_DATA_HOME"
+            "$XDG_STATE_HOME"
+          ]
+        ) (sources app.bubblewrap.bind.ro);
+      gamepadsOnly =
+        lib.elem [
+          "/dev/gamepad-input"
+          "/dev/input"
+        ] app.bubblewrap.bind.dev
+        && !lib.elem "/dev/input" (sources app.bubblewrap.bind.dev)
+        && !lib.any (path: lib.hasPrefix "/dev/hidraw" path) (lib.flatten app.bubblewrap.bind.dev);
+      driver32 = lib.elem "/run/opengl-driver-32" app.bubblewrap.bind.ro;
+      compatToolsInStore = lib.all (lib.hasPrefix builtins.storeDir) (
+        lib.splitString ":" app.bubblewrap.env.STEAM_EXTRA_COMPAT_TOOLS_PATHS
+      );
+      openUri = app.portalGroups.openUri;
+      noFileChooser = !app.portalGroups.fileChooser;
+    };
+
+  mkAppPolicy =
+    name: spec:
+    let
+      app = load name;
+      allowedVideoDevices = spec.allowedVideoDevices or [ ];
+      forbiddenMountFor = path: forbiddenMount path && !lib.elem path allowedVideoDevices;
+      checks = {
+        "${name}/clearEnv" = app.bubblewrap.clearEnv;
+        "${name}/dbus" = app.dbus.enable == (spec.dbus or true);
+        "${name}/noRawPipewire" = !app.bubblewrap.sockets.pipewire || (spec.allowPipewire or false);
+        "${name}/noForbiddenDbus" = !lib.any forbiddenDbus app.dbus.args;
+        "${name}/noBroadKeyring" =
+          !lib.any (argument: argument == "--talk=org.freedesktop.secrets") app.dbus.args;
+        "${name}/noForbiddenMounts" = !lib.any forbiddenMountFor (mountStrings app);
+        "${name}/hostFontconfig" = hasHostFontconfig app;
+        "${name}/noSandboxFonts" = !app.fonts.enable;
+        "${name}/privateTmp" = hasPrivateTmp app;
+        "${name}/network" = networkCheck app spec.network;
+        "${name}/x11" = app.bubblewrap.sockets.x11 == (spec.x11 or false);
+        "${name}/media" = mediaCheck app (spec.media or false) (spec.allowPipewire or false);
+        "${name}/pulse" = app.bubblewrap.sockets.pulse == (spec.pulse or (spec.media or false));
+        "${name}/mpris" = app.desktopIntegration.mpris == (spec.mpris or false);
+        "${name}/notifications" = app.desktopIntegration.notifications == (spec.notifications or true);
+        "${name}/tray" = trayCheck app (spec.tray or false);
+        "${name}/browserpass" =
+          (app.browserPermissions.browserpass or false) == (spec.browserpass or false);
+        "${name}/fido2" = fido2Check app (spec.fido2 or false);
+        "${name}/personalFiles" =
+          (app.browserPermissions.personalFiles or false) == (spec.personalFiles or false);
+        "${name}/secretPortal" = secretPortalCheck app (spec.secretPortal or false);
+        # nixpak resolves "env" entries from the launcher environment.
+        "${name}/timeZonePassthrough" =
+          app.bubblewrap.env ? TZ
+          && app.bubblewrap.env.TZ.type == "env"
+          && app.bubblewrap.env ? TZDIR
+          && app.bubblewrap.env.TZDIR.type == "env";
+      };
+      extraChecks = lib.mapAttrs' (checkName: value: {
+        name = "${name}/${checkName}";
+        inherit value;
+      }) (spec.extraChecks or { });
+      duplicates = lib.attrNames (lib.intersectAttrs checks extraChecks);
+    in
+    if duplicates != [ ] then
+      throw "duplicate nixpak policy checks for ${name}: ${lib.concatStringsSep ", " duplicates}"
+    else
+      checks // extraChecks;
+
+  globalChecks =
+    let
+      paths = map (app: app.bubblewrap.bind.rw) apps;
+      tmpPaths = map (
+        bind:
+        lib.findFirst (
+          entry: builtins.isList entry && builtins.length entry == 2 && builtins.elem "/tmp" entry
+        ) null bind
+      ) paths;
+    in
+    {
+      appTmpIsolation =
+        lib.all (path: builtins.isList path && builtins.length path == 2) tmpPaths
+        && lib.length (lib.unique (map builtins.head tmpPaths)) == builtins.length apps;
+    };
+in
+{
+  inherit
+    lib
+    appNames
+    load
+    mountStrings
+    renderBind
+    gamingChecks
+    withoutSecretPortal
+    mkAppPolicy
+    globalChecks
+    ;
+}

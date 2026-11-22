@@ -1,5 +1,4 @@
 {
-  lib,
   pkgs,
   nixos-apple-silicon,
   my-asahi-firmware,
@@ -15,7 +14,7 @@
   # screen would bypass it entirely). Keep tuigreet from modules/nixos/desktop.nix.
 
   # 16G machine: more compressed swap than the 50% default
-  zramSwap.memoryPercent = lib.mkForce 75;
+  zramSwap.memoryPercent = 75;
 
   nix.settings = {
     extra-substituters = [
@@ -32,7 +31,7 @@
   # BCM4378/brcmfmac: disable Wi-Fi power saving. Powersave is a common source
   # of intermittent association failures / authentication timeouts, which NM
   # mistakes for a bad key, re-prompts, and lets the client (Noctalia, nmtui,
-  # nmcli) save as a duplicate "<SSID> 1" profile. See WORKAROUNDS.md WA-024/025.
+  # nmcli) save as a duplicate "<SSID> 1" profile. See docs/WORKAROUNDS.md WA-024/025.
   networking.networkmanager.wifi.powersave = false;
 
   # Specify path to peripheral firmware files.
@@ -65,6 +64,12 @@
     AllowSuspendThenHibernate = "no";
     HibernateDelaySec = "5min";
   };
+
+  # Cap charging at 90%. The driver rejects writes at "add" (before registration finishes) and
+  # announces readiness with "change". TLP's macbook plugin only accepts 80/100 here.
+  services.udev.extraRules = ''
+    ACTION=="add|change", SUBSYSTEM=="power_supply", KERNEL=="macsmc-battery", ATTR{charge_control_end_threshold}!="90", ATTR{charge_control_end_threshold}="90"
+  '';
 
   # After adding this snippet, you need to restart the system for the touchbar to work.
   hardware.apple.touchBar = {

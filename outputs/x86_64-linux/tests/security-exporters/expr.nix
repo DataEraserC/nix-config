@@ -43,6 +43,31 @@ lib.genAttrs (builtins.attrNames outputs.nixosConfigurations) (
           9835
           9633
         ];
+    # Every enabled exporter's socket must bind this host's static LAN IPv4, not
+    # the nixpkgs default 0.0.0.0 (audit 2026-10-22 found the nvidia exporter wild).
+    exportersBoundToLan =
+      let
+        lanAddr = myvars.networking.hostsAddr.${config.networking.hostName}.ipv4 or null;
+      in
+      lib.all
+        (
+          name:
+          let
+            e = config.services.prometheus.exporters.${name};
+            socket = config.systemd.sockets."prometheus-${name}-exporter" or { };
+          in
+          !e.enable
+          || (
+            builtins.elem "--web.systemd-socket" e.extraFlags
+            && socket.listenStreams or [ ] == [ "${lanAddr}:${toString e.port}" ]
+            && socket.socketConfig.FreeBind or false
+          )
+        )
+        [
+          "node"
+          "smartctl"
+          "nvidia-gpu"
+        ];
     ipv6RestrictedBeforeTrust = lib.hasInfix ipv6Guard beforeTrust;
     generatedRestrictionsBeforeTrust =
       broadTrustRules != [ ]

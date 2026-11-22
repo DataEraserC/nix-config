@@ -12,8 +12,6 @@ in
 
   modules.desktop.vinput.enable = true;
 
-  programs.ssh.settings."github.com".IdentityFile = "${config.home.homeDirectory}/.ssh/idols-ai";
-
   modules.desktop.gaming.enable = true;
   modules.desktop.niri.enable = true;
 
@@ -34,7 +32,8 @@ in
   xdg.configFile."niri/niri-hardware.kdl".source =
     mkSymlink "${config.home.homeDirectory}/nix-config/hosts/idols-ai/niri-hardware.kdl";
 
-  # Keep Noctalia's network widgets on the physical uplink, not the Mihomo TUN.
+  # Keep Noctalia's network widgets on the physical uplink, not the Mihomo TUN
+  # (the interface name is in ./idols-ai/noctalia.toml and `hostsAddr.ai.iface`).
   xdg.configFile."noctalia/host-ai.toml".source = ./idols-ai/noctalia.toml;
 
   # The desktop speakers are already loud, so use the broadcast-standard -23 dB.

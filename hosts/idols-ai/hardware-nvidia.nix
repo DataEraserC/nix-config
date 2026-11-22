@@ -1,6 +1,7 @@
 {
   config,
   pkgs,
+  myvars,
   ...
 }:
 {
@@ -8,36 +9,12 @@
   # for Nvidia GPU
   # https://wiki.nixos.org/wiki/NVIDIA
   # https://wiki.hyprland.org/Nvidia/
+  #
+  # The RTX 4090 is the only GPU on this host: the i5-13600KF has no iGPU, so
+  # there is no PRIME offload to configure and nothing to keep the dGPU "free"
+  # for.
   # ===============================================================================================
 
-  # Hybrid graphics with PRIME[integrated GPU (iGPU) + dedicated GPU (dGPU)]
-  hardware.nvidia.prime = {
-    # puts dGPU(Nvidia) to sleep and lets the iGPU handle all tasks by default.
-    offload = {
-      enable = true;
-      enableOffloadCmd = true; # generate a nvidia-offload command
-    };
-
-    intelBusId = "PCI:0@0:2:0";
-    nvidiaBusId = "PCI:2@0:0:0";
-  };
-
-  # Games launched through GameScope should use the dGPU. prime.offload keeps the
-  # Intel iGPU as the default renderer so the dGPU stays free for LLM workloads,
-  # so opt GameScope games into PRIME render offload here. Games launched outside
-  # GameScope need `nvidia-offload %command%` in their Steam launch options.
-  programs.gamescope.env = {
-    __NV_PRIME_RENDER_OFFLOAD = "1";
-    __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
-    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
-    __VK_LAYER_NV_optimus = "NVIDIA_only";
-  };
-
-  boot.kernelParams = [
-    # Since NVIDIA does not load kernel mode setting by default,
-    # enabling it is required to make Wayland compositors function properly.
-    "nvidia-drm.fbdev=1"
-  ];
   services.xserver.videoDrivers = [ "nvidia" ]; # will install nvidia-vaapi-driver by default
 
   hardware.nvidia = {
@@ -49,10 +26,38 @@
     # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/os-specific/linux/nvidia-x11/default.nix
     package = config.boot.kernelPackages.nvidiaPackages.production;
 
-    # required by most wayland compositors!
+    # required by most wayland compositors! Also sets nvidia-drm.modeset=1 and,
+    # for drivers >= 545, nvidia-drm.fbdev=1.
     modesetting.enable = true;
     powerManagement.enable = true;
   };
+
+  # Bound the driver's free-buffer pool for niri only: it never returns freed
+  # vidmem, so niri's VRAM grows past 1 GiB (WA-039). Applies at niri's next start.
+  # https://github.com/niri-wm/niri/wiki/Nvidia#high-vram-usage-fix
+  environment.etc."nvidia/nvidia-application-profiles-rc.d/50-limit-free-buffer-pool-in-wayland-compositors.json".text =
+    builtins.toJSON {
+      rules = [
+        {
+          pattern = {
+            feature = "procname";
+            matches = "niri";
+          };
+          profile = "Limit Free Buffer Pool On Wayland Compositors";
+        }
+      ];
+      profiles = [
+        {
+          name = "Limit Free Buffer Pool On Wayland Compositors";
+          settings = [
+            {
+              key = "GLVidHeapReuseRatio";
+              value = 0;
+            }
+          ];
+        }
+      ];
+    };
 
   hardware.nvidia-container-toolkit.enable = true;
   hardware.graphics = {
@@ -61,23 +66,25 @@
     enable32Bit = true;
   };
 
-  # GPU monitoring: CUDA btop (CAP_PERFMON also lets it read the Intel iGPU),
-  # nvtop, and the community nvidia_gpu_exporter.
-  modules.btop = {
-    package = pkgs.btop-cuda;
-    perfmon = true;
-  };
+  # GPU monitoring: CUDA btop, nvtop, and the community nvidia_gpu_exporter.
+  modules.btop.package = pkgs.btop-cuda;
   environment.systemPackages = [ pkgs.nvtopPackages.full ];
-  services.prometheus.exporters.nvidia-gpu.enable = true;
+  # LAN-bound like node/smartctl in modules/nixos/base/monitoring.nix: the
+  # socket must not exist on tailscale0/br0 even if the firewall regresses.
+  services.prometheus.exporters.nvidia-gpu = {
+    enable = true;
+    listenAddress = myvars.networking.hostsAddr.ai.ipv4;
+  };
 
   services.sunshine.settings = {
-    adapter_name = "/dev/dri/by-path/pci-0000:00:02.0-render"; # Intel iGPU
-    encoder = "vaapi";
+    max_bitrate = 20000; # in Kbps
+    # No adapter_name: Sunshine picks the only adapter, the 4090.
+    nvenc_preset = 3;
+    nvenc_twopass = "full_res";
   };
 
   systemd.user.services.sunshine = {
     after = [ "niri.service" ];
-    environment.LIBVA_DRIVER_NAME = "iHD";
     preStart = ''
       for _ in {1..20}; do
         if ${config.programs.niri.package}/bin/niri msg outputs | ${pkgs.gnugrep}/bin/grep -q '^Output '; then

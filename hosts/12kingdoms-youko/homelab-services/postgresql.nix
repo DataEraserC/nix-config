@@ -57,7 +57,12 @@ in
 
       # logging
       log_connections = true;
-      log_statement = "all";
+      # Log slow statements instead of every statement; also lock waits longer
+      # than deadlock_timeout, every temp file, and slow autovacuum runs.
+      log_min_duration_statement = 1000; # ms
+      log_lock_waits = true;
+      log_temp_files = 0;
+      log_autovacuum_min_duration = 1000; # ms
       logging_collector = true;
       log_disconnections = true;
       log_destination = lib.mkForce "syslog";
@@ -96,10 +101,11 @@ in
       # "local" is for Unix domain socket connections only
       local   all             all                                     peer     map=superuser_map
 
-      # TCP loopback: application roles may still connect without a password
-      # (Immich, the exporter), but the superuser and replication may not. That
-      # is the path a compromised local service would take. No password is set
-      # for postgres, so these lines deny it over TCP.
+      # TCP loopback: application roles may still connect without a password,
+      # but the superuser and replication may not. That is the path a
+      # compromised local service would take. No password is set for postgres,
+      # so these lines deny it over TCP. Immich and the exporter use the Unix
+      # socket above, so no configured client needs the loopback trust lines.
       host    all             postgres        127.0.0.1/32            scram-sha-256
       host    all             postgres        ::1/128                 scram-sha-256
       host    all             all             127.0.0.1/32            trust
@@ -116,6 +122,21 @@ in
     # initialScript =
     #   pkgs.writeText "backend-initScript" ''
     #   '';
+  };
+
+  # Logical dump of all databases and roles. The restic snapshot of the data
+  # directory is only crash-consistent; the dump restores cleanly. /var/lib is
+  # persisted, so the dump lands in the @persistent tree that restic backs up.
+  services.postgresqlBackup = {
+    enable = true;
+    location = "/var/lib/postgresql-backup";
+    compression = "zstd";
+    # no timer of its own: each restic run takes a fresh dump first
+    startAt = [ ];
+  };
+  systemd.services.restic-backups-homelab = {
+    wants = [ "postgresqlBackup.service" ];
+    after = [ "postgresqlBackup.service" ];
   };
 
   services.prometheus.exporters.postgres = {
