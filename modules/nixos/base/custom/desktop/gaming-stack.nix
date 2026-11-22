@@ -68,38 +68,12 @@ in
       ];
     };
 
-    # Expose DW-Proton to umu-run: umu ignores Steam's
-    # STEAM_EXTRA_COMPAT_TOOLS_PATHS, and a store path baked into a generated
-    # launcher goes stale on every dwproton-bin update. The nix-config-umu-game
-    # skill and the run/exec scripts it generates read this first.
-    environment.variables.UMU_PROTONPATH = "${pkgs.dwproton-bin.steamcompattool}";
-
-    # GameScope: run a game in its own nested compositor and let it renice
-    # itself for steadier frame pacing. GPU-specific PRIME render offload belongs
-    # to the host, not here (see programs.gamescope.env in
-    # hosts/idols-ai/hardware-nvidia.nix).
-    # https://github.com/ValveSoftware/gamescope
-    programs.gamescope = {
-      enable = true;
-      capSysNice = true;
-    };
-
     # low-latency PipeWire comes from upstream's gaming.nix native
     # 99-lowlatency config (see above); nix-gaming's pipewireLowLatency import
     # is deliberately omitted to avoid a duplicate module-rt entry.
     # programs.steam.platformOptimizations stays off: the sysctls it would set
     # are already carried by the upstream gaming module (identical values, but
     # boot.kernel.sysctl rejects duplicate definitions).
-
-    # Optimise Linux system performance on demand
-    # https://github.com/FeralInteractive/GameMode
-    # https://wiki.archlinux.org/title/Gamemode
-    #
-    # Usage:
-    #   1. For games/launchers which integrate GameMode support:
-    #      https://github.com/FeralInteractive/GameMode#apps-with-gamemode-integration
-    #      simply running the game will automatically activate GameMode.
-    programs.gamemode.enable = true;
 
     # run anime games on Linux
     # https://github.com/an-anime-team/

@@ -50,13 +50,6 @@ in
       # Ons related
       onscripter
 
-      # Heroic Games Launcher - primarily for Epic Games & GOG
-      # https://heroicgameslauncher.com/
-      (heroic.override {
-        extraPkgs = _pkgs: [
-          pkgs.gamescope
-        ];
-      })
     ];
   };
 }
