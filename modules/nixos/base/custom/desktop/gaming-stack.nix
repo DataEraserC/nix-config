@@ -26,9 +26,11 @@ in
   # platformOptimizations is imported only for its `programs.steam.
   # platformOptimizations` option declaration; it stays DISABLED because its
   # sysctls duplicate upstream's gaming.nix ones, and boot.kernel.sysctl
-  # treats repeat definitions as unique-value conflicts.
+  # treats repeat definitions as unique-value conflicts. pipewireLowLatency is
+  # likewise not imported: upstream's gaming.nix ships the identical
+  # 99-lowlatency PipeWire config natively, and a second import would append a
+  # duplicate libpipewire-module-rt entry.
   imports = [
-    nix-gaming.nixosModules.pipewireLowLatency
     nix-gaming.nixosModules.platformOptimizations
 
     # run anime games on Linux
@@ -82,8 +84,9 @@ in
       capSysNice = true;
     };
 
-    # see https://github.com/fufexan/nix-gaming/#pipewire-low-latency
-    services.pipewire.lowLatency.enable = true;
+    # low-latency PipeWire comes from upstream's gaming.nix native
+    # 99-lowlatency config (see above); nix-gaming's pipewireLowLatency import
+    # is deliberately omitted to avoid a duplicate module-rt entry.
     # programs.steam.platformOptimizations stays off: the sysctls it would set
     # are already carried by the upstream gaming module (identical values, but
     # boot.kernel.sysctl rejects duplicate definitions).

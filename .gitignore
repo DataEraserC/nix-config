@@ -68,3 +68,6 @@ modules/nixos/desktop/networking/mihomo/snapshots/
 
 # scratch review patches generated at the repo root
 /*.patch
+
+# local review notes
+/issues.txt

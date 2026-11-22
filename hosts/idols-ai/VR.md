@@ -11,7 +11,8 @@ Run `just niri` on idols-ai. Log out and back in so Steam sees
 WiVRn's `$XDG_RUNTIME_DIR/wivrn/comp_ipc` socket into a game's container; without it the game's
 OpenXR client fails with `ERROR_RUNTIME_UNAVAILABLE` and the headset stays black.
 
-The root filesystem is a 4 GiB tmpfs. These directories are preserved with mode 0700:
+The root filesystem uses the btrfs wipe-on-boot flow (modules.system.rootfs). These directories are
+preserved with mode 0700:
 
 - `~/.config/wivrn/`: server settings, paired headset public keys and discovery cookie.
 - `~/.android/`: ADB host keys, so USB authorization survives a reboot.

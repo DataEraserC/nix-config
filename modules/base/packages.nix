@@ -51,6 +51,7 @@
 
     duf # Disk Usage/Free Utility - a better 'df' alternative
     gdu # disk usage analyzer, non-interactive (`-n`) & JSON (`-o`)
+    nix-du # visualize /nix/store disk usage as a tree, companion of gdu/duf
 
     # networking tools
     mtr # A network diagnostic tool(traceroute)

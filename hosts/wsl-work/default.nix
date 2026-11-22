@@ -9,7 +9,7 @@
 }@args:
 #############################################################
 #
-#  Ai - my main computer, with NixOS + AMD Ryzen 9 8945HX + RTX 5070 Laptop GPU, for gaming & daily use.
+#  WSL distro on the y9000p2025 laptop (Intel CPU + RTX 5070 Laptop GPU).
 #
 #############################################################
 let
@@ -57,7 +57,7 @@ rec {
     networkmanager.enable = true;
     networkmanager.wifi.macAddress = macAddress;
     networkmanager.ethernet.macAddress = macAddress;
-    enableIPv6 = true; # disable ipv6
+    enableIPv6 = true; # flipped on at some point; the old comment said "disable ipv6"
     extraHosts = myvars.networking.genericHosts;
   };
 

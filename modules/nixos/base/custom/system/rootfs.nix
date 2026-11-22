@@ -1,9 +1,8 @@
 # Root-filesystem strategy for impermanent hosts (downstream-only module; both
 # the option name and the implementation are ours, upstream has no equivalent).
 #
-# One parametrised module serves every shape that used to be three divergent
-# per-host copies (hosts/idols-ai/impermanence_addon.nix and the two WSL
-# impermanence_addon.nix files):
+# One parametrised module serves every shape that used to be divergent
+# per-host impermanence_addon.nix copies:
 #
 #   - fsType "tmpfs": root on tmpfs (the WSL hosts).
 #   - fsType "btrfs": root subvolume wiped at every boot through a systemd

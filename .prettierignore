@@ -16,3 +16,6 @@ home/base/tui/agents/dsh/web
 # out-of-store link to rewrite the checkout copy, so formatting it here would be
 # undone on the next edit.
 home/linux/gui/base/vinput/config.json
+
+# local scratch notes
+issues.txt

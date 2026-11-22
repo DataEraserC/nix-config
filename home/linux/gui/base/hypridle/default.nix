@@ -44,7 +44,9 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
+  # implementation is declared in hypridle_downstream.nix; when the hosts pick
+  # "downstream" this file's listeners must stay out of the merged settings.
+  config = lib.mkIf (cfg.enable && cfg.implementation != "downstream") {
     home.packages = [ activityMonitor ];
     systemd.user.services.hypridle-activity = {
       Unit = {

@@ -7,7 +7,7 @@
 let
   # Custom startup entry: runs the activated desktop startup script
   # (~/.config/scripts/startup, symlinked from desktop/conf/scripts by
-  # desktop-tools.nix). Kept here instead of as a tracked .desktop so the Exec
+  # desktop-tools_downstream.nix). Kept here instead of as a tracked .desktop so the Exec
   # path is resolved from the home-manager config rather than a machine-specific
   # repository path.
   #
