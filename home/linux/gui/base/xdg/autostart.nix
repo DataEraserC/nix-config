@@ -41,6 +41,7 @@ in
     # nixpaks
     # "${pkgs.nixpaks.firefox}/share/applications/org.mozilla.firefox.desktop"
     # "${pkgs.nixpaks.telegram-desktop}/share/applications/org.telegram.desktop.desktop"
-    "${pkgs.google-chrome}/share/applications/google-chrome.desktop"
-  ];
+    "${pkgs.nixpaks.google-chrome}/share/applications/com.google.Chrome.desktop"
+  ]
+  ++ startupDesktop;
 }

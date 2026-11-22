@@ -34,6 +34,13 @@ lib.mkIf cfgNiri.enable {
     in
     mkSymlink config "${confPath}";
 
+  # Vendored Noctalia plugins, deployed out-of-store so local edits hot-reload.
+  # Whether the v5 shell still loads them is up to the plugin manager; they sit
+  # in ~/.config/noctalia/plugins/ and can be toggled per-plugin from the UI.
+  xdg.configFile."noctalia/plugins".source =
+    mylib.mkSymlinkOrFallback config "noctaliaPluginsPath" ""
+      "${./config/plugins}";
+
   # Noctalia v5 is started by niri's spawn-at-startup (see the niri conf), so
   # app2unit is still used to launch desktop entries as systemd user units.
   home.packages = [

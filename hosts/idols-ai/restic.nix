@@ -1,5 +1,6 @@
 {
   config,
+  myvars,
   ...
 }:
 {
@@ -18,16 +19,16 @@
     environmentFile = config.age.secrets."restic-rest-credentials".path;
 
     paths = [
-      "/home/ryan/Documents"
-      "/home/ryan/work"
-      "/home/ryan/Pictures"
-      "/home/ryan/codes"
-      "/home/ryan/src"
-      "/home/ryan/nix-config"
-      "/home/ryan/.local/state"
+      "/home/${myvars.username}/Documents"
+      "/home/${myvars.username}/work"
+      "/home/${myvars.username}/Pictures"
+      "/home/${myvars.username}/codes"
+      "/home/${myvars.username}/src"
+      "/home/${myvars.username}/nix-config"
+      "/home/${myvars.username}/.local/state"
       # dsh (DeepSeek Harness) state: session transcripts, workspace storages,
       # profiles. Its credentials file is excluded below.
-      "/home/ryan/.dsh"
+      "/home/${myvars.username}/.dsh"
     ];
 
     # anything bigger than this is a re-downloadable artifact (models, datasets,

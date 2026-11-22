@@ -12,7 +12,9 @@
 }@args:
 #############################################################
 #
-#  Ai - my main computer, with NixOS + AMD Ryzen 9 8945HX + RTX 5070 Laptop GPU, for gaming & daily use.
+#  Ai - my main computer, with NixOS + Intel CPU + RTX 5070 Laptop GPU (Lenovo
+#  Legion y9000p2025; earlier this file served a y7000k2021 and an r9000p2025),
+#  for gaming & daily use.
 #
 #############################################################
 let

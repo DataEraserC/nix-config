@@ -88,7 +88,6 @@ window-rule {
     // The launcher's announcement popup (公告) is still excluded by title.
     match app-id="^steam_app_[0-9]+$"
     exclude title="^(公告|Announcement|Notice)$"
-    open-on-workspace "4entertainment"
     open-fullscreen true
     variable-refresh-rate true
 }

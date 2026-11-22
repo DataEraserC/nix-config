@@ -13,9 +13,8 @@
     associations.added =
       let
         browser = [
-          "google-chrome-unstable.desktop"
-          "google-chrome.desktop"
-          "firefox.desktop"
+          "com.google.Chrome.desktop"
+          "org.mozilla.firefox.desktop"
         ];
         editor = [
           "dev.zed.Zed.desktop"
@@ -56,9 +55,8 @@
     defaultApplications =
       let
         browser = [
-          "google-chrome-unstable.desktop"
-          "google-chrome.desktop"
-          "firefox.desktop"
+          "com.google.Chrome.desktop"
+          "org.mozilla.firefox.desktop"
         ];
         editor = [
           "dev.zed.Zed.desktop"
