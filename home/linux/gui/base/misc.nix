@@ -24,9 +24,8 @@
     # this break building
     # cinny-desktop
 
-    # remote desktop(rdp connect)
-    remmina
-    freerdp # required by remmina
+    # remote desktop (RDP/VNC/SPICE); FreeRDP is a Remmina runtime dependency
+    nixpaks.remmina
 
     # Download Manager
     motrix

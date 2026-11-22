@@ -14,6 +14,20 @@
 let
   # 星野 アイ, Hoshino Ai
   name = "ai";
+
+  # Downstream enable flags shared by every ai-* variant. Hoisted here so the
+  # variant wiring below only references the name.
+  downstream-enable-modules = {
+    modules.desktop.fonts.enable = true;
+    modules.desktop.wayland.enable = true;
+    modules.secrets.desktop.enable = true;
+    modules.secrets.preservation.enable = true;
+    modules.desktop.gaming.enable = true;
+    modules.desktop.appcast.enable = true;
+    modules.archive-tools.enable = true;
+    modules.dsh.enable = true;
+    modules.vscode-server.enable = true;
+  };
   base-modules = {
     nixos-modules =
       (map mylib.relativeToRoot [
@@ -27,19 +41,9 @@ let
         # nixos hardening
         "hardening/nixpaks"
       ])
+      # daeuniverse (dae/daed) modules are imported by modules/nixos/base/custom/network/dae.nix
       ++ [
-        {
-          modules.desktop.fonts.enable = true;
-          modules.desktop.wayland.enable = true;
-          modules.secrets.desktop.enable = true;
-          modules.secrets.preservation.enable = true;
-          modules.desktop.gaming.enable = true;
-          modules.desktop.appcast.enable = true;
-          modules.archive-tools.enable = true;
-          modules.dsh.enable = true;
-          modules.vscode-server.enable = true;
-        }
-        # daeuniverse (dae/daed) modules are imported by modules/nixos/base/custom/network/dae.nix
+        downstream-enable-modules
         inputs.chaotic.nixosModules.default
         {
           modules.outOfStoreSymlink = {

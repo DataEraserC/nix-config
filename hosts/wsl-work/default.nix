@@ -41,7 +41,7 @@ rec {
     ./preservation.nix
     ./preservation-downstream.nix
     ../service-user-ids.nix
-    ./impermanence_addon.nix
+    ../wsl-common/impermanence_addon.nix
     # ./dae.nix
 
     # wsl related

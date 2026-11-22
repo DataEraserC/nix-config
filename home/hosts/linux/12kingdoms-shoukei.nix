@@ -1,6 +1,5 @@
 { config, mylib, ... }:
 let
-  hostName = "shoukei"; # Define your hostname.
   mkSymlink = mylib.mklinkRelativeToRoot;
 in
 {
@@ -10,8 +9,6 @@ in
   ];
 
   modules.desktop.vinput.enable = true;
-
-  programs.ssh.settings."github.com".IdentityFile = "${config.home.homeDirectory}/.ssh/${hostName}";
 
   modules.desktop.gaming.enable = false;
   modules.desktop.niri.enable = true;

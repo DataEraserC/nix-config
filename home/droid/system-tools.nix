@@ -39,7 +39,6 @@
     # 'neofetch' has been removed because it is unmaintained upstream.
     # neofetch
     fastfetch
-    ranger # terminal file manager(batteries included, with image preview support)
 
     # archives
     zip

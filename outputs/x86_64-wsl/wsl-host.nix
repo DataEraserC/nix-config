@@ -22,6 +22,28 @@
 }:
 let
   hostName = "wsl-${name}";
+
+  # Downstream enable flags shared by both WSL hosts.
+  downstream-enable-modules = {
+    modules.secrets.desktop.enable = true;
+    modules.secrets.preservation.enable = true;
+    modules.vscode-server.enable = true;
+
+    # Host variant flags. `desktop.fonts` and `appcast` come from the shared
+    # module files wsl_import.nix pulls in; `dsh` from the custom AI module set.
+    modules.desktop.fonts.enable = true;
+    modules.desktop.appcast.enable = true;
+    modules.dsh.enable = true;
+
+    modules.outOfStoreSymlink = {
+      enable = true;
+      paths = {
+        configPath = "/home/nixos/nix-config";
+        wallpaperPath = "/home/nixos/Documents/code/wallpapers";
+        passwordStorePath = "/home/nixos/nix-config/secrets/PasswordStore";
+      };
+    };
+  };
 in
 {
   nixosConfigurations.${hostName} = mylib.nixosSystem (
@@ -42,27 +64,7 @@ in
         ++ [
           inputs.nixos-wsl.nixosModules.default
           inputs.vscode-remote-workaround.nixosModules.default
-          {
-            modules.secrets.desktop.enable = true;
-            modules.secrets.preservation.enable = true;
-            modules.vscode-server.enable = true;
-
-            # Host variant flags. `desktop.fonts` and `appcast` come from the
-            # shared module files wsl_import.nix pulls in; `dsh` from the
-            # custom AI module set.
-            modules.desktop.fonts.enable = true;
-            modules.desktop.appcast.enable = true;
-            modules.dsh.enable = true;
-
-            modules.outOfStoreSymlink = {
-              enable = true;
-              paths = {
-                configPath = "/home/nixos/nix-config";
-                wallpaperPath = "/home/nixos/Documents/code/wallpapers";
-                passwordStorePath = "/home/nixos/nix-config/secrets/PasswordStore";
-              };
-            };
-          }
+          downstream-enable-modules
         ];
       home-modules =
         map mylib.relativeToRoot [
