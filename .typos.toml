@@ -12,6 +12,12 @@ extend-exclude = [
   # archived sync diff (a git patch snapshot); its bytes must stay exact, and
   # patch content (index hashes, code being patched) is not prose
   "docs/sync/",
+  # vendored noctalia plugins (third-party): translations are real words in
+  # their languages ("sie", "ist", "Alle"), and spell-fixing identifiers in
+  # the QML sources would silently break the plugins
+  "home/linux/gui/base/noctalia/config/plugins/",
+  # pinyin schema: lines like "# ue -> ve" use pinyin finals, not English
+  "home/linux/gui/base/fcitx5/pinyin.conf",
   # small-duck flypy user dictionary: entries are pinyin codes ("delt", "juli"),
   # not English words, so the spell checker flags every one of them
   "home/base/gui/rime/flypy_user.txt",
