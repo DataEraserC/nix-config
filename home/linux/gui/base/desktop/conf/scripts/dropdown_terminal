@@ -1,1 +1,1 @@
-ndrop foot -a dropdown_terminal
+ndrop ghostty --class=dropdown_terminal

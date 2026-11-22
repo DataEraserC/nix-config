@@ -9,16 +9,6 @@
   ...
 }:
 let
-  bambu-studio = pkgs.symlinkJoin {
-    name = "bambu-studio-${pkgs-master.bambu-studio.version}";
-    paths = [ pkgs-master.bambu-studio ];
-    nativeBuildInputs = [ pkgs.makeWrapper ];
-    postBuild = ''
-      # Work around wxWidgets HiDPI text clipping under fractional scaling.
-      # https://github.com/bambulab/BambuStudio/issues/4959
-      wrapProgram $out/bin/bambu-studio --set GDK_DPI_SCALE 0.8
-    '';
-  };
   my_packages = with pkgs; [
     gimp
     # nur-DataEraserC.packages.${pkgs.system}.wechat_dev_tools_bin
