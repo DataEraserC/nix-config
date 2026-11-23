@@ -92,6 +92,33 @@ let
         echo '${vmoptions}' >> ${vmoptionsFileName}
       '';
     };
+
+  # nixpkgs 26.11 IDEA CE 2025.3.4 hard-fails its own verify_class_file_versions
+  # build step: the bundled maven3 pins jline-terminal-ffm 3.30.17 whose classes
+  # are Java 22 (v66) while the checker expects the JBR 21 ceiling (v65). Skip
+  # that single step until nixpkgs re-pins jline or widens the rule; jline falls
+  # back to its non-FFM terminal providers at runtime on JBR 21.
+  ideaOssFixed =
+    let
+      jetbrainsFixed = pkgs.jetbrains // {
+        mkJetBrainsSource =
+          args:
+          (pkgs.jetbrains.mkJetBrainsSource args).overrideAttrs (old: {
+            configurePhase =
+              builtins.replaceStrings
+                [
+                  "-Dintellij.build.skip.build.steps=mac_artifacts,mac_dmg,mac_sit,windows_exe_installer,windows_sign,repair_utility_bundle_step,sources_archive"
+                ]
+                [
+                  "-Dintellij.build.skip.build.steps=verify_class_file_versions,mac_artifacts,mac_dmg,mac_sit,windows_exe_installer,windows_sign,repair_utility_bundle_step,sources_archive"
+                ]
+                old.configurePhase;
+          });
+      };
+    in
+    pkgs.callPackage "${pkgs.path}/pkgs/by-name/in/intellij-idea-oss/package.nix" {
+      jetbrains = jetbrainsFixed;
+    };
 in
 {
   options.programs.jetbrains = {
@@ -100,7 +127,7 @@ in
 
   config = lib.mkIf cfg.enable {
     home.packages = with nix-jetbrains-plugins.lib; [
-      (buildIdeWithPlugins pkgs "idea-oss" (genJetbrainsPluginList jetbrainsPluginList "idea-oss"))
+      (buildIdeWithPlugins pkgs ideaOssFixed (genJetbrainsPluginList jetbrainsPluginList "idea-oss"))
 
       (buildIdeWithPlugins pkgs "idea" (genJetbrainsPluginList jetbrainsPluginList "idea"))
       (buildIdeWithPlugins pkgs "rust-rover" (genJetbrainsPluginList jetbrainsPluginList "rust-rover"))
