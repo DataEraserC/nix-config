@@ -12,7 +12,7 @@
 # 模块开关与端口来自 vars/networking 的 services.acb 注册表；dsh / drivers /
 # opencode 已由 acbl 组件管理，不再由 nix-config 生成单元。本模块当前只生成
 # acb-bridge（launcher）一个 systemd --user 单元。
-# 数据在 ~/.local/share/acb；可写源码通过 modules.outOfStoreSymlink 的
+# 数据在 ~/.local/share/acb；可写源码通过 modules.mutableSources 的
 # agentChatBridge 根接入；没配置时只跳过链接，不退回 flake store。
 let
   cfg = config.modules.acb;
@@ -48,7 +48,7 @@ let
       $out/deploy/components/opencode/opencode-serve.sh
   '';
 
-  sourceRoot = config.modules.outOfStoreSymlink.paths.agentChatBridge or null;
+  sourceRoot = config.lib.mutableSources.resolve { name = "agentChatBridge"; };
 
   # 脚本正文都在同目录的 *.sh 里，这里只替换 @NAME@ 占位符。
   render =
@@ -159,6 +159,34 @@ in
       acblPkg
     ];
 
+    system.activationScripts.acb-dirs = {
+      deps = [ "users" ];
+      text = ''
+        dataDir=${lib.escapeShellArg dataDir}
+        parent="$(dirname "$dataDir")"
+        resolvedParent="$(readlink -e "$parent")"
+        if [ "$resolvedParent" != "$parent" ]; then
+          echo "acb-dirs: refusing symlinked parent $parent -> $resolvedParent" >&2
+          exit 1
+        fi
+        if [ -L "$dataDir" ] || { [ -e "$dataDir" ] && [ ! -d "$dataDir" ]; }; then
+          echo "acb-dirs: refusing non-directory or symlink $dataDir" >&2
+          exit 1
+        fi
+        if [ ! -d "$dataDir" ]; then
+          install -d -m 0700 -o ${myvars.username} -g users "$dataDir"
+        fi
+      '';
+    };
+
+    modules.managedLinks.links.acb-harnesses = lib.mkIf (sourceRoot != null) {
+      sourceName = "agentChatBridge";
+      subpath = "harnesses";
+      adoptExistingSymlink = true;
+      target = "${dataDir}/harnesses";
+      after = [ "acb-dirs" ];
+    };
+
     systemd.user.services = {
       "acb-bridge" = {
         # 用户级 unit 默认不随登录拉起；linger 已开，挂到 default.target
@@ -209,11 +237,6 @@ in
             ++ lib.optional notificationsEnabled cfg.notifications.topicSecret;
           ExecStartPre = [
             "${pkgs.coreutils}/bin/mkdir -p ${lib.escapeShellArg dataDir} ${lib.escapeShellArg logDir}"
-          ]
-          ++ lib.optionals (sourceRoot != null) [
-            # 只保留 harnesses 的开发覆盖链接（opencode 插件路径仍指向这里）；
-            # lua 已由 profile/current/examples/lua 提供，不再另建一份。
-            "${pkgs.coreutils}/bin/ln -sfnT ${lib.escapeShellArg "${sourceRoot}/harnesses"} ${lib.escapeShellArg "${dataDir}/harnesses"}"
           ]
           ++ lib.optional notificationsEnabled "${configMerge}/bin/acb-config-merge"
           ++ [

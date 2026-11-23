@@ -51,12 +51,10 @@ let
         downstream-enable-modules
         inputs.chaotic.nixosModules.default
         {
-          modules.outOfStoreSymlink = {
+          modules.mutableSources = {
             enable = true;
-            paths = {
-              configPath = "/home/nixos/nix-config";
-              wallpaperPath = "/home/nixos/Documents/code/wallpapers";
-              passwordStorePath = "/home/nixos/nix-config/secrets/PasswordStore";
+            sources = {
+              config.external = "/home/nixos/nix-config";
               # ACB 的 harnesses / Lua 示例：可写，改完重启对应单元生效；
               # 指向开发仓库根，而不是只读的 flake store。
               #
@@ -66,7 +64,7 @@ let
               # ENOENT、桥那边永远是 "no connection attempt"，症状是
               # opencode 组件 healthy 但 harness 依赖 down。
               # 换仓库时这个值必须跟着改，它不会自己跟随 flake input。
-              agentChatBridge = "/home/nixos/Documents/code/AgentChatBridge";
+              agentChatBridge.external = "/home/nixos/Documents/code/AgentChatBridge";
             };
           };
         }
@@ -77,12 +75,12 @@ let
       ]
       ++ [
         {
-          modules.outOfStoreSymlink = {
+          modules.mutableSources = {
             enable = true;
-            paths = {
-              configPath = "/home/nixos/nix-config";
-              wallpaperPath = "/home/nixos/Documents/code/wallpapers";
-              passwordStorePath = "/home/nixos/nix-config/secrets/PasswordStore";
+            sources = {
+              config.external = "/home/nixos/nix-config";
+              wallpapers.external = "/home/nixos/Documents/code/wallpapers";
+              passwordStore.external = "/home/nixos/nix-config/secrets/PasswordStore";
             };
           };
           modules.desktop.gaming.enable = true;

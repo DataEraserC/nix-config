@@ -8,7 +8,6 @@
   config,
   myvars,
   lib,
-  mylib,
   ...
 }:
 let
@@ -1066,7 +1065,7 @@ in
 
     # Keep the home patch on a leash instead of a copy: activation symlinks
     # `$DSH_HOME/cordis.patch.yml` at the repo file above (out-of-store when
-    # the configPath pool is set, a store copy otherwise). With
+    # the mutable `config` source is set, a store copy otherwise). With
     # `programs.dsh.patch = null` the seed wrapper neither validates nor
     # copies that path — its `validate_owned_file` would die on a symlink —
     # so the link survives every `dsh` launch, while the boot loader follows
@@ -1079,18 +1078,56 @@ in
     # bundle (DS-012). The home-side agent config (rules, cross-tool skills,
     # agent CLIs) deliberately stays in home/base/tui/agents; only $DSH_HOME
     # itself is laid out here.
+    modules.managedLinks.links = {
+      dsh-home-patch = {
+        sourceName = "config";
+        subpath = "modules/nixos/base/custom/ai/dsh/common.yml";
+        fallback = ../../../../../.. + "/modules/nixos/base/custom/ai/dsh/common.yml";
+        adoptExistingSymlink = true;
+        target = "/home/${myvars.username}/.dsh/cordis.patch.yml";
+        after = [ "dsh-home" ];
+      };
+      dsh-cua-sandboxes = {
+        source = "${nur-DataEraserC.packages.${pkgs.system}.cua-cli}/share/cua-skills/cua-sandboxes";
+        adoptExistingSymlink = true;
+        target = "/home/${myvars.username}/.dsh/skills/cua-sandboxes";
+        after = [ "dsh-home" ];
+      };
+      dsh-gui-automation = {
+        source = "${nur-DataEraserC.packages.${pkgs.system}.cua-cli}/share/cua-skills/gui-automation";
+        adoptExistingSymlink = true;
+        target = "/home/${myvars.username}/.dsh/skills/gui-automation";
+        after = [ "dsh-home" ];
+      };
+    };
+
     system.activationScripts.dsh-home = {
       deps = [ "users" ];
       text = ''
         dshHome="/home/${myvars.username}/.dsh"
+        homeParent="$(dirname "$dshHome")"
+        resolvedHomeParent="$(readlink -e "$homeParent")"
+        if [ "$resolvedHomeParent" != "$homeParent" ]; then
+          echo "dsh-home: refusing symlinked parent $homeParent -> $resolvedHomeParent" >&2
+          exit 1
+        fi
+        if [ -L "$dshHome" ] || { [ -e "$dshHome" ] && [ ! -d "$dshHome" ]; }; then
+          echo "dsh-home: refusing non-directory or symlink $dshHome" >&2
+          exit 1
+        fi
         if [ ! -d "$dshHome" ]; then
           install -d -m 755 -o ${myvars.username} -g users "$dshHome"
         fi
-        ln -sfnT ${mylib.mklinkRelativeToRoot config "modules/nixos/base/custom/ai/dsh/common.yml"} "$dshHome/cordis.patch.yml"
-
         ${dshRemoteSettingsScript}
 
-        install -d -m 755 -o ${myvars.username} -g users "$dshHome/skills"
+        skillsDir="$dshHome/skills"
+        if [ -L "$skillsDir" ] || { [ -e "$skillsDir" ] && [ ! -d "$skillsDir" ]; }; then
+          echo "dsh-home: refusing non-directory or symlink $skillsDir" >&2
+          exit 1
+        fi
+        if [ ! -d "$skillsDir" ]; then
+          install -d -m 755 -o ${myvars.username} -g users "$skillsDir"
+        fi
 
         # The local-desktop skill pack is DISABLED with its bundle (DS-012).
         # Drop the link an earlier generation left behind — activation never
@@ -1107,12 +1144,8 @@ in
         # examples in the skill resolve inside dsh. Upstream's own
         # `cua skills install` agent list has no dsh entry, hence the manual
         # links.
-        ln -sfnT ${
-          nur-DataEraserC.packages.${pkgs.system}.cua-cli
-        }/share/cua-skills/cua-sandboxes "$dshHome/skills/cua-sandboxes"
-        ln -sfnT ${
-          nur-DataEraserC.packages.${pkgs.system}.cua-cli
-        }/share/cua-skills/gui-automation "$dshHome/skills/gui-automation"
+        # managedLinks owns the active cua-sandboxes and gui-automation links;
+        # this script only prepares their parent directory.
       '';
     };
 

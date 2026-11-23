@@ -37,13 +37,9 @@ let
     modules.desktop.appcast.enable = true;
     modules.dsh.enable = true;
 
-    modules.outOfStoreSymlink = {
+    modules.mutableSources = {
       enable = true;
-      paths = {
-        configPath = "/home/nixos/nix-config";
-        wallpaperPath = "/home/nixos/Documents/code/wallpapers";
-        passwordStorePath = "/home/nixos/nix-config/secrets/PasswordStore";
-      };
+      sources.config.external = "/home/nixos/nix-config";
     };
   };
 in
@@ -77,14 +73,12 @@ in
         ]
         ++ [
           {
-            # Same paths as the NixOS-level pool above, for the home-manager
-            # module tree (home/base/outOfStoreSymlink.nix).
-            modules.outOfStoreSymlink = {
+            modules.mutableSources = {
               enable = true;
-              paths = {
-                configPath = "/home/nixos/nix-config";
-                wallpaperPath = "/home/nixos/Documents/code/wallpapers";
-                passwordStorePath = "/home/nixos/nix-config/secrets/PasswordStore";
+              sources = {
+                config.external = "/home/nixos/nix-config";
+                wallpapers.external = "/home/nixos/Documents/code/wallpapers";
+                passwordStore.external = "/home/nixos/nix-config/secrets/PasswordStore";
               };
             };
           }

@@ -2,7 +2,6 @@
   pkgs,
   config,
   lib,
-  mylib,
   mysecrets,
   ...
 }:
@@ -10,9 +9,10 @@ let
   passwordStoreDir = "${config.xdg.dataHome}/password-store";
 in
 {
-  home.file.".local/share/password-store".source =
-    mylib.mkSymlinkOrFallback config "passwordStorePath" ""
-      "${mysecrets}/PasswordStore";
+  home.file.".local/share/password-store".source = config.lib.mutableSources.link {
+    name = "passwordStore";
+    fallback = "${mysecrets}/PasswordStore";
+  };
 
   programs.password-store = {
     enable = true;

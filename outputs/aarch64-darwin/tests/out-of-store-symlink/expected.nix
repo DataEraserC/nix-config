@@ -1,7 +1,10 @@
 {
-  # nix-darwin 侧同样由 modules/base/outOfStoreSymlink.nix 提供该函数
   darwinLibFileExists = true;
+  mutableSourcesLibExists = true;
   darwinCallReturnsDrv = true;
   darwinLinkBasename = true;
-  poolEnabled = true;
+  fallbackIsDirect = true;
+  legacyPathMapsToConfig = "/tmp/legacy-config";
+  legacyDisableMaps = true;
+  sourcesEnabled = true;
 }

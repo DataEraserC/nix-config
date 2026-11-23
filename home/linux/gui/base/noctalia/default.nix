@@ -12,7 +12,12 @@ let
   cfgNiri = config.modules.desktop.niri;
   package = noctalia-shell.packages.${pkgs.system}.default;
   mklinkWallpaperPath =
-    config: FilePath: mylib.mkSymlinkOrFallback config "wallpaperPath" FilePath wallpapers;
+    config: FilePath:
+    config.lib.mutableSources.link {
+      name = "wallpapers";
+      subpath = FilePath;
+      fallback = wallpapers;
+    };
   wallpapers_dir = mklinkWallpaperPath config "dark";
 in
 lib.mkIf cfgNiri.enable {

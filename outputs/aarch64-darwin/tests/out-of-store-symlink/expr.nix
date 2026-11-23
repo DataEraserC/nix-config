@@ -5,13 +5,35 @@
 }:
 let
   cfg = outputs.darwinConfigurations.fern.config;
-  # 实际调用一次，确保 nix-darwin 求值下 pkgs.runCommandLocal 可用
-  link = cfg.lib.file.mkOutOfStoreSymlink "/home/nixos/nix-config/home/base/outOfStoreSymlink.nix";
+  directLink = cfg.lib.file.mkOutOfStoreSymlink "/home/nixos/nix-config/home/base/mutableSources.nix";
+  fallback = cfg.lib.mutableSources.resolve {
+    name = "missing";
+    fallback = "/immutable/fallback";
+  };
+  legacyCfg =
+    (outputs.darwinConfigurations.fern.extendModules {
+      modules = [
+        {
+          modules.outOfStoreSymlink.paths.configPath = "/tmp/legacy-config";
+        }
+      ];
+    }).config;
+  legacyDisabledCfg =
+    (outputs.darwinConfigurations.fern.extendModules {
+      modules = [
+        {
+          modules.outOfStoreSymlink.enable = false;
+        }
+      ];
+    }).config;
 in
 {
   darwinLibFileExists = builtins.isFunction (cfg.lib.file.mkOutOfStoreSymlink or null);
-  darwinCallReturnsDrv = lib.isDerivation link;
-  darwinLinkBasename = lib.hasSuffix "outOfStoreSymlink.nix" (toString link);
-  # darwin 主机未声明池，enable 取选项默认值
-  poolEnabled = cfg.modules.outOfStoreSymlink.enable;
+  mutableSourcesLibExists = builtins.isFunction (cfg.lib.mutableSources.link or null);
+  darwinCallReturnsDrv = lib.isDerivation directLink;
+  darwinLinkBasename = lib.hasSuffix "mutableSources.nix" (toString directLink);
+  fallbackIsDirect = fallback == "/immutable/fallback";
+  legacyPathMapsToConfig = legacyCfg.lib.mutableSources.resolve { name = "config"; };
+  legacyDisableMaps = !legacyDisabledCfg.modules.mutableSources.enable;
+  sourcesEnabled = cfg.modules.mutableSources.enable;
 }

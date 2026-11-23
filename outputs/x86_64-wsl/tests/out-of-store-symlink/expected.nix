@@ -1,7 +1,7 @@
 {
-  wslLibFileExists = true;
+  wslLibExists = true;
   wslCallReturnsDrv = true;
   wslLinkBasename = true;
-  wslPoolEnabled = true;
-  wslPoolConfigPath = "/home/nixos/nix-config";
+  wslSourcesEnabled = true;
+  wslConfigSource = "/home/nixos/nix-config";
 }

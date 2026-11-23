@@ -1,7 +1,6 @@
 {
   lib,
   inputs,
-  mylib,
   outputs,
   ...
 }:
@@ -9,7 +8,11 @@ let
   cfg = outputs.nixosConfigurations.ai-niri.config;
   yml = builtins.readFile ../../../../modules/nixos/base/custom/ai/dsh/common.yml;
   activation = cfg.system.activationScripts.dsh-home.text;
-  homeLink = mylib.mklinkRelativeToRoot cfg "modules/nixos/base/custom/ai/dsh/common.yml";
+  homePatchLink = cfg.modules.managedLinks.links.dsh-home-patch;
+  homeLink = cfg.lib.mutableSources.link {
+    name = homePatchLink.sourceName;
+    inherit (homePatchLink) subpath fallback;
+  };
   # NUR 侧 cua-cli 预编译包（二进制 + skills）
   nurCuaCli = inputs.nur-DataEraserC.packages.x86_64-linux.cua-cli;
 in
@@ -22,9 +25,11 @@ in
   # 的 <key>.yml，由 dsh-profile-patch 测试覆盖）；密钥只允许以环境变量引用
   # 存在，不允许出现裸 apiKey: 行。
   ymlHasNoInlineKey = !(lib.hasInfix "apiKey:" yml);
-  # activation 负责把仓库文件链接到 $DSH_HOME/cordis.patch.yml
-  activationSymlinksHomePatch =
-    lib.hasInfix "ln -sfnT" activation && lib.hasInfix "cordis.patch.yml" activation;
+  # managedLinks owns the target; dsh-home only prepares its parent and must not
+  # create an unmanaged link that the manifest cannot later clean.
+  managedLinksOwnsHomePatch =
+    homePatchLink.target == "/home/nixos/.dsh/cordis.patch.yml"
+    && !(lib.hasInfix "ln -sfnT" activation && lib.hasInfix "cordis.patch.yml" activation);
   # dsh-cua-driver 停用（DS-012：cua-driver 启动时把 org.a11y.Status.IsEnabled
   # 翻成 true，GNOME 随即拉起 Orca）。两处必须一起保持关闭：bundle 不在任何
   # profile 的 bundle 列表里，$DSH_HOME/skills/cua-driver 也不再链接（activation
@@ -38,15 +43,15 @@ in
   # 参考）同样钉在 NUR cua-cli 的 outPath 上：技能与 bundle 的 runtimeDeps
   # 钉同一个 store 路径，版本切换时两边一起换，不会出现"技能讲 0.6、二进制
   # 是 0.7"的漂移。断言方式：正则里不出现带 context 的插值。
-  skillsSymlinksCuaSandbox =
+  skillsManagedByCuaPackage =
     let
-      capturedSandboxes = lib.match ".*(/nix/store/[a-z0-9]+-cua-cli-[0-9.]+)/share/cua-skills/cua-sandboxes.*" activation;
-      capturedGui = lib.match ".*(/nix/store/[a-z0-9]+-cua-cli-[0-9.]+)/share/cua-skills/gui-automation.*" activation;
+      sandboxSource = toString cfg.modules.managedLinks.links.dsh-cua-sandboxes.source;
+      guiSource = toString cfg.modules.managedLinks.links.dsh-gui-automation.source;
     in
-    capturedSandboxes != null
-    && builtins.head capturedSandboxes == nurCuaCli.outPath
-    && capturedGui != null
-    && builtins.head capturedGui == nurCuaCli.outPath;
+    lib.hasPrefix nurCuaCli.outPath sandboxSource
+    && lib.hasSuffix "/share/cua-skills/cua-sandboxes" sandboxSource
+    && lib.hasPrefix nurCuaCli.outPath guiSource
+    && lib.hasSuffix "/share/cua-skills/gui-automation" guiSource;
   # cua 沙盒引擎：cua-vmm 走 Podman 的 docker 兼容 API socket，
   # $XDG_RUNTIME_DIR/podman/podman.sock 是它的 well-known 候选之一。
   #
@@ -90,5 +95,5 @@ in
     in
     lib.any (n: lib.hasInfix "dsh-cua-sandbox" n) names;
   # mkOutOfStoreSymlink 的 toString 是 store 路径，其名字 = 源文件 basename
-  homeLinkTargetsCordisPatch = lib.hasSuffix "common.yml" (toString homeLink);
+  homeLinkTargetsCommonYml = lib.hasSuffix "common.yml" (toString homeLink);
 }

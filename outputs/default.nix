@@ -319,6 +319,15 @@ rec {
         pkgs = nixpkgs.legacyPackages.${system};
         inherit (inputs) preservation;
       };
+      managed-links =
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+        in
+        pkgs.runCommand "managed-links-test" { nativeBuildInputs = [ pkgs.python3 ]; } ''
+          MANAGED_LINKS_SCRIPT=${mylib.relativeToRoot "modules/nixos/base/custom/system/managed_links.py"} \
+            python ${mylib.relativeToRoot "tests/test_managed_links.py"}
+          touch $out
+        '';
       codebuddy-acp-multi-instance-state = import ./x86_64-linux/tests/codebuddy-acp/runtime.nix {
         config =
           (nixosConfigurations.ai-niri.extendModules {

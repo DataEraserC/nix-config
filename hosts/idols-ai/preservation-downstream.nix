@@ -143,6 +143,13 @@ in
       # it (and .nix-source) to force a clean rebuild.
       "/var/lib/astrbot"
 
+      {
+        directory = "/var/lib/nix-config/managed-links";
+        user = "root";
+        group = "root";
+        mode = "0700";
+      }
+
       # compiler caches
       "/var/cache/ccache"
       {
