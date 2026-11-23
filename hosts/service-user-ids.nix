@@ -99,6 +99,12 @@ let
       uid = 951;
       gid = 951;
     };
+    # sccache owns a persistent compiler cache. Its server runs with nixbld as
+    # the primary runtime group so sandboxed build users can reach the socket.
+    sccache = {
+      uid = 952;
+      gid = 952;
+    };
   };
 
   # Sunshine has no account: the desktop user services run as the logged-in

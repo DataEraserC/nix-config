@@ -143,8 +143,14 @@ in
       # it (and .nix-source) to force a clean rebuild.
       "/var/lib/astrbot"
 
-      # ccache
+      # compiler caches
       "/var/cache/ccache"
+      {
+        directory = "/var/cache/sccache";
+        user = "sccache";
+        group = "nixbld";
+        mode = "0770";
+      }
 
       # for android sign
       # TODO: move to agenix/sop

@@ -117,6 +117,12 @@ let
           # for unrelated GPU architectures.
           cudaCapabilities = [ "12.0" ];
         };
+        # This overlay is intentionally scoped to pkgs-cuda. Putting it under
+        # the globally scanned overlays/ would also affect every NixOS and
+        # Nix-on-Droid package set.
+        overlays = lib.optionals (system == "x86_64-linux") [
+          (import ./pkgs-cuda/torch-sccache-overlay.nix { inherit lib; })
+        ];
       };
     };
 

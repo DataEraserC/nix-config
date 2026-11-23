@@ -6,6 +6,7 @@
   config,
   lib,
   pkgs,
+  pkgs-cuda,
   inputs,
   myvars,
   ...
@@ -24,6 +25,14 @@ let
   };
 in
 {
+  # One unprivileged server owns the persistent cache; build sandboxes only see
+  # its Unix socket, and pkgs-cuda's torch falls back when the socket is absent.
+  modules.sccache = {
+    enable = true;
+    package = pkgs-cuda.python314Packages.torch.sccachePackage;
+    cacheSize = "32G";
+  };
+
   # dae transparent proxy - the shared module lives in
   # modules/nixos/base/custom/network/dae.nix and is only enabled on this host for now.
   # Its main config is the host-local ./config.dae, the subscription comes from agenix.
