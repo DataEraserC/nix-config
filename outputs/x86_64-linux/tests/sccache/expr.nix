@@ -31,8 +31,10 @@ in
     serviceGroup = unit.serviceConfig.Group;
     socketPath = unit.environment.SCCACHE_SERVER_UDS;
     socketExposed = builtins.elem "/run/sccache?" (cfg.nix.settings.extra-sandbox-paths or [ ]);
+    runtimeDirectoryMode = unit.serviceConfig.RuntimeDirectoryMode;
     permissionWatch =
       cfg.systemd.paths.sccache-socket-permissions.pathConfig.PathChanged == "/run/sccache";
+    worldSocket = lib.hasInfix "chmod 0666" cfg.systemd.services.sccache-socket-permissions.script;
     unixOnly = unit.serviceConfig.RestrictAddressFamilies == [ "AF_UNIX" ];
   };
 

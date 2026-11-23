@@ -23,8 +23,9 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # The pinned account comes from hosts/service-user-ids.nix. Build users need
-    # group access to the Unix socket; the server itself stays unprivileged.
+    # The pinned account comes from hosts/service-user-ids.nix. The server uses
+    # nixbld for cache ownership, but auto-allocated build UIDs have no
+    # supplementary groups and reach only the world-writable Unix socket.
     users.users.sccache.extraGroups = [ "nixbld" ];
 
     environment.systemPackages = [ cfg.package ];
@@ -55,7 +56,7 @@ in
         UMask = "0007";
 
         RuntimeDirectory = "sccache";
-        RuntimeDirectoryMode = "0770";
+        RuntimeDirectoryMode = "0711";
         CacheDirectory = "sccache";
         CacheDirectoryMode = "0770";
 
@@ -76,9 +77,9 @@ in
       };
     };
 
-    # sccache 0.19 creates its UDS as 0750 even with a group-friendly umask.
-    # Watch the runtime directory before the server starts and repair each new
-    # socket without polling. The launcher falls back until this has happened.
+    # sccache 0.19 creates its UDS as 0750. Nix's auto-allocated build UIDs
+    # have no supplementary groups, so each new socket must be 0666; the 0711
+    # runtime directory prevents listing, and the cache directory stays 0770.
     systemd.paths.sccache-socket-permissions = {
       description = "Watch for the sccache Unix socket";
       wantedBy = [ "multi-user.target" ];
@@ -87,7 +88,7 @@ in
     };
 
     systemd.services.sccache-socket-permissions = {
-      description = "Grant nixbld access to the sccache Unix socket";
+      description = "Grant Nix builders access to the sccache Unix socket";
       serviceConfig = {
         Type = "oneshot";
         NoNewPrivileges = true;
@@ -97,8 +98,7 @@ in
       };
       script = ''
         if [[ -S ${socketPath} ]]; then
-          chgrp nixbld ${socketPath}
-          chmod 0770 ${socketPath}
+          chmod 0666 ${socketPath}
         fi
       '';
     };

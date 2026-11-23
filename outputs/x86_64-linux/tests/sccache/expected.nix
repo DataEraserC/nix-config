@@ -9,7 +9,9 @@
     serviceGroup = "nixbld";
     socketPath = "/run/sccache/sccache.sock";
     socketExposed = true;
+    runtimeDirectoryMode = "0711";
     permissionWatch = true;
+    worldSocket = true;
     unixOnly = true;
   };
 
