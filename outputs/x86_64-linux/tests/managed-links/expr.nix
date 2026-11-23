@@ -21,6 +21,11 @@ in
   activationAfterAcbDirs = builtins.elem "acb-dirs" activation.deps;
   acbParentGuard = lib.hasInfix "refusing symlinked parent" cfg.system.activationScripts.acb-dirs.text;
   dshParentGuard = lib.hasInfix "refusing symlinked parent" cfg.system.activationScripts.dsh-home.text;
+  skipsInitrd = lib.all (text: lib.hasInfix "IN_NIXOS_SYSTEMD_STAGE1" text) [
+    cfg.system.activationScripts.acb-dirs.text
+    cfg.system.activationScripts.dsh-home.text
+    activation.text
+  ];
   activationUsesManifest =
     lib.hasInfix "managed_links.py" activation.text
     && lib.hasInfix "/var/lib/nix-config/managed-links/manifest.json" activation.text;

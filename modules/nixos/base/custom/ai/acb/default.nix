@@ -162,19 +162,21 @@ in
     system.activationScripts.acb-dirs = {
       deps = [ "users" ];
       text = ''
-        dataDir=${lib.escapeShellArg dataDir}
-        parent="$(dirname "$dataDir")"
-        resolvedParent="$(readlink -e "$parent")"
-        if [ "$resolvedParent" != "$parent" ]; then
-          echo "acb-dirs: refusing symlinked parent $parent -> $resolvedParent" >&2
-          exit 1
-        fi
-        if [ -L "$dataDir" ] || { [ -e "$dataDir" ] && [ ! -d "$dataDir" ]; }; then
-          echo "acb-dirs: refusing non-directory or symlink $dataDir" >&2
-          exit 1
-        fi
-        if [ ! -d "$dataDir" ]; then
-          install -d -m 0700 -o ${myvars.username} -g users "$dataDir"
+        if [ "''${IN_NIXOS_SYSTEMD_STAGE1:-}" != true ]; then
+          dataDir=${lib.escapeShellArg dataDir}
+          parent="$(dirname "$dataDir")"
+          resolvedParent="$(readlink -e "$parent")"
+          if [ "$resolvedParent" != "$parent" ]; then
+            echo "acb-dirs: refusing symlinked parent $parent -> $resolvedParent" >&2
+            exit 1
+          fi
+          if [ -L "$dataDir" ] || { [ -e "$dataDir" ] && [ ! -d "$dataDir" ]; }; then
+            echo "acb-dirs: refusing non-directory or symlink $dataDir" >&2
+            exit 1
+          fi
+          if [ ! -d "$dataDir" ]; then
+            install -d -m 0700 -o ${myvars.username} -g users "$dataDir"
+          fi
         fi
       '';
     };

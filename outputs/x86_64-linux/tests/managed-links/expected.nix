@@ -14,6 +14,7 @@
   activationAfterAcbDirs = true;
   acbParentGuard = true;
   dshParentGuard = true;
+  skipsInitrd = true;
   activationUsesManifest = true;
   manifestIsDerivation = true;
   statePreserved = true;

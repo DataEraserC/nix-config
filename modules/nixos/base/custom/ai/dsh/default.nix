@@ -1104,7 +1104,8 @@ in
     system.activationScripts.dsh-home = {
       deps = [ "users" ];
       text = ''
-        dshHome="/home/${myvars.username}/.dsh"
+        if [ "''${IN_NIXOS_SYSTEMD_STAGE1:-}" != true ]; then
+          dshHome="/home/${myvars.username}/.dsh"
         homeParent="$(dirname "$dshHome")"
         resolvedHomeParent="$(readlink -e "$homeParent")"
         if [ "$resolvedHomeParent" != "$homeParent" ]; then
@@ -1146,6 +1147,7 @@ in
         # links.
         # managedLinks owns the active cua-sandboxes and gui-automation links;
         # this script only prepares their parent directory.
+        fi
       '';
     };
 

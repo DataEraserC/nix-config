@@ -168,10 +168,12 @@ in
     system.activationScripts.managedLinks = {
       deps = activationDeps;
       text = ''
-        install -d -m 0700 ${lib.escapeShellArg cfg.stateDirectory}
-        ${pkgs.python3}/bin/python ${./managed_links.py} \
-          --desired ${desiredManifest} \
-          --state ${lib.escapeShellArg "${cfg.stateDirectory}/manifest.json"}
+        if [ "''${IN_NIXOS_SYSTEMD_STAGE1:-}" != true ]; then
+          install -d -m 0700 ${lib.escapeShellArg cfg.stateDirectory}
+          ${pkgs.python3}/bin/python ${./managed_links.py} \
+            --desired ${desiredManifest} \
+            --state ${lib.escapeShellArg "${cfg.stateDirectory}/manifest.json"}
+        fi
       '';
     };
   };
