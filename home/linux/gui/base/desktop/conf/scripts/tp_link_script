@@ -87,4 +87,3 @@ fi
 
 # invoke set down_speed function
 set_down_speed "$url" "$stok" "$mac" "$name" "$downLimit"
-

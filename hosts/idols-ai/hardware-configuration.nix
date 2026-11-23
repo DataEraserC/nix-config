@@ -43,20 +43,20 @@ let
           echo "findfs not available, falling back to /dev/disk/by-uuid path"
           device_path="/dev/disk/by-uuid/$uuid"
         fi
-        
+
         # Check if device exists and is accessible
         if [ -e "$device_path" ] && [ -r "$device_path" ]; then
           echo "Found device $device_path for UUID $uuid"
           if mount -n -t vfat -o ro "$device_path" /key; then
             echo "Successfully mounted key device with UUID $uuid"
-            
+
             # Check if the key file exists
             if [ ! -f "/key/luks/root-part.key" ]; then
               echo "WARNING: Key file '/key/luks/root-part.key' not found on mounted device"
               umount /key
               continue
             fi
-            
+
             echo "Key file found on device with UUID $uuid"
             return 0
           else

@@ -576,4 +576,3 @@ routing {
 
     fallback: direct
 }
-
