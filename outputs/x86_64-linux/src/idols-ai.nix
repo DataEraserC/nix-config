@@ -18,20 +18,27 @@ let
   # Downstream enable flags shared by every ai-* variant. Hoisted here so the
   # variant wiring below only references the name.
   downstream-enable-modules = {
-    modules.desktop.fonts.enable = true;
-    modules.desktop.wayland.enable = true;
-    modules.secrets.desktop.enable = true;
-    modules.secrets.preservation.enable = true;
-    # upstream gaming base (sysctls/gamescope/gamemode/32-bit graphics) runs
-    # alongside the downstream stack; overlapping values are identical
-    modules.desktop.gaming.enable = true;
-    modules.gaming-stack.enable = true;
-    modules.linyaps.enable = true;
-    modules.ollama.hostKey = "idols-ai";
-    modules.desktop.appcast.enable = true;
-    modules.archive-tools.enable = true;
-    modules.dsh.enable = true;
-    modules.vscode-server.enable = true;
+    nixos = {
+      modules.desktop.fonts.enable = true;
+      modules.desktop.wayland.enable = true;
+      modules.secrets.desktop.enable = true;
+      modules.secrets.preservation.enable = true;
+      # upstream gaming base (sysctls/gamescope/gamemode/32-bit graphics) runs
+      # alongside the downstream stack; overlapping values are identical
+      modules.desktop.gaming.enable = true;
+      modules.gaming-stack.enable = true;
+      modules.linyaps.enable = true;
+      modules.ollama.hostKey = "idols-ai";
+      modules.desktop.appcast.enable = true;
+      modules.archive-tools.enable = true;
+      modules.dsh.enable = true;
+      modules.vscode-server.enable = true;
+    };
+
+    home = {
+      modules.desktop.gaming.enable = true;
+      modules.vscode.enable = true;
+    };
   };
   base-modules = {
     nixos-modules =
@@ -48,7 +55,7 @@ let
       ])
       # daeuniverse (dae/daed) modules are imported by modules/nixos/base/custom/network/dae.nix
       ++ [
-        downstream-enable-modules
+        downstream-enable-modules.nixos
         inputs.chaotic.nixosModules.default
         {
           modules.mutableSources = {
@@ -74,6 +81,7 @@ let
         "home/hosts/linux/idols-${name}.nix"
       ]
       ++ [
+        downstream-enable-modules.home
         {
           modules.mutableSources = {
             enable = true;
@@ -83,7 +91,6 @@ let
               passwordStore.external = "/home/nixos/nix-config/secrets/PasswordStore";
             };
           };
-          modules.desktop.gaming.enable = true;
           # modules.desktop.canokey.enable = true;
           # # Native mihomo core + local web dashboard instead of the Clash Verge
           # # GUI; its config is ~/.config/mihomo/config.yaml (out of the store).
