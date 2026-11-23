@@ -38,7 +38,7 @@ in
 
   torch = {
     marked = torch.sccacheCudaEnabled;
-    hasSccacheInput = lib.any (input: lib.getName input == "sccache") torch.nativeBuildInputs;
+    notOnBuildPath = lib.all (input: lib.getName input != "sccache") torch.nativeBuildInputs;
     cuda = hasLauncher "CMAKE_CUDA_COMPILER_LAUNCHER";
     c = hasLauncher "CMAKE_C_COMPILER_LAUNCHER";
     cxx = hasLauncher "CMAKE_CXX_COMPILER_LAUNCHER";

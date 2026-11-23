@@ -51,8 +51,6 @@ in
   pythonPackagesExtensions = (prev.pythonPackagesExtensions or [ ]) ++ [
     (_pythonFinal: pythonPrev: {
       torch = pythonPrev.torch.overrideAttrs (old: {
-        nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ sccacheNvcc ];
-
         # Nix's GCC wrappers are not sccache compiler proxies. Scope caching to
         # NVCC until upstream supports those wrappers too.
         cmakeFlags = (old.cmakeFlags or [ ]) ++ [

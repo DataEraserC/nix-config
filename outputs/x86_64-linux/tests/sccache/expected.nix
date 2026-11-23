@@ -15,7 +15,7 @@
 
   torch = {
     marked = true;
-    hasSccacheInput = true;
+    notOnBuildPath = true;
     cuda = true;
     c = false;
     cxx = false;
