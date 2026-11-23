@@ -279,10 +279,9 @@ in
           directory = ".pki";
           mode = "0700";
         }
-        {
-          directory = ".local/share/password-store";
-          mode = "0700";
-        }
+        # PasswordStore is managed as a Home Manager mutable-source symlink.
+        # Preserving the same target creates a non-canonical mount path and
+        # makes local-fs fail during switch and boot.
         {
           # gnmome keyrings
           directory = ".local/share/keyrings";
