@@ -95,9 +95,10 @@ in
         PrivateTmp = true;
         ProtectHome = true;
         ProtectSystem = "strict";
+        ReadWritePaths = [ socketDir ];
       };
       script = ''
-        if [[ -S ${socketPath} ]]; then
+        if [[ -S ${socketPath} ]] && [[ "$(stat -c %a ${socketPath})" != 666 ]]; then
           chmod 0666 ${socketPath}
         fi
       '';

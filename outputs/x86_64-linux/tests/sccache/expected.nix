@@ -11,6 +11,7 @@
     socketExposed = true;
     runtimeDirectoryMode = "0711";
     permissionWatch = true;
+    permissionUnitWritable = true;
     worldSocket = true;
     unixOnly = true;
   };

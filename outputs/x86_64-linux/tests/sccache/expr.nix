@@ -34,6 +34,9 @@ in
     runtimeDirectoryMode = unit.serviceConfig.RuntimeDirectoryMode;
     permissionWatch =
       cfg.systemd.paths.sccache-socket-permissions.pathConfig.PathChanged == "/run/sccache";
+    permissionUnitWritable = builtins.elem "/run/sccache" (
+      cfg.systemd.services.sccache-socket-permissions.serviceConfig.ReadWritePaths or [ ]
+    );
     worldSocket = lib.hasInfix "chmod 0666" cfg.systemd.services.sccache-socket-permissions.script;
     unixOnly = unit.serviceConfig.RestrictAddressFamilies == [ "AF_UNIX" ];
   };
