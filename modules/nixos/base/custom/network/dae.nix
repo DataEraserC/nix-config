@@ -116,6 +116,15 @@ in
   config = lib.mkIf cfg.enable {
     services.dae = {
       enable = true;
+
+      # dae v1.0.0 vendors cilium/ebpf v0.15, whose BTF parser insists that every
+      # byte past the fixed header is zero; kernels from 7.3 on put a non-zero
+      # layout trailer there, so every CO-RE relocation dies with "header padding:
+      # encountered non-zero byte" and the unit never starts. HEAD parses that
+      # trailer, so the flake's unstable build is the only one that loads here.
+      # See DS-015 in WORKAROUNDS_downstream.md.
+      package = daeuniverse.packages.${pkgs.stdenv.hostPlatform.system}.dae-unstable;
+
       configFile = cfg.configFile;
       # tproxy only serves locally injected transparent traffic, so keep 12345
       # closed on the firewall; tproxy_port_protect already blocks direct hits.
