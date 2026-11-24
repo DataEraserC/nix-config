@@ -24,19 +24,24 @@ let
   };
 in
 {
+  # Public keys are not secret: every device installs the whole set, whatever
+  # its own identity is. Only the private key name differs per host (its home
+  # module sets `settings."*".IdentityFile`).
   home.file.".ssh/romantic.pub".source = "${mysecrets}/public/romantic.pub";
-  home.file.".ssh/gluttony.pub".source = "${mysecrets}/public/gluttony.pub";
-  home.file.".ssh/juliet-age.pub".source = "${mysecrets}/public/juliet-age.pub";
-  home.file.".ssh/idols-ai_id_rsa.pub".source = "${mysecrets}/public/idols-ai_id_rsa.pub";
   home.file.".ssh/idols-ai_id_ed25519.pub".source = "${mysecrets}/public/idols-ai_id_ed25519.pub";
-  home.file.".ssh/wsl-y9000p2025_id_rsa.pub".source = "${mysecrets}/public/idols-ai_id_rsa.pub";
-  home.file.".ssh/wsl-y9000p2025_id_ed25519.pub".source =
-    "${mysecrets}/public/idols-ai_id_ed25519.pub";
+  home.file.".ssh/idols-ai_id_rsa.pub".source = "${mysecrets}/public/idols-ai_id_rsa.pub";
+  home.file.".ssh/wsl-work_id_ed25519.pub".source = "${mysecrets}/public/wsl-work_id_ed25519.pub";
+  # TODO: wsl-y9000p2025's own public keys are still missing. Its distro disk is
+  # not on the mounted Windows volume, so these stay disabled until we can read
+  # them from ~/.ssh on that host (or from its ext4.vhdx once located).
+  # home.file.".ssh/wsl-y9000p2025_id_ed25519.pub".source =
+  #   "${mysecrets}/public/wsl-y9000p2025_id_ed25519.pub";
+  # home.file.".ssh/wsl-y9000p2025_id_rsa.pub".source =
+  #   "${mysecrets}/public/wsl-y9000p2025_id_rsa.pub";
 
-  # Each CanoKey holds a resident FIDO2 SSH key for GitHub and every host, its
-  # handle exported on each desktop to ~/.ssh/canokey-<name>; every new
-  # connection needs a touch, and ssh skips the handle of an unplugged key. Setup:
-  # docs/security-keys.md.
+  # The fork has no CanoKey, and each host carries its own key pair named after
+  # itself (`<host>_id_ed25519` + `<host>_id_rsa`). ssh asks for the passphrase
+  # once and the agent keeps it.
   programs.ssh = {
     enable = true;
     # macOS's ssh has no FIDO provider ("Cannot download keys without provider").
@@ -48,11 +53,8 @@ in
     # so the generated LAN patterns are merged inside it with `//` instead.
     settings = {
       "*" = {
-        # Main key first, then the backup.
-        IdentityFile = map (name: "${config.home.homeDirectory}/.ssh/${name}") [
-          "canokey-tea"
-          "canokey-moe"
-        ];
+        # IdentityFile is per host (see the comment above); ssh asks for the
+        # passphrase once and the agent keeps it.
         ForwardAgent = false;
         AddKeysToAgent = "yes";
         Compression = true;

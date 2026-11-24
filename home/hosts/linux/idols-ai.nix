@@ -21,8 +21,15 @@ in
   # modules.desktop.cyime.enable = lib.mkIf cfgGnomeWayland.enable true;
   # modules.cyime-ice.enable = lib.mkIf cfgGnomeWayland.enable true;
 
-  programs.ssh.settings."github.com".identityFile =
-    "${config.home.homeDirectory}/.ssh/idols-ai_id_ed25519";
+  # This machine's own SSH identity: idols-ai_id_ed25519 with its RSA sibling.
+  # The .pub files are installed by home/base/tui/ssh.nix on every device.
+  programs.ssh.settings = {
+    "*".IdentityFile = map (name: "${config.home.homeDirectory}/.ssh/${name}") [
+      "idols-ai_id_ed25519"
+      "idols-ai_id_rsa"
+    ];
+    "github.com".identityFile = "${config.home.homeDirectory}/.ssh/idols-ai_id_ed25519";
+  };
 
   # We set this in outputs
   # modules.desktop.gaming.enable = true;

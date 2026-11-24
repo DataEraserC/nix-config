@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   pkgs,
   mylib,
   nur-DataEraserC,
@@ -29,24 +30,20 @@
   #   enable = true;
   # };
 
-  programs.ssh = {
-    enable = true;
-    extraConfig = ''
-      Host *
-          ForwardAgent yes
-          IdentityFile ~/.ssh/id_ed25519
-          IdentitiesOnly yes
-
-      Host github.com
-          IdentityFile ~/.ssh/id_ed25519
-          # Specifies that ssh should only use the identity file explicitly configured above
-          # required to prevent sending default identity files first.
-          IdentitiesOnly yes
-
-      Host zerotier_devices
-        HostName 10.147.20.*
-        MACs hmac-sha1,hmac-sha1-96,hmac-sha2-256,hmac-sha2-512,hmac-md5
-    '';
+  # This machine's own SSH identity: wsl-work_id_ed25519. Same shape as
+  # home/hosts/linux/idols-ai.nix; WSL forwards the agent (mkForce wins over the
+  # shared `Host *` default) and pins every connection to its own identity.
+  programs.ssh.settings = {
+    "*" = {
+      ForwardAgent = lib.mkForce true;
+      IdentitiesOnly = true;
+      IdentityFile = [ "${config.home.homeDirectory}/.ssh/wsl-work_id_ed25519" ];
+    };
+    "github.com".identityFile = "${config.home.homeDirectory}/.ssh/wsl-work_id_ed25519";
+    "zerotier_devices" = {
+      HostName = "10.147.20.*";
+      MACs = "hmac-sha1,hmac-sha1-96,hmac-sha2-256,hmac-sha2-512,hmac-md5";
+    };
   };
   home.stateVersion = "26.05";
   home.packages = [

@@ -1,14 +1,9 @@
 { lib }:
 let
-  # CanoKey resident SSH keys: the only user keys, and the only keys pam_rssh
-  # accepts for sudo on servers through the forwarded agent
-  # (modules/nixos/server/ssh-agent-sudo.nix).
-  canokeySshKeys = [
-    # canokey-tea (main)
-    "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAINuvSs4skjxNCTvN5k8rihUXOCst/XChw37aDeOmz+vvAAAAEHNzaDpyeWFuNHlpbi10ZWE= ryan@canokey-tea"
-    # canokey-moe (backup)
-    "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIEZKUA4pNWvXKCpPQZHgctlR6O/71QirBQNt2RC5QsdfAAAAEHNzaDpyeWFuNHlpbi1tb2U= ryan@canokey-moe"
-  ];
+  # The fork owns no CanoKey, so upstream's resident FIDO2 SSH keys are empty.
+  # pam_rssh (modules/nixos/server/ssh-agent-sudo.nix) then trusts no key, so
+  # sudo over SSH falls back to the password.
+  canokeySshKeys = [ ];
 in
 {
   inherit canokeySshKeys;
@@ -33,9 +28,13 @@ in
   # https://man.archlinux.org/man/crypt.5.en
   initialHashedPassword = "$7$CU..../....lO1U0fsl954fC3porcCY41$OXiwbYrYuY4Z3KSFQ6IM04D9yFBExkENIewhjyTqN7C";
   hashedPassword = "$7$CU..../....lO1U0fsl954fC3porcCY41$OXiwbYrYuY4Z3KSFQ6IM04D9yFBExkENIewhjyTqN7C";
-  # Public Keys that can be used to login to all my PCs, Macbooks, and servers.
+  # Downstream's own public keys, the only ones authorized on every host.
+  # The fork owns no CanoKey: a passphrase-protected ed25519 key,
+  # ~/.ssh/idols-ai_id_ed25519, is the primary identity on every host (with
+  # ~/.ssh/idols-ai_id_rsa as its RSA sibling), and the rest are the fork's
+  # other devices.
   #
-  # Since its authority is so large, we must strengthen its security:
+  # Upstream's per-key hygiene still applies:
   # 1. The corresponding private key must be:
   #    1. Generated locally on every trusted client via:
   #      ```bash
@@ -60,18 +59,12 @@ in
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPdiLAS0Gwc1FIDVs5gyp0fQyJZm5KRXjR/oPZ6cezfL nixos@work"
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLeL1APZhRXbWFBoemc9deWf6s6tfmp3H/S4/D71fIA root@wsl-work"
   ];
-  # CanoKey U2F registrations for sudo (modules/nixos/desktop/canokey.nix).
-  # Key handles and public keys only, so they are safe to commit.
-  canokeyU2fKeys = [
-    # canokey-tea (main)
-    "1pS52FIPHfevn97Hiz5+OOFe0OaPBPqIrsD0r/mC/YIAAdEYDZIbm8kTBUGA49wXW0ZvSpF9VNYh2w84Xz9nAIAW////+Q==,LkVavaZRhu8nHhIj1r2N78BwOlU32Y/AAGkekzn5DLQCztnMs4uslIAvzzaNNCpaDu49xwZm4TqPBDKg0IuIlA==,es256,+presence"
-    # canokey-moe (backup)
-    "dxdeYeJTx40VhgPll05COx1Vn3WRKuXNgtHCTpTSyq0AAdEYDZIbm8kTBUGA49wXW0ZvSpF9VNYh2w84Xz9nAIAW////+Q==,cpBHKCdambMTGau3+eXVyv4JWQK7ZQ+8AbRt0EevCL0DeftDdXX6aatHSpbiXAhjip3R8pfeXi6GTW67YpdCPw==,es256,+presence"
-  ];
-  secondaryAuthorizedKeys = [
-    # the backup ssh keys for disaster recovery
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMzYT0Fpcp681eHY5FJV2G8Mve53iX3hMOLGbVvfL+TF ryan@romantic"
-  ];
+  # Upstream's CanoKey U2F registrations, emptied downstream along with the
+  # SSH keys above.
+  canokeyU2fKeys = [ ];
+  # Upstream's `ryan@romantic` key is not ours, and the fork keeps no separate
+  # recovery identity: ~/.ssh/idols-ai_id_ed25519 covers every host.
+  secondaryAuthorizedKeys = [ ];
   # The SSH host keys of the machines whose nix-daemons build through aquamarine
   # (modules/nixos/base/remote-builders.nix).
   remoteBuilderClientKeys = [
