@@ -324,8 +324,8 @@ rec {
           pkgs = nixpkgs.legacyPackages.${system};
         in
         pkgs.runCommand "managed-links-test" { nativeBuildInputs = [ pkgs.python3 ]; } ''
-          MANAGED_LINKS_SCRIPT=${mylib.relativeToRoot "modules/nixos/base/custom/system/managed_links.py"} \
-            python ${mylib.relativeToRoot "tests/test_managed_links.py"}
+          MANAGED_LINKS_SCRIPT=${mylib.relativeToRoot "modules/nixos/base/custom/system/managed-links/managed_links.py"} \
+            python ${mylib.relativeToRoot "tests/managed-links/test_managed_links.py"}
           touch $out
         '';
       codebuddy-acp-multi-instance-state = import ./x86_64-linux/tests/codebuddy-acp/runtime.nix {

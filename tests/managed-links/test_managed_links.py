@@ -8,11 +8,11 @@ import unittest
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = Path(
     os.environ.get(
         "MANAGED_LINKS_SCRIPT",
-        ROOT / "modules/nixos/base/custom/system/managed_links.py",
+        ROOT / "modules/nixos/base/custom/system/managed-links/managed_links.py",
     )
 )
 
