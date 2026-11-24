@@ -37,11 +37,12 @@ in
         clipboard-indicator.extensionUuid
         mirror.extensionUuid
       ];
-      # Dash favorites; `google-chrome.desktop` is the visible Chrome entry
-      # (`com.google.Chrome.desktop` is its NoDisplay portal duplicate).
+      # Dash favorites. Chrome's entry id comes from the nixpak wrapper, which
+      # names it after the Flatpak appId; the bare `google-chrome.desktop` of the
+      # unpackaged Chrome is gone, so GNOME silently drops that favorite.
       favorite-apps = [
         "com.mitchellh.ghostty.desktop"
-        "google-chrome.desktop"
+        "com.google.Chrome.desktop"
         "org.mozilla.firefox.desktop"
         "code.desktop"
         "org.gnome.Nautilus.desktop"
