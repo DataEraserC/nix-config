@@ -1,12 +1,15 @@
 { ... }:
 {
-  fsType = "btrfs";
-  retentionPeriod = 7;
-
-  recursionUsesChild = true;
-  recursionReusesArgument = false;
-  createBeforeSweep = true;
-  sweepKeepsOldRootsDir = true;
-  sweepIsLoud = true;
-  rotationIsAtomic = true;
+  recursionUsesChildPath = true;
+  recursionKeepsArgument = true;
+  rootSubvolumeCreatedBeforeSweep = true;
+  sweepFailureIsReported = true;
+  sweepStartsBelowOldRoots = true;
+  rotationRejectsExistingTarget = true;
+  blockDeviceIsUsed = true;
+  defaultRetentionIsUsed = true;
+  rootMountUsesSubvolRoot = true;
+  rootMountComesFromBlockDevice = true;
+  tmpfsBranchHasNoSweepService = true;
+  disabledHasNoSweepService = true;
 }
