@@ -445,6 +445,10 @@ in
     xiaohuanxiong = 2;
     mobileclaw = 2;
   };
+  # Group each program's launchers into one app-grid folder. Only the GNOME
+  # variant has an app grid; the keys are GNOME dconf paths, so the other
+  # variants have nothing to do with them.
+  modules.multi-instance.gnomeAppFolders.enable = lib.mkIf config.modules.desktop.gnome-wayland.enable true;
   # Power off when NO channel to reach this device remains for 30min. The
   # offline-assessment is "do I still have any channel to connect in through",
   # so every overlay channel gets its own probe and `mode = "any"` keeps the

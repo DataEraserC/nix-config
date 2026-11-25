@@ -194,6 +194,32 @@ let
     lib.mapAttrsToList (name: value: map (mkLauncher name) (instanceNames value)) cfg.instances
   );
 
+  # GNOME names an app by its .desktop file id, and makeDesktopItem names that
+  # file after the launcher, so the id is the launcher name plus the suffix.
+  instanceDesktopIds =
+    name:
+    map (instance: "multi-instance-${name}-${instance}.desktop") (instanceNames cfg.instances.${name});
+
+  # A folder holding one entry only hides that entry one level deeper, so a
+  # program below `minimumInstances` keeps its plain launcher.
+  gnomeFolders = lib.filterAttrs (_: ids: lib.length ids >= cfg.gnomeAppFolders.minimumInstances) (
+    lib.mapAttrs (name: _: instanceDesktopIds name) cfg.instances
+  );
+
+  # `folder-children` names the folders; each one needs its own dconf group with
+  # a display name and the member app ids.
+  gnomeFolderSettings = {
+    "org/gnome/desktop/app-folders" = {
+      folder-children = map (name: "multi-instance-${name}") (lib.attrNames gnomeFolders);
+    };
+  }
+  // lib.concatMapAttrs (name: ids: {
+    "org/gnome/desktop/app-folders/folders/multi-instance-${name}" = {
+      name = cfg.apps.${name}.desktop.label;
+      apps = ids;
+    };
+  }) gnomeFolders;
+
   # Every path the programs redirect, plus the store they redirect into. The same
   # path can be listed by two programs (`CodeBuddyExtension` holds auth shared by
   # codebuddy-acp and workbuddy), and duplicate mount units are an error.
@@ -283,6 +309,22 @@ in
         Only programs with `desktop` metadata are accepted.
       '';
     };
+
+    gnomeAppFolders = {
+      enable = lib.mkEnableOption ''
+        one GNOME app-grid folder per program in `instances`, holding that
+        program's launcher entries
+      '';
+
+      minimumInstances = lib.mkOption {
+        type = lib.types.ints.positive;
+        default = 2;
+        description = ''
+          Group a program only when it has at least this many instances. A
+          folder holding a single entry only hides that entry one level deeper.
+        '';
+      };
+    };
   };
 
   config = lib.mkMerge [
@@ -339,6 +381,15 @@ in
 
     (lib.mkIf cfg.enable {
       environment.systemPackages = [ multi-instance ] ++ launchers;
+    })
+
+    # GNOME-only and opt-in. The folder is a system-wide dconf default, so it
+    # appears for every user of the host without a per-user module; a user's own
+    # dconf edits still win over the default.
+    (lib.mkIf (cfg.enable && cfg.gnomeAppFolders.enable && gnomeFolders != { }) {
+      programs.dconf.profiles.user.databases = [
+        { settings = gnomeFolderSettings; }
+      ];
     })
 
     # Exposed whether or not the launcher is enabled: the paths are facts about
