@@ -41,11 +41,14 @@ in
           in
           {
             "niri/config.kdl".source = mkSymlink config "${confPath}/config.kdl";
-            "niri/downstream.kdl".source = mkSymlink config "${confPath}/downstream.kdl";
             "niri/keybindings.kdl".source = mkSymlink config "${confPath}/keybindings.kdl";
+            "niri/keybindings_downstream.kdl".source =
+              mkSymlink config "${confPath}/keybindings_downstream.kdl";
             "niri/noctalia-shell.kdl".source = mkSymlink config "${confPath}/noctalia-shell.kdl";
             "niri/spawn-at-startup.kdl".source = mkSymlink config "${confPath}/spawn-at-startup.kdl";
             "niri/windowrules.kdl".source = mkSymlink config "${confPath}/windowrules.kdl";
+            "niri/windowrules_downstream.kdl".source =
+              mkSymlink config "${confPath}/windowrules_downstream.kdl";
           };
 
         systemd.user.services.niri-flake-polkit = {

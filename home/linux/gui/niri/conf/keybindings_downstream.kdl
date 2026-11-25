@@ -40,5 +40,6 @@ binds {
     Ctrl+Shift+Escape { spawn "missioncenter"; }
     Mod+P { spawn "~/.config/scripts/colorpicker"; }
     Mod+F12 { spawn "~/.config/scripts/dropdown_terminal"; }
-    // Mod+E { spawn "nautilus"; } // upstream keeps Mod+E on the noctalia session panel
+    // Overrides upstream's noctalia session panel on Mod+E.
+    Mod+E { spawn "nautilus"; }
 }

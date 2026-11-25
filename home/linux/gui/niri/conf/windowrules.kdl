@@ -96,14 +96,6 @@ window-rule {
     // open-on-workspace "4entertainment"
 }
 window-rule {
-    match app-id="net.lutris.Lutris"
-    // open-on-workspace "4entertainment"
-}
-window-rule {
-    match app-id="com.vysp3r.ProtonPlus"
-    // open-on-workspace "4entertainment"
-}
-window-rule {
     // Run anime games on Linux
     match app-id="^moe.launcher"
     // open-on-workspace "4entertainment"
@@ -181,34 +173,3 @@ window-rule {
     open-focused false
     default-floating-position x=0 y=0 relative-to="bottom-right"
 }
-
-// Mayuri's rules
-
-// Steam fullscreen rule
-window-rule {
-    match app-id="^steam$" title="^Steam 大屏幕模式$"
-    match app-id=".*Minecraft.*"
-    open-fullscreen true
-}
-
-// Scrcpy floating rule
-window-rule {
-    match app-id=".*scrcpy.*"
-    open-floating true
-}
-
-// DropDown Apps rules
-window-rule {
-    match app-id="^dropdown.*$"
-    open-floating true
-    default-floating-position x=0 y=0 relative-to="top-left"
-    default-window-height { proportion 0.5; }
-    default-column-width { proportion 1.0; }
-}
-
-window-rule {
-    match app-id="^dropdown.*$" is-focused=false
-    opacity 0.5
-}
-
-workspace "ndrop"

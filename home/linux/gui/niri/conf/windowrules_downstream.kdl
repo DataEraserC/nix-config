@@ -1,0 +1,40 @@
+// Downstream (DataEraserC) window rules that upstream does not have.
+//
+// Same layout trick as keybindings_downstream.kdl: niri `include` is positional,
+// and multipart sections like window-rule are inserted at the include line, so
+// these rules apply after (and therefore win over) the upstream rules for any
+// property they set. Rules that only *remove* something upstream sets - the
+// open-on-workspace lines this fork drops because it runs a single screen with
+// index workspaces - cannot be expressed here; those stay commented out in
+// windowrules.kdl as a known fork delta.
+
+// Mayuri's rules
+
+// Steam fullscreen rule
+window-rule {
+    match app-id="^steam$" title="^Steam 大屏幕模式$"
+    match app-id=".*Minecraft.*"
+    open-fullscreen true
+}
+
+// Scrcpy floating rule
+window-rule {
+    match app-id=".*scrcpy.*"
+    open-floating true
+}
+
+// DropDown Apps rules
+window-rule {
+    match app-id="^dropdown.*$"
+    open-floating true
+    default-floating-position x=0 y=0 relative-to="top-left"
+    default-window-height { proportion 0.5; }
+    default-column-width { proportion 1.0; }
+}
+
+window-rule {
+    match app-id="^dropdown.*$" is-focused=false
+    opacity 0.5
+}
+
+workspace "ndrop"
