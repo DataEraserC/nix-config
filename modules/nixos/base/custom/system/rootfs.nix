@@ -111,27 +111,39 @@ in
           script = ''
             mkdir -p /btrfs_tmp
             mount -t btrfs ${cfg.btrfsBlockDevice} /btrfs_tmp
+            mkdir -p /btrfs_tmp/old_roots
             if [ -e /btrfs_tmp/root ]; then
                 ${cfg.preBackupCommand}
-                mkdir -p /btrfs_tmp/old_roots
                 timestamp=$(date --date="@$(stat -c %Y /btrfs_tmp/root)" "+%Y-%m-%d_%H:%M:%S")
-                mv /btrfs_tmp/root "/btrfs_tmp/old_roots/$timestamp"
+                mv -T /btrfs_tmp/root "/btrfs_tmp/old_roots/$timestamp"
                 ${cfg.postBackupCommand}
             fi
 
+            # The next root is created before any retention work: cleanup is
+            # allowed to fail, but never to leave the host without a root
+            # subvolume for sysroot.mount.
+            btrfs subvolume create /btrfs_tmp/root
+
             delete_subvolume_recursively() {
-                IFS=$'\n'
-                for i in $(btrfs subvolume list -o "$1" | cut -f 9- -d ' '); do
-                    delete_subvolume_recursively "/btrfs_tmp/$i"
+                local IFS=$'\n'
+                local path="$1"
+                local child
+                # -o prints children relative to the mounted top level, so the
+                # mount point prefixes the child, never the path we were given.
+                for child in $(btrfs subvolume list -o "$path" | cut -f 9- -d ' '); do
+                    delete_subvolume_recursively "/btrfs_tmp/$child"
                 done
-                btrfs subvolume delete "$1"
+                btrfs subvolume delete "$path"
             }
 
-            for i in $(find /btrfs_tmp/old_roots/ -maxdepth 1 -mtime +${toString cfg.retentionPeriod}); do
-                delete_subvolume_recursively "$i"
+            # -mindepth 1 keeps the sweep on the retained roots: without it
+            # /btrfs_tmp/old_roots itself can match -mtime, and the recursion
+            # then deletes every root still being kept.
+            for i in $(find /btrfs_tmp/old_roots/ -mindepth 1 -maxdepth 1 -mtime +${toString cfg.retentionPeriod}); do
+                delete_subvolume_recursively "$i" \
+                    || echo "impermanence-setup: WARNING: expired root $i was not deleted, it is kept; free it manually" >&2
             done
 
-            btrfs subvolume create /btrfs_tmp/root
             umount /btrfs_tmp
           '';
         };
