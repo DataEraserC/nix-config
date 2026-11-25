@@ -26,19 +26,25 @@ let
 in
 {
   # Boot-menu name for this generation. systemd-boot/lanzaboote builds the entry
-  # title from bootspec's label, which is system.nixos.label, and appends the
-  # generation number (plus date) itself. Without this every ai-* variant shows
-  # only the nixpkgs version, so the three configurations are indistinguishable
-  # in the menu. Keep the name short: it is also what `nixos-version` prints.
-  system.nixos.label =
-    if config.modules.desktop.niri.enable then
-      "ai-niri"
-    else if config.modules.desktop.gnome-wayland.enable then
-      "ai-gnome-wayland"
-    else if config.modules.desktop.kde-wayland.enable then
-      "ai-kde-wayland"
-    else
-      "ai";
+  # title from bootspec's label, which is system.nixos.label and appends the
+  # generation number (plus date) itself; the label defaults to
+  # "<tags>-<nixpkgs version>". Naming the running desktop variant through
+  # system.nixos.tags keeps the nixpkgs version string the entries always showed
+  # and only prefixes it, so the three configurations stay distinguishable
+  # instead of all reading "26.11.20261115.1c872b8":
+  #   ai-niri-26.11.20261115.1c872b8 (Generation 42, ...)
+  system.nixos.tags = [
+    (
+      if config.modules.desktop.niri.enable then
+        "ai-niri"
+      else if config.modules.desktop.gnome-wayland.enable then
+        "ai-gnome-wayland"
+      else if config.modules.desktop.kde-wayland.enable then
+        "ai-kde-wayland"
+      else
+        "ai"
+    )
+  ];
 
   # One unprivileged server owns the persistent cache; build sandboxes only see
   # its Unix socket, and pkgs-cuda's torch falls back when the socket is absent.
