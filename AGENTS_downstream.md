@@ -117,6 +117,16 @@ next merge. Push work outward, in this order, before writing it down here.
    is not needed yet. A commented switch documents a verified capability; an enabled one is a
    standing build and maintenance cost.
 
+## Keep my other flakes on this repo's nixpkgs
+
+`nur-DataEraserC`, the AppCast/AgentChatBridge/packaging repos and the Android forks build against
+the nixpkgs revision locked here, so a bump in this repository is followed by a
+`chore: update nixpkgs with nix-config` commit in each of them. The roster, the per-repo command and
+the exceptions are in
+[docs/nixpkgs-alignment_downstream.md](./docs/nixpkgs-alignment_downstream.md); read the target
+revision with `nix eval` rather than by grepping `flake.lock`, because a `follows` chain can hide
+it.
+
 ## WebMux / CodeBuddy ACP 下游升级闸门
 
 修改 `modules.webmux`、`codebuddy-acp`、agent accounts、multi-instance 或对应 NUR pin 前，先读
