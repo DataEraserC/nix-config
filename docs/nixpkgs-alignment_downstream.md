@@ -16,20 +16,20 @@ nix eval --raw --impure \
 
 ## Tracked repositories
 
-| Repository                  | Local path                                     | Branch         | Notes                                                                       |
-| --------------------------- | ---------------------------------------------- | -------------- | --------------------------------------------------------------------------- |
-| nur-packages                | `~/Documents/code/nur-packages`                | `main`         | Also regenerate `README.md` after a lock bump (its own fork rule).          |
-| AgentChatBridge             | `~/Documents/code/AgentChatBridge`             | `dev_20261025` |                                                                             |
-| FileClassificationSolutions | `~/Documents/code/FileClassificationSolutions` | `rust_new`     |                                                                             |
-| AppCast                     | `~/Documents/code/AppCast`                     | `main`         |                                                                             |
-| PoaceaeFS                   | `~/Documents/code/PoaceaeFS`                   | `poc`          | Upstream lives in a third-party org; the branch here is the fork's.         |
-| oray-tools                  | `~/Documents/code/oray-tools`                  | `main`         | Was rev-pinned in `flake.nix`; un-pinned to `nixos-unstable` on 2026-11-26. |
-| bas-remote                  | `~/Documents/code/bas-remote`                  | `main`         | Effective nixpkgs is reached through a `follows` node (`nixpkgs_2`).        |
-| cpolar-status               | `~/Documents/code/cpolar-status`               | `main`         | Was rev-pinned in `flake.nix`; un-pinned to `nixos-unstable` on 2026-11-26. |
-| video-login                 | `~/Documents/code/video-login`                 | `main`         | Remote is `DataEraserC/content-extractor`.                                  |
-| agent2api.nix               | `~/Documents/code/agent2api.nix`               | `main`         | `origin` is an HTTPS URL without stored credentials; push with the SSH URL. |
-| IntentModifier              | `~/AndroidStudioProjects/IntentModifier`       | `java_engine`  | Fork of a third-party app.                                                  |
-| fcitx5-android              | `~/AndroidStudioProjects/fcitx5-android`       | `dev20261105`  | Fork of a third-party app.                                                  |
+| Repository                  | Local path                                     | Branch         | Notes                                                                                           |
+| --------------------------- | ---------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------- |
+| nur-packages                | `~/Documents/code/nur-packages`                | `main`         | Regenerate `README.md` with `nix run .#readme`: rows that take their version from nixpkgs move. |
+| AgentChatBridge             | `~/Documents/code/AgentChatBridge`             | `dev_20261025` |                                                                                                 |
+| FileClassificationSolutions | `~/Documents/code/FileClassificationSolutions` | `rust_new`     |                                                                                                 |
+| AppCast                     | `~/Documents/code/AppCast`                     | `main`         |                                                                                                 |
+| PoaceaeFS                   | `~/Documents/code/PoaceaeFS`                   | `poc`          | Upstream lives in a third-party org; the branch here is the fork's.                             |
+| oray-tools                  | `~/Documents/code/oray-tools`                  | `main`         | Was rev-pinned in `flake.nix`; un-pinned to `nixos-unstable` on 2026-11-26.                     |
+| bas-remote                  | `~/Documents/code/bas-remote`                  | `main`         | Effective nixpkgs is reached through a `follows` node (`nixpkgs_2`).                            |
+| cpolar-status               | `~/Documents/code/cpolar-status`               | `main`         | Was rev-pinned in `flake.nix`; un-pinned to `nixos-unstable` on 2026-11-26.                     |
+| video-login                 | `~/Documents/code/video-login`                 | `main`         | Remote is `DataEraserC/content-extractor`.                                                      |
+| agent2api.nix               | `~/Documents/code/agent2api.nix`               | `main`         | `origin` is an HTTPS URL without stored credentials; push with the SSH URL.                     |
+| IntentModifier              | `~/AndroidStudioProjects/IntentModifier`       | `java_engine`  | Fork of a third-party app.                                                                      |
+| fcitx5-android              | `~/AndroidStudioProjects/fcitx5-android`       | `dev20261105`  | Fork of a third-party app.                                                                      |
 
 ## Procedure
 
@@ -51,6 +51,9 @@ An input pinned to a revision inside `flake.nix` cannot be aligned by the lock a
 `nix flake update` would revert it. Un-pin such an input to `nixos-unstable` in the same commit and
 ship both files.
 
+nur-packages regenerates `README.md` from its own package set (`nix run .#readme`), so run that
+before committing and stage the regenerated file in the same commit.
+
 ## Not tracked
 
 - `AgentChatBridge-rewrite`, `AgentChatBridge-backup`: working copies of a repository already in the
@@ -64,5 +67,6 @@ ship both files.
 
 ## Last alignment
 
-2026-11-26 to `1c872b8c508bbbfebc1b0b74777ff391ce0a574c` (nixpkgs 2026-11-15). nur-packages follows
-once the pending package change lands.
+2026-11-26 to `1c872b8c508bbbfebc1b0b74777ff391ce0a574c` (nixpkgs 2026-11-15) across all twelve
+repositories. `oray-tools` and `cpolar-status` also lost their revision pins in `flake.nix` in that
+pass. Checked with `just eval-host ai-gnome-wayland`; the aligned repositories were not rebuilt.
