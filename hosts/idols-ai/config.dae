@@ -444,16 +444,17 @@ routing {
     # below, which would otherwise win.
     domain(suffix: codebuddy.ai) -> proxy
 
-    # agentrouter.org: Linux.do's new-api gateway on an Aliyun Singapore ALB
-    # (8.214.161.192). The GFW blocks it in both layers: every plain resolver
-    # returns a poison answer (2026-11-27: alidns 199.59.148.20, router
-    # 104.244.46.208, 8.8.8.8 108.160.172.1, all in foreign CDN ranges) and a
-    # direct TLS handshake to the real IP is reset on SNI, so `direct` cannot
-    # work at all. It used to fall through to `proxy`, whose min_moving_avg
-    # swaps exits mid-page-load; that costs a fresh handshake per asset and
-    # leaves the Aliyun WAF re-challenging every visit with a captcha. Pin it
-    # to the Singapore group: same country as the origin, and min_avg10 holds
-    # one exit instead of chasing the fastest node.
+    # agentrouter.org: an LLM API relay (new-api) on an Aliyun Singapore ALB
+    # (8.214.161.192), fronted by the Aliyun WAF, which sets acw_tc. The GFW
+    # blocks the site in both layers: every plain resolver returns a poison
+    # answer (2026-11-27: alidns 199.59.148.20, router 104.244.46.208, 8.8.8.8
+    # 108.160.172.1, all in foreign CDN ranges) and a direct TLS handshake to
+    # the real IP is reset on SNI, so `direct` cannot work at all. It used to
+    # fall through to `proxy`, whose min_moving_avg swaps exits mid-page-load:
+    # a fresh handshake per asset, and the likely trigger for the WAF's human
+    # verification on every visit. Pin it to the Singapore group: same country
+    # as the origin, and min_avg10 holds one exit instead of chasing the
+    # fastest node.
     domain(suffix: agentrouter.org) -> sg
 
     # Direct access to all Chinese mainland-related IP addresses
