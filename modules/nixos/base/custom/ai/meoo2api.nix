@@ -50,7 +50,11 @@ in
   config = lib.mkIf cfg.enable {
     services.dataEraserc.meoo2api = {
       enable = true;
-      package = nur-DataEraserC.packages.${system}.meoo2api;
+      # meoo2api-firefox carries the Referrer-Policy: same-origin patch so
+      # Firefox console logins keep a real Origin (upstream no-referrer makes
+      # Firefox send Origin: null -> 403). Drop back to plain meoo2api once
+      # upstream fixes the header; see the package's AGENTS.md for criteria.
+      package = nur-DataEraserC.packages.${system}.meoo2api-firefox;
       host = "0.0.0.0";
       port = cfg.port;
       openFirewall = false;
