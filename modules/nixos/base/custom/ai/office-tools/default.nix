@@ -5,7 +5,8 @@
 #
 # Shared base (enable = true): LibreOffice headless (`soffice`), poppler
 # (`pdftoppm`), ONE python3.withPackages environment (pandas + the packages the
-# excel/word/ppt switches select) and the `office-render` helper:
+# excel/word/ppt switches select) and the `office-render` helper
+# (office-render.sh next to this file):
 #
 #   office-render <file> [outdir] [dpi]   # xlsx/docx/pptx/... -> PDF -> PNG images
 #
@@ -43,27 +44,47 @@ let
   # Exactly ONE Python environment: merge the per-format packages into a single
   # list and call python3.withPackages once. markitdown 0.1.8 exists in the
   # locked nixpkgs (verified with nix eval); it pulls its own converter extras.
-  pythonEnv = pkgs.python3.withPackages (
-    ps:
-    [ ps.pandas ]
-    ++ lib.optionals cfg.excel [
-      ps.openpyxl
-      ps.xlsxwriter
-    ]
-    ++ lib.optionals cfg.word [
-      ps.python-docx
-      ps.lxml
-    ]
-    ++ lib.optionals cfg.ppt [
-      ps.python-pptx
-      ps.pillow
-    ]
-    ++ lib.optional anyFormat ps.markitdown
-  );
+  #
+  # Profile collision policy (verified with pkgs.buildEnv against the locked
+  # nixpkgs): NixOS merges environment.systemPackages with ignoreCollisions =
+  # true, so a bare python3 elsewhere (modules/nixos/base/packages.nix ships
+  # python313) does NOT fail the build - but at equal meta.priority the winner
+  # of bin/python is arbitrary, and the bare interpreter can shadow this env.
+  # Lowering the priority number makes this env win bin/python{,3} in the
+  # system profile deterministically; with no other python declared it wins
+  # trivially. Home Manager's python313 env lives in the per-user profile,
+  # which precedes /run/current-system/sw on PATH for interactive shells; this
+  # module owns the SYSTEM python only (agents run system-side). For an
+  # unambiguous entry point regardless of PATH order use
+  # /run/current-system/sw/bin/office-python (symlink below).
+  pythonEnv =
+    (pkgs.python3.withPackages (
+      ps:
+      [ ps.pandas ]
+      ++ lib.optionals cfg.excel [
+        ps.openpyxl
+        ps.xlsxwriter
+      ]
+      ++ lib.optionals cfg.word [
+        ps.python-docx
+        ps.lxml
+      ]
+      ++ lib.optionals cfg.ppt [
+        ps.python-pptx
+        ps.pillow
+      ]
+      ++ lib.optional anyFormat ps.markitdown
+    )).overrideAttrs
+      (_: {
+        # Default priority is 5; smaller wins profile collisions.
+        meta.priority = 4;
+      });
 
-  # office-render <file> [outdir] [dpi]: headless soffice -> PDF -> pdftoppm PNG images.
-  # Each run gets a private UserInstallation profile so concurrent invocations
-  # (parallel agents) never fight over the same LibreOffice profile lock.
+  # office-render <file> [outdir] [dpi]: headless soffice -> PDF -> pdftoppm.
+  # The script body lives in office-render.sh (plain shell, no Nix string
+  # interpolation - runtime values are script arguments). writeShellApplication
+  # adds the shebang, `set -euo pipefail`, a shellcheck pass and runtimeInputs
+  # on PATH.
   officeRender = pkgs.writeShellApplication {
     name = "office-render";
     runtimeInputs = [
@@ -71,42 +92,7 @@ let
       poppler
       pkgs.coreutils
     ];
-    text = ''
-      if [ "$#" -lt 1 ] || [ "$#" -gt 3 ]; then
-        echo "usage: office-render <file> [outdir] [dpi]" >&2
-        exit 1
-      fi
-      file=$1
-      outdir=''${2:-.}
-      dpi=''${3:-100}
-      if [ ! -f "$file" ]; then
-        echo "office-render: no such file: $file" >&2
-        exit 1
-      fi
-      case "$dpi" in
-        "" | *[!0-9]*)
-          echo "office-render: dpi must be a positive integer, got: $dpi" >&2
-          exit 1
-          ;;
-      esac
-      stem=$(basename "$file")
-      stem=''${stem%.*}
-      work=$(mktemp -d)
-      trap 'rm -rf "$work"' EXIT
-      mkdir -p "$outdir"
-      # Fresh profile per invocation; the intermediate PDF stays in $work.
-      soffice -env:UserInstallation="file://$work/profile" \
-        --headless --norestore --convert-to pdf --outdir "$work" "$file"
-      if [ ! -f "$work/$stem.pdf" ]; then
-        echo "office-render: LibreOffice did not produce $stem.pdf" >&2
-        exit 1
-      fi
-      pdftoppm -png -r "$dpi" "$work/$stem.pdf" "$outdir/$stem"
-      for png in "$outdir/$stem"*.png; do
-        [ -e "$png" ] || continue
-        realpath "$png"
-      done
-    '';
+    text = builtins.readFile ./office-render.sh;
   };
 in
 {
@@ -150,6 +136,12 @@ in
       poppler
       pythonEnv
       officeRender
+      # Stable, collision-free interpreter entry point: always this module's
+      # env, independent of which python wins bin/python on PATH.
+      (pkgs.runCommand "office-python" { } ''
+        mkdir -p $out/bin
+        ln -s ${pythonEnv}/bin/python3 $out/bin/office-python
+      '')
     ]
     # word: docx <-> markdown/PDF conversions beyond python-docx.
     ++ lib.optional cfg.word pkgs.pandoc
