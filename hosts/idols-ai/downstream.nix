@@ -292,7 +292,7 @@ in
   # of WebMux's launch-config icon keys (an unknown icon makes the loader
   # skip the whole declaration).
   modules.webmux.acpAgents.zcode-acp = {
-    title = "ZCode";
+    title = "ZCode ACP";
     icon = "terminal";
     processExecutables = [
       "node"
@@ -340,7 +340,7 @@ in
   # the chat view finds and resumes the sessions the terminal form creates.
   # International `qodercli` is packaged but off, like `modules.qoder`.
   modules.webmux.acpAgents.qoder-cli-cn = {
-    title = "Qoder CLI CN";
+    title = "Qoder CLI CN ACP";
     icon = "qoder";
     processExecutables = [ "qoderclicn" ];
     commands = map (
@@ -379,7 +379,7 @@ in
   # `processExecutables` names only the vendor TUI process, not the ACP-side
   # bridge; `icon` must be a supported launch-config key.
   modules.webmux.acpAgents.xiaohuanxiong-acp = {
-    title = "Raccoon Work";
+    title = "Raccoon Work ACP";
     icon = "terminal";
     processExecutables = [ "node" ];
     commands = [
