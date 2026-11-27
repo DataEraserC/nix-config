@@ -5,8 +5,9 @@
 #
 # Shared base (enable = true): LibreOffice headless (`soffice`), poppler
 # (`pdftoppm`), ONE python3.withPackages environment (pandas + the packages the
-# excel/word/ppt switches select) and the `office-render` helper
-# (office-render.sh next to this file):
+# excel/word/ppt switches select) exposed as `office-python` / `office-python3`
+# so it coexists with any other system/home python, and the `office-render`
+# helper (office-render.sh next to this file):
 #
 #   office-render <file> [outdir] [dpi]   # xlsx/docx/pptx/... -> PDF -> PNG images
 #
@@ -17,7 +18,7 @@
 # Check (after switch)
 #   soffice --version
 #   pdftoppm -v
-#   python -c "import openpyxl, docx, pptx, pandas"
+#   office-python -c "import openpyxl, docx, pptx, pandas"
 #   fc-list :lang=zh | head
 #   office-render test.xlsx
 # ===============================================================================
@@ -45,40 +46,40 @@ let
   # list and call python3.withPackages once. markitdown 0.1.8 exists in the
   # locked nixpkgs (verified with nix eval); it pulls its own converter extras.
   #
-  # Profile collision policy (verified with pkgs.buildEnv against the locked
-  # nixpkgs): NixOS merges environment.systemPackages with ignoreCollisions =
-  # true, so a bare python3 elsewhere (modules/nixos/base/packages.nix ships
-  # python313) does NOT fail the build - but at equal meta.priority the winner
-  # of bin/python is arbitrary, and the bare interpreter can shadow this env.
-  # Lowering the priority number makes this env win bin/python{,3} in the
-  # system profile deterministically; with no other python declared it wins
-  # trivially. Home Manager's python313 env lives in the per-user profile,
-  # which precedes /run/current-system/sw on PATH for interactive shells; this
-  # module owns the SYSTEM python only (agents run system-side). For an
-  # unambiguous entry point regardless of PATH order use
-  # /run/current-system/sw/bin/office-python (symlink below).
-  pythonEnv =
-    (pkgs.python3.withPackages (
-      ps:
-      [ ps.pandas ]
-      ++ lib.optionals cfg.excel [
-        ps.openpyxl
-        ps.xlsxwriter
-      ]
-      ++ lib.optionals cfg.word [
-        ps.python-docx
-        ps.lxml
-      ]
-      ++ lib.optionals cfg.ppt [
-        ps.python-pptx
-        ps.pillow
-      ]
-      ++ lib.optional anyFormat ps.markitdown
-    )).overrideAttrs
-      (_: {
-        # Default priority is 5; smaller wins profile collisions.
-        meta.priority = 4;
-      });
+  # Coexistence policy: this env is NOT added to environment.systemPackages
+  # directly - it would collide on bin/python{,3} with the bare python313 in
+  # modules/nixos/base/packages.nix (and fight Home Manager's per-user env on
+  # PATH). Whoever declares python/python3 keeps them untouched; this module
+  # exposes its env ONLY through the uniquely named office-python entry points
+  # below, so both interpreters coexist regardless of profile order. With no
+  # other python declared anywhere, office-python still works the same way.
+  pythonEnv = pkgs.python3.withPackages (
+    ps:
+    [ ps.pandas ]
+    ++ lib.optionals cfg.excel [
+      ps.openpyxl
+      ps.xlsxwriter
+    ]
+    ++ lib.optionals cfg.word [
+      ps.python-docx
+      ps.lxml
+    ]
+    ++ lib.optionals cfg.ppt [
+      ps.python-pptx
+      ps.pillow
+    ]
+    ++ lib.optional anyFormat ps.markitdown
+  );
+
+  # Unique names only (office-python / office-python3): no bin/python* is
+  # created, so nothing here can shadow or collide with another profile's
+  # interpreter. Symlinks (not wrappers) keep argv[0] semantics and venv
+  # creation (`office-python -m venv`) working against the real env.
+  officePython = pkgs.runCommand "office-python" { } ''
+    mkdir -p $out/bin
+    ln -s ${pythonEnv}/bin/python3 $out/bin/office-python
+    ln -s ${pythonEnv}/bin/python3 $out/bin/office-python3
+  '';
 
   # office-render <file> [outdir] [dpi]: headless soffice -> PDF -> pdftoppm.
   # The script body lives in office-render.sh (plain shell, no Nix string
@@ -134,14 +135,10 @@ in
     environment.systemPackages = [
       libreoffice
       poppler
-      pythonEnv
+      # Only the uniquely named entry points enter the profile; pythonEnv
+      # itself stays out so bin/python{,3} is left to whoever declares it.
+      officePython
       officeRender
-      # Stable, collision-free interpreter entry point: always this module's
-      # env, independent of which python wins bin/python on PATH.
-      (pkgs.runCommand "office-python" { } ''
-        mkdir -p $out/bin
-        ln -s ${pythonEnv}/bin/python3 $out/bin/office-python
-      '')
     ]
     # word: docx <-> markdown/PDF conversions beyond python-docx.
     ++ lib.optional cfg.word pkgs.pandoc
