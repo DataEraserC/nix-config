@@ -230,7 +230,13 @@ group {
     # "竞速" (speed-race) nodes, which feel snappy for interactive traffic; but those nodes oversell their
     # bandwidth and are slow on large downloads, so download rules use proxy_bw instead.
     proxy {
-        # No filter. Use all nodes.
+        # All nodes except subscription placeholders. Airports add entries named
+        # after the account quota or expiry ("剩余流量：0", "套餐到期：长期有效",
+        # "ExpireAt: ...") that duplicate a real node's credentials, so they pass
+        # health checks and min_moving_avg can pick one (2026-11-27: proxy chose
+        # 剩余流量：0 for UDP). Filter lines are OR'ed, so the exclusions share one
+        # && chain.
+        filter: !name(keyword: '剩余流量') && !name(keyword: '套餐到期') && !name(keyword: 'ExpireAt:')
 
         # Randomly select a node from the group for every connection.
         #policy: random
