@@ -286,11 +286,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1795758876,
-        "narHash": "sha256-1m0cB3J5KCmcBZVoQ0VaoL0b4hPm+zm+bKVRW2R2q4o=",
+        "lastModified": 1795786538,
+        "narHash": "sha256-7Ui+5wGUmhZDww9X6GZMXV4Z4PTJBo5ORv89ebg8WnU=",
         "owner": "desktop-tools-which-may-be-useful",
         "repo": "agent2api.nix",
-        "rev": "8f0eeb41df917c6a2f864899cba454b3344865dc",
+        "rev": "3b3ba955910409064e4b222427801f780ffd18ac",
         "type": "github"
       },
       "original": {
