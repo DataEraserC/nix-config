@@ -635,6 +635,27 @@ rec {
       };
     };
 
+    # xiaohuanxiong2api (base/custom/ai/xiaohuanxiong2api): SenseTime Raccoon
+    # gateway with the API and management panel on one port. Enabled only on
+    # idols-ai for now; the API key and the panel key are agenix secrets.
+    xiaohuanxiong2api = {
+      hosts = {
+        idols-ai = {
+          enable = true;
+          host = "0.0.0.0";
+          port = 1112;
+        };
+      };
+      catalog = {
+        tags = [
+          "llm"
+          "gateway"
+          "ui"
+        ];
+        note = "xiaohuanxiong2api";
+      };
+    };
+
     open-webui = {
       hosts = {
         idols-ai = {

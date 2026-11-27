@@ -60,6 +60,7 @@
   "note.astrbot": "聊天机器人 WebUI。",
   "note.sub-store": "订阅面板位于 Basic Auth 之后；24500 的 JSON API 未列入。",
   "note.workbuddy2api": "WorkBuddy / Qoder / Trae / MiniMax 网关，API 与管理面板共用同一端口。",
+  "note.xiaohuanxiong2api": "商汤小浣熊网关，API 与管理面板共用同一端口。",
   "tag.llm": "LLM",
   "tag.gateway": "网关",
   "tag.ui": "Web UI",

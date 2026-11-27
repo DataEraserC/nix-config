@@ -270,6 +270,18 @@ in
           owner = "workbuddy2api";
           group = "workbuddy2api";
         };
+        "xiaohuanxiong2api-api-key" = mkIf config.modules.xiaohuanxiong2api.enable {
+          file = "${mysecrets}/xiaohuanxiong2api-api-key.age";
+          mode = "0600";
+          owner = "xiaohuanxiong2api";
+          group = "xiaohuanxiong2api";
+        };
+        "xiaohuanxiong2api-admin-api-key" = mkIf config.modules.xiaohuanxiong2api.enable {
+          file = "${mysecrets}/xiaohuanxiong2api-admin-api-key.age";
+          mode = "0600";
+          owner = "xiaohuanxiong2api";
+          group = "xiaohuanxiong2api";
+        };
       };
 
       # place secrets in /etc/

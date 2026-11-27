@@ -379,6 +379,10 @@ in
   # workbuddy2api gateway and panel, bound to 0.0.0.0:1111.
   modules.workbuddy2api.enable = (svc "workbuddy2api").enable;
   modules.workbuddy2api.port = (svc "workbuddy2api").port;
+  # xiaohuanxiong2api Raccoon gateway and panel, bound to 0.0.0.0:1112.
+  modules.xiaohuanxiong2api.enable = (svc "xiaohuanxiong2api").enable;
+  modules.xiaohuanxiong2api.host = (svc "xiaohuanxiong2api").host;
+  modules.xiaohuanxiong2api.port = (svc "xiaohuanxiong2api").port;
   # OmniRoute unified LLM gateway, bound to 0.0.0.0:1106.
   modules.omniroute.enable = (svc "omniroute").enable;
   modules.omniroute.port = (svc "omniroute").port;
