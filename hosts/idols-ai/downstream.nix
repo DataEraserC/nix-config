@@ -189,13 +189,17 @@ in
   modules.agent2api.port = (svc "agent2api").port;
   # Provider packs from the agent2api-nix flake; managed mode reconciles this
   # set (and the provider switches) on every start.
-  modules.agent2api.plugins = with inputs.agent2api-nix.packages.${pkgs.stdenv.hostPlatform.system}; [
-    # The native pack already provides trae/zcode/zcode-intl; the wasm
-    # packs need a wasm-capable gateway and fail on the headless 3.4.2
-    # server with "Exec format error".
-    agent2api-providers
-    agent2api-web-providers
-  ];
+  #
+  # 3.5.x refuses the legacy native packs: the old agent2api-providers /
+  # agent2api-web-providers zips now report "Legacy plugin unsupported" and
+  # their child exits with code 127. The wasm packs declare the same provider
+  # ids (zcode, zcode-intl, trae, ...), so taking every wasm pack keeps the
+  # provider set and leaves the stored accounts usable.
+  modules.agent2api.plugins = lib.attrValues (
+    lib.filterAttrs (
+      name: _: lib.hasPrefix "agent2api-wasm-" name
+    ) inputs.agent2api-nix.packages.${pkgs.stdenv.hostPlatform.system}
+  );
   # WebMux browser terminal server, bound to 0.0.0.0:1109 (runs as this host's
   # login user so sessions reach its agent logins and HOME).
   modules.webmux.enable = (svc "webmux").enable;
