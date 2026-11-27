@@ -366,6 +366,58 @@ in
       }
     ) (lib.range 1 2);
   };
+  # Raccoon Work ACP: the Go bridge answers session/list and serves the Martty
+  # chat TUI under WebMux's PTY; `--acp` runs the stdio ACP server over plain
+  # pipes. Instances 1 and 2 match `desktopAccounts.xiaohuanxiong`; each keeps
+  # its own ~/.box-agent login (log in once with
+  # `multi-instance xiaohuanxiong-acp N --login`), and the TUI and chat view
+  # share the same session store. The TUI process is Martty (node), so
+  # `processExecutables` names only the vendor TUI process, not the ACP-side
+  # bridge; `icon` must be a supported launch-config key.
+  modules.webmux.acpAgents.xiaohuanxiong-acp = {
+    title = "Raccoon Work";
+    icon = "terminal";
+    processExecutables = [ "node" ];
+    commands = [
+      {
+        match = [ "xiaohuanxiong-acp" ];
+        acp = [
+          "xiaohuanxiong-acp"
+          "--acp"
+        ];
+        resume = [
+          "xiaohuanxiong-acp"
+          "--resume"
+        ];
+      }
+    ]
+    ++ map (
+      instance:
+      let
+        instanceName = toString instance;
+      in
+      {
+        match = [
+          "multi-instance"
+          "xiaohuanxiong-acp"
+          instanceName
+        ];
+        acp = [
+          "multi-instance"
+          "xiaohuanxiong-acp"
+          instanceName
+          "--acp"
+        ];
+        resume = [
+          "multi-instance"
+          "xiaohuanxiong-acp"
+          instanceName
+          "--resume"
+        ];
+        launcher = "bwrap";
+      }
+    ) (lib.range 1 2);
+  };
   # opencode2api gateway, bound to 0.0.0.0:1101 (API) and 0.0.0.0:1102 (WebUI).
   modules.opencode2api.enable = (svc "opencode2api").enable;
   modules.opencode2api.port = (svc "opencode2api").port;
@@ -428,7 +480,7 @@ in
   # ~/RaccoonWork, ~/.openclaw, ~/.hermes) is persisted unconditionally in
   # preservation-downstream.nix, so re-enabling one keeps the login and history
   # already on disk.
-  # See modules/nixos/base/custom/ai/{codebuddy-acp,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl,zcode,zcode-acp,qoder,qoder-ide,qoder-cn,qoder-cn-ide,qodercli,qoderclicn,autoclaw-cn,autoclaw-intl,xiaohuanxiong}.nix.
+  # See modules/nixos/base/custom/ai/{codebuddy-acp,codearts,workbuddy,workbuddy-ai,lobsterai,trae-cn,trae-intl,zcode,zcode-acp,qoder,qoder-ide,qoder-cn,qoder-cn-ide,qodercli,qoderclicn,autoclaw-cn,autoclaw-intl,xiaohuanxiong,xiaohuanxiong-acp}.nix.
   modules.codebuddy-acp.enable = true;
   modules.zcode-acp.enable = true;
   # modules.codearts.enable = true;
@@ -447,6 +499,7 @@ in
   modules.autoclaw-cn.enable = true;
   modules.autoclaw-intl.enable = true;
   modules.xiaohuanxiong.enable = true;
+  modules.xiaohuanxiong-acp.enable = true;
   modules.mobileclaw.enable = true;
   # Office document toolchain for AI agents (shared
   # modules/nixos/base/custom/ai/office-tools.nix): headless LibreOffice +

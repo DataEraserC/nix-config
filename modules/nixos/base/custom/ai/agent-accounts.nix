@@ -483,6 +483,22 @@ let
       };
     };
 
+    # The ACP bridge + Martty TUI keeps its own agent home in ~/.box-agent
+    # under the instance HOME. A separate stateDirectoryKey keeps an ACP
+    # account independent of the desktop app's ~/.box-agent, so logging in
+    # through `multi-instance xiaohuanxiong-acp N --login` never changes the
+    # desktop login. CLI-only: no launcher entry.
+    xiaohuanxiong-acp = {
+      stateDirectoryKey = "xiaohuanxiong-acp";
+      paths = [ ".box-agent" ];
+      persist = [
+        {
+          directory = ".box-agent";
+          mode = "0700";
+        }
+      ];
+    };
+
     # ~/.config/com.cmss.mobileclaw-desktop holds the config, device ID and auth
     # token; ~/.config/MobileClaw is the Electron userData directory, whose
     # single-instance lock is named after that path, so without `userDataDir`
