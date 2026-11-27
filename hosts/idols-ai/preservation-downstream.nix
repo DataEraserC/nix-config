@@ -253,6 +253,14 @@ in
         # cache and singbox/singbox-config.json (subscription nodes).
         ".opencode2dsh"
 
+        # xiaohuanxiong-acp global instance (the direct command): auth.json,
+        # sessions and the model cache. The multi-instance copies live in the
+        # multi-instance store below.
+        {
+          directory = ".local/state/xiaohuanxiong-acp";
+          mode = "0700";
+        }
+
         # pi coding agent (sessions under ~/.pi/agent/sessions)
         ".pi"
 
