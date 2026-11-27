@@ -3,7 +3,7 @@ def wsl-path-fix [] {
   if not ('/proc/version' | path exists) {
     return
   }
-  let version = (open /proc/version | str downcase)
+  let version = (open /proc/version | str lowercase)
   if not ($version | str contains 'microsoft') {
     return
   }
