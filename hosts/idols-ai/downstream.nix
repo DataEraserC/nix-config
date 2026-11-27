@@ -444,6 +444,22 @@ in
   modules.autoclaw-intl.enable = true;
   modules.xiaohuanxiong.enable = true;
   modules.mobileclaw.enable = true;
+  # Office document toolchain for AI agents (shared
+  # modules/nixos/base/custom/ai/office-tools.nix): headless LibreOffice +
+  # poppler + one python env (openpyxl/python-docx/python-pptx/pandas/...) and
+  # the `office-render <file> [outdir] [dpi]` PDF->PNG verification helper.
+  modules.office-tools = {
+    enable = true;
+    excel = true;
+    word = true;
+    ppt = true;
+    # Hand-picked for this host's documents (Chinese + metric-compatible
+    # Latin); replace/extend freely - the module presets no fonts.
+    fonts = with pkgs; [
+      noto-fonts-cjk-sans
+      liberation_ttf
+    ];
+  };
   # `multi-instance <app> <account>`: the same apps under bubblewrap with one
   # state directory per account; see modules/nixos/base/custom/ai/agent-accounts.nix.
   # CodeBuddy account 1 accepts the canonical `multi-instance codebuddy-acp 1`
