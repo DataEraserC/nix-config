@@ -290,7 +290,7 @@
         "narHash": "sha256-1m0cB3J5KCmcBZVoQ0VaoL0b4hPm+zm+bKVRW2R2q4o=",
         "owner": "desktop-tools-which-may-be-useful",
         "repo": "agent2api.nix",
-        "rev": "dcad0e21e87d9ead641a52a8adcc8c51e7328709",
+        "rev": "8f0eeb41df917c6a2f864899cba454b3344865dc",
         "type": "github"
       },
       "original": {
